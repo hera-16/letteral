@@ -1,16 +1,17 @@
 package com.chatapp.service;
 
-import com.chatapp.model.Friend;
-import com.chatapp.model.User;
-import com.chatapp.repository.FriendRepository;
-import com.chatapp.repository.UserRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.chatapp.model.Friend;
+import com.chatapp.model.User;
+import com.chatapp.repository.FriendRepository;
+import com.chatapp.repository.UserRepository;
 
 @Service
 @Transactional
