@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
-import ChatRoom from '@/components/ChatRoom';
+import Dashboard from '@/components/Dashboard';
 import { authService } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
@@ -11,7 +11,7 @@ type AuthMode = 'login' | 'signup';
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
-  const [roomId] = useState('general'); // 固定のチャットルーム
+
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
 
   useEffect(() => {
@@ -41,9 +41,8 @@ export default function Home() {
 
   if (user) {
     return (
-      <ChatRoom
+      <Dashboard
         user={user}
-        roomId={roomId}
         onLogout={handleLogout}
       />
     );

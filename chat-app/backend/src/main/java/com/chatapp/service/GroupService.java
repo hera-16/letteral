@@ -1,19 +1,20 @@
 package com.chatapp.service;
 
-import com.chatapp.model.Group;
-import com.chatapp.model.GroupMember;
-import com.chatapp.model.User;
-import com.chatapp.repository.GroupRepository;
-import com.chatapp.repository.GroupMemberRepository;
-import com.chatapp.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.chatapp.model.Group;
+import com.chatapp.model.GroupMember;
+import com.chatapp.model.User;
+import com.chatapp.repository.GroupMemberRepository;
+import com.chatapp.repository.GroupRepository;
+import com.chatapp.repository.UserRepository;
 
 @Service
 @Transactional

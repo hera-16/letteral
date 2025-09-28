@@ -1,17 +1,18 @@
 package com.chatapp.service;
 
-import com.chatapp.model.Group;
-import com.chatapp.model.GroupMember;
-import com.chatapp.repository.GroupMemberRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.HashSet;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.chatapp.model.Group;
+import com.chatapp.model.GroupMember;
+import com.chatapp.repository.GroupMemberRepository;
 
 @Service
 public class AnonymousNameService {

@@ -114,6 +114,12 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
             </p>
           </div>
           <div className="flex items-center space-x-4">
+            <a 
+              href="/groups"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm font-medium"
+            >
+              📱 Letteral (匿名グループ)
+            </a>
             <div className={`flex items-center space-x-2 ${connected ? 'text-green-600' : 'text-red-600'}`}>
               <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}></div>
               <span className="text-sm">{connected ? '接続済み' : '未接続'}</span>
