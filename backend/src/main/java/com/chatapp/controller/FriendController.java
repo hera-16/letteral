@@ -50,7 +50,8 @@ public final class FriendController {
 
     private Long resolveUserId(final Authentication authentication) {
         final Object principal = authentication.getPrincipal();
-        if (principal instanceof UserPrincipal userPrincipal) {
+        if (principal instanceof UserPrincipal) {
+            final UserPrincipal userPrincipal = (UserPrincipal) principal;
             return userPrincipal.getId();
         }
         throw new IllegalStateException("Unsupported principal: " + principal);
@@ -62,7 +63,23 @@ public final class FriendController {
      * @param friendCount         total accepted friends
      * @param pendingRequestCount total pending requests
      */
-    public record FriendStatsResponse(long friendCount,
-            long pendingRequestCount) {
+    public static final class FriendStatsResponse {
+
+        private final long friendCount;
+        private final long pendingRequestCount;
+
+        public FriendStatsResponse(final long friendCount,
+                final long pendingRequestCount) {
+            this.friendCount = friendCount;
+            this.pendingRequestCount = pendingRequestCount;
+        }
+
+        public long getFriendCount() {
+            return friendCount;
+        }
+
+        public long getPendingRequestCount() {
+            return pendingRequestCount;
+        }
     }
 }

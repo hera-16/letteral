@@ -42,23 +42,25 @@ public class FriendService {
 
         final Optional<Friend> existingFriendship = friendRepository
                 .findFriendshipBetween(requester, target);
-        if (existingFriendship.isPresent()) {
-            final Friend existing = existingFriendship.get();
-            switch (existing.getStatus()) {
-            case ACCEPTED -> throw new IllegalStateException("Already friends");
-            case PENDING -> throw new IllegalStateException(
-                    "Friend request already sent");
-            case BLOCKED -> throw new IllegalStateException(
-                    "Cannot send friend request to blocked user");
-            case REJECTED -> {
-                existing.setStatus(Friend.FriendStatus.PENDING);
-                existing.setRequester(requester);
-                existing.setAddressee(target);
-                return friendRepository.save(existing);
-            }
-            default -> throw new IllegalStateException(
-                    "Unsupported status: " + existing.getStatus());
-            }
+                if (existingFriendship.isPresent()) {
+                        final Friend existing = existingFriendship.get();
+                        switch (existing.getStatus()) {
+                        case ACCEPTED:
+                                throw new IllegalStateException("Already friends");
+                        case PENDING:
+                                throw new IllegalStateException("Friend request already sent");
+                        case BLOCKED:
+                                throw new IllegalStateException(
+                                                "Cannot send friend request to blocked user");
+                        case REJECTED:
+                                existing.setStatus(Friend.FriendStatus.PENDING);
+                                existing.setRequester(requester);
+                                existing.setAddressee(target);
+                                return friendRepository.save(existing);
+                        default:
+                                throw new IllegalStateException(
+                                                "Unsupported status: " + existing.getStatus());
+                        }
         }
 
         final Friend friendRequest = new Friend(requester, target);
@@ -67,7 +69,7 @@ public class FriendService {
 
     public Friend acceptFriendRequest(final Long userId,
             final Long requestId) {
-        final User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "User not found"));
 

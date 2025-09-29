@@ -1,7 +1,7 @@
 package com.chatapp.websocket;
 
-import com.chatapp.dto.ChatMessageDto;
-import com.chatapp.service.ChatService;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,9 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+
+import com.chatapp.dto.ChatMessageDto;
+import com.chatapp.service.ChatService;
 
 @Component
 public class WebSocketEventListener {
@@ -31,10 +34,15 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        
-        String username = (String) headerAccessor.getSessionAttributes().get("username");
-        String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
-        
+        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        if (sessionAttributes == null) {
+            logger.debug("No session attributes found on disconnect event");
+            return;
+        }
+
+        String username = (String) sessionAttributes.get("username");
+        String roomId = (String) sessionAttributes.get("roomId");
+
         if (username != null && roomId != null) {
             logger.info("User Disconnected : " + username);
             
