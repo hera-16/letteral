@@ -6,7 +6,7 @@ class WebSocketService {
   private stompClient: Client | null = null;
   private connected = false;
 
-  connect(onMessageReceived: (message: ChatMessage) => void): Promise<void> {
+  connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       const socket = new SockJS('http://localhost:8080/ws');
       
@@ -76,4 +76,7 @@ class WebSocketService {
   }
 }
 
-export default new WebSocketService();
+const webSocketService = new WebSocketService();
+
+export { webSocketService };
+export default webSocketService;

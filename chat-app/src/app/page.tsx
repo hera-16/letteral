@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
 import Dashboard from '@/components/Dashboard';
-import { authService } from '@/services/api';
+import { authService, StoredUser } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<StoredUser | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
 
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
@@ -22,7 +22,7 @@ export default function Home() {
     }
   }, []);
 
-  const handleLogin = (userData: any) => {
+  const handleLogin = (userData: StoredUser) => {
     setUser(userData);
   };
 

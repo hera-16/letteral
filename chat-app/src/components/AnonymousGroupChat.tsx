@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import api from '@/services/api';
 
 interface Message {
   id: number;
@@ -30,103 +30,123 @@ const AnonymousGroupChat: React.FC<AnonymousGroupChatProps> = ({ groupId }) => {
   const [newMessage, setNewMessage] = useState('');
   const [group, setGroup] = useState<Group | null>(null);
   const [anonymousName, setAnonymousName] = useState<string>('');
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchGroupInfo();
-    fetchMessages();
-    fetchAnonymousName();
-    initializeSocket();
+  const extractErrorMessage = (err: unknown): string | null => {
+    if (typeof err === 'string') {
+      return err;
+    }
 
-    return () => {
-      if (socket) {
-        socket.disconnect();
+    if (err && typeof err === 'object') {
+      if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
+        return (err as { message: string }).message;
       }
-    };
-  }, [groupId]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const fetchGroupInfo = async () => {
-    try {
-      const response = await axios.get(`http://localhost:8080/api/groups/${groupId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+      const response = (err as { response?: { data?: unknown } }).response;
+      if (response?.data) {
+        if (typeof response.data === 'string') {
+          return response.data;
         }
-      });
+
+        if (
+          typeof response.data === 'object' &&
+          response.data !== null &&
+          'message' in response.data &&
+          typeof (response.data as { message: unknown }).message === 'string'
+        ) {
+          return (response.data as { message: string }).message;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const fetchGroupInfo = useCallback(async () => {
+    try {
+      const response = await api.get<Group>(`/groups/${groupId}`);
       setGroup(response.data);
     } catch (error) {
       console.error('グループ情報取得エラー:', error);
     }
-  };
+  }, [groupId]);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/chat/groups/${groupId}/messages`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get<Message[]>(`/chat/groups/${groupId}/messages`);
       setMessages(response.data);
-    } catch (error: any) {
+    } catch (error) {
       console.error('メッセージ取得エラー:', error);
-      if (error.response?.status === 403) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        (error as { response?: { status?: number } }).response?.status === 403
+      ) {
         alert('このグループにアクセスする権限がありません');
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
-  const fetchAnonymousName = async () => {
+  const fetchAnonymousName = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/groups/${groupId}/anonymous-name`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get<string>(`/groups/${groupId}/anonymous-name`);
       setAnonymousName(response.data);
     } catch (error) {
       console.error('匿名名取得エラー:', error);
     }
-  };
+  }, [groupId]);
 
-  const initializeSocket = () => {
+  const initializeSocket = useCallback(() => {
     const newSocket = io('http://localhost:8080');
-    
+
     newSocket.on('connect', () => {
       console.log('WebSocket connected');
-      // グループ専用のルームに参加
       newSocket.emit('join', `group_${groupId}`);
     });
 
     newSocket.on(`group_${groupId}`, (message: Message) => {
-      setMessages(prev => [...prev, message]);
+      setMessages((prev) => [...prev, message]);
     });
 
-    setSocket(newSocket);
-  };
+    socketRef.current = newSocket;
+    return newSocket;
+  }, [groupId]);
 
-  const sendMessage = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const socketInstance = initializeSocket();
+
+    void fetchGroupInfo();
+    void fetchMessages();
+    void fetchAnonymousName();
+
+    return () => {
+      socketInstance.disconnect();
+      socketRef.current = null;
+    };
+  }, [fetchAnonymousName, fetchGroupInfo, fetchMessages, initializeSocket]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     try {
-      await axios.post(`http://localhost:8080/api/chat/groups/${groupId}/anonymous`, {
-        content: newMessage
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      await api.post(`/chat/groups/${groupId}/anonymous`, {
+        content: newMessage,
       });
       setNewMessage('');
     } catch (error) {
       console.error('メッセージ送信エラー:', error);
-      alert('メッセージの送信に失敗しました');
+      const message = extractErrorMessage(error) ?? 'メッセージの送信に失敗しました';
+      alert(message);
     }
   };
 

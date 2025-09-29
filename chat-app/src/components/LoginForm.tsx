@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { authService, LoginRequest } from '@/services/api';
+import { authService, LoginRequest, StoredUser } from '@/services/api';
 
 interface LoginFormProps {
-  onLogin: (user: any) => void;
+  onLogin: (user: StoredUser) => void;
   onSwitchToSignup: () => void;
 }
 
@@ -16,26 +16,42 @@ export default function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const extractErrorMessage = (err: unknown): string => {
+    if (typeof err === 'string') {
+      return err;
+    }
+    if (err && typeof err === 'object') {
+      const maybeResponse = (err as { response?: { data?: unknown } }).response;
+      if (maybeResponse?.data) {
+        if (typeof maybeResponse.data === 'string') {
+          return maybeResponse.data;
+        }
+        if (
+          typeof maybeResponse.data === 'object' &&
+          maybeResponse.data !== null &&
+          'message' in maybeResponse.data &&
+          typeof (maybeResponse.data as { message: unknown }).message === 'string'
+        ) {
+          return (maybeResponse.data as { message: string }).message;
+        }
+      }
+      if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
+        return (err as { message: string }).message;
+      }
+    }
+    return 'ログインに失敗しました';
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const response = await authService.login(credentials);
-      
-      // トークンとユーザー情報をローカルストレージに保存
-      localStorage.setItem('token', response.accessToken);
-      localStorage.setItem('user', JSON.stringify({
-        id: response.id,
-        username: response.username,
-        email: response.email,
-        displayName: response.displayName,
-      }));
-
-      onLogin(response);
-    } catch (error: any) {
-      setError(error.response?.data || 'ログインに失敗しました');
+      const userProfile = await authService.login(credentials);
+      onLogin(userProfile);
+    } catch (error: unknown) {
+      setError(extractErrorMessage(error));
     } finally {
       setLoading(false);
     }

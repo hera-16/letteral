@@ -1,11 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { ChatMessage, chatService } from '@/services/api';
-import websocketService from '@/services/websocket';
+import { ChatMessage, chatService, StoredUser } from '@/services/api';
+import { webSocketService } from '@/services/websocket';
 
 interface ChatRoomProps {
-  user: any;
+  user: StoredUser;
   roomId: string;
   onLogout: () => void;
 }
@@ -38,16 +39,14 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
     // WebSocket接続を確立
     const connectWebSocket = async () => {
       try {
-        await websocketService.connect((message: ChatMessage) => {
-          setMessages((prev) => [...prev, message]);
-        });
+        await webSocketService.connect();
 
-        websocketService.subscribe(roomId, (message: ChatMessage) => {
+        webSocketService.subscribe(roomId, (message: ChatMessage) => {
           setMessages((prev) => [...prev, message]);
         });
 
         // ユーザーが参加したことを通知
-        websocketService.addUser({
+        webSocketService.addUser({
           content: `${user.displayName || user.username} joined the chat`,
           senderUsername: user.username,
           roomId,
@@ -64,9 +63,9 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
     connectWebSocket();
 
     return () => {
-      websocketService.disconnect();
+      webSocketService.disconnect();
     };
-  }, [user, roomId]);
+  }, [user.displayName, user.username, roomId]);
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +79,7 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
         messageType: 'CHAT',
       };
 
-      websocketService.sendMessage(message);
+  webSocketService.sendMessage(message);
       setNewMessage('');
     }
   };
@@ -114,12 +113,12 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <a 
+            <Link
               href="/groups"
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm font-medium"
             >
               📱 Letteral (匿名グループ)
-            </a>
+            </Link>
             <div className={`flex items-center space-x-2 ${connected ? 'text-green-600' : 'text-red-600'}`}>
               <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}></div>
               <span className="text-sm">{connected ? '接続済み' : '未接続'}</span>

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import ChatRoom from '@/components/ChatRoom';
-import { authService } from '@/services/api';
+import { authService, StoredUser } from '@/services/api';
 
 export default function ChatPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<StoredUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

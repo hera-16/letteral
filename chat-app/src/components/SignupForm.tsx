@@ -18,7 +18,33 @@ export default function SignupForm({ onSignupSuccess, onSwitchToLogin }: SignupF
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const extractErrorMessage = (err: unknown): string => {
+    if (typeof err === 'string') {
+      return err;
+    }
+    if (err && typeof err === 'object') {
+      const maybeResponse = (err as { response?: { data?: unknown } }).response;
+      if (maybeResponse?.data) {
+        if (typeof maybeResponse.data === 'string') {
+          return maybeResponse.data;
+        }
+        if (
+          typeof maybeResponse.data === 'object' &&
+          maybeResponse.data !== null &&
+          'message' in maybeResponse.data &&
+          typeof (maybeResponse.data as { message: unknown }).message === 'string'
+        ) {
+          return (maybeResponse.data as { message: string }).message;
+        }
+      }
+      if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
+        return (err as { message: string }).message;
+      }
+    }
+    return '新規登録に失敗しました';
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -26,8 +52,8 @@ export default function SignupForm({ onSignupSuccess, onSwitchToLogin }: SignupF
     try {
       await authService.signup(userData);
       onSignupSuccess();
-    } catch (error: any) {
-      setError(error.response?.data || '新規登録に失敗しました');
+    } catch (error: unknown) {
+      setError(extractErrorMessage(error));
     } finally {
       setLoading(false);
     }

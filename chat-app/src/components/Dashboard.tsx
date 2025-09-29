@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { StoredUser } from '@/services/api';
 
 interface DashboardProps {
-  user: any;
+  user: StoredUser;
   onLogout: () => void;
 }
 
@@ -23,11 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/friends/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get<Stats>('/friends/stats');
       setStats(response.data);
     } catch (error) {
       console.error('統計情報取得エラー:', error);

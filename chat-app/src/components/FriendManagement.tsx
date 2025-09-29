@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '@/services/api';
 
 interface User {
   id: number;
@@ -33,108 +33,115 @@ const FriendManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'sent'>('friends');
 
-  useEffect(() => {
-    fetchAllData();
+  const extractErrorMessage = (err: unknown): string | null => {
+    if (typeof err === 'string') {
+      return err;
+    }
+
+    if (err && typeof err === 'object') {
+      if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
+        return (err as { message: string }).message;
+      }
+
+      const response = (err as { response?: { data?: unknown } }).response;
+      if (response?.data) {
+        if (typeof response.data === 'string') {
+          return response.data;
+        }
+
+        if (
+          typeof response.data === 'object' &&
+          response.data !== null &&
+          'message' in response.data &&
+          typeof (response.data as { message: unknown }).message === 'string'
+        ) {
+          return (response.data as { message: string }).message;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const fetchFriends = useCallback(async () => {
+    try {
+      const response = await api.get<User[]>('/friends/list');
+      setFriends(response.data);
+    } catch (error) {
+      console.error('フレンド一覧取得エラー:', error);
+    }
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchPendingRequests = useCallback(async () => {
+    try {
+      const response = await api.get<Friend[]>('/friends/requests/received');
+      setPendingRequests(response.data);
+    } catch (error) {
+      console.error('フレンド申請取得エラー:', error);
+    }
+  }, []);
+
+  const fetchSentRequests = useCallback(async () => {
+    try {
+      const response = await api.get<Friend[]>('/friends/requests/sent');
+      setSentRequests(response.data);
+    } catch (error) {
+      console.error('送信済み申請取得エラー:', error);
+    }
+  }, []);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await api.get<FriendStats>('/friends/stats');
+      setStats(response.data);
+    } catch (error) {
+      console.error('統計情報取得エラー:', error);
+    }
+  }, []);
+
+  const fetchAllData = useCallback(async () => {
     try {
       await Promise.all([
         fetchFriends(),
         fetchPendingRequests(),
         fetchSentRequests(),
-        fetchStats()
+        fetchStats(),
       ]);
     } catch (error) {
       console.error('データ取得エラー:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchFriends, fetchPendingRequests, fetchSentRequests, fetchStats]);
 
-  const fetchFriends = async () => {
-    try {
-      const response = await axios.get('http://localhost:8080/api/friends/list', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setFriends(response.data);
-    } catch (error) {
-      console.error('フレンド一覧取得エラー:', error);
-    }
-  };
-
-  const fetchPendingRequests = async () => {
-    try {
-      const response = await axios.get('http://localhost:8080/api/friends/requests/received', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setPendingRequests(response.data);
-    } catch (error) {
-      console.error('フレンド申請取得エラー:', error);
-    }
-  };
-
-  const fetchSentRequests = async () => {
-    try {
-      const response = await axios.get('http://localhost:8080/api/friends/requests/sent', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setSentRequests(response.data);
-    } catch (error) {
-      console.error('送信済み申請取得エラー:', error);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get('http://localhost:8080/api/friends/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setStats(response.data);
-    } catch (error) {
-      console.error('統計情報取得エラー:', error);
-    }
-  };
+  useEffect(() => {
+    void fetchAllData();
+  }, [fetchAllData]);
 
   const sendFriendRequest = async () => {
     if (!targetUserId.trim()) return;
 
     try {
-      await axios.post('http://localhost:8080/api/friends/request', {
-        targetUserId: targetUserId
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      await api.post('/friends/request', {
+        targetUserId,
       });
       
       setTargetUserId('');
-      fetchSentRequests();
-      fetchStats();
+      void fetchSentRequests();
+      void fetchStats();
       alert('フレンド申請を送信しました！');
-    } catch (error: any) {
+    } catch (error) {
       console.error('フレンド申請エラー:', error);
-      alert(error.response?.data?.message || 'フレンド申請の送信に失敗しました');
+      const message = extractErrorMessage(error) ?? 'フレンド申請の送信に失敗しました';
+      alert(message);
     }
   };
 
   const acceptFriendRequest = async (requestId: number) => {
     try {
-      await axios.post(`http://localhost:8080/api/friends/accept/${requestId}`, {}, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      fetchAllData();
+      await api.post(`/friends/accept/${requestId}`);
+
+      void fetchAllData();
       alert('フレンド申請を承認しました！');
     } catch (error) {
       console.error('申請承認エラー:', error);
@@ -144,14 +151,10 @@ const FriendManagement: React.FC = () => {
 
   const rejectFriendRequest = async (requestId: number) => {
     try {
-      await axios.post(`http://localhost:8080/api/friends/reject/${requestId}`, {}, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      fetchPendingRequests();
-      fetchStats();
+      await api.post(`/friends/reject/${requestId}`);
+
+      void fetchPendingRequests();
+      void fetchStats();
       alert('フレンド申請を拒否しました');
     } catch (error) {
       console.error('申請拒否エラー:', error);
@@ -163,14 +166,10 @@ const FriendManagement: React.FC = () => {
     if (!confirm('このフレンドを削除しますか？')) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/friends/${friendId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      fetchFriends();
-      fetchStats();
+      await api.delete(`/friends/${friendId}`);
+
+      void fetchFriends();
+      void fetchStats();
       alert('フレンドを削除しました');
     } catch (error) {
       console.error('フレンド削除エラー:', error);
