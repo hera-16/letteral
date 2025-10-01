@@ -191,6 +191,8 @@ export default function Home() {
             <ChatRoom
               user={user}
               roomId={chatTarget.roomId}
+              chatType={chatTarget.type}
+              chatId={chatTarget.id}
             />
             {showGroupSettings && chatTarget.type === 'group' && chatTarget.id && (
               <GroupSettings

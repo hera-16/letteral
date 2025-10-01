@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.dto.ChatMessageDto;
 import com.chatapp.model.ChatMessage;
+import com.chatapp.model.Friend;
 import com.chatapp.model.User;
 import com.chatapp.repository.ChatMessageRepository;
+import com.chatapp.repository.FriendRepository;
 import com.chatapp.repository.UserRepository;
 
 @Service
@@ -23,7 +25,13 @@ public class ChatService {
     private UserRepository userRepository;
     
     @Autowired
+    private FriendRepository friendRepository;
+    
+    @Autowired
     private GroupService groupService;
+    
+    @Autowired
+    private AnonymousNameService anonymousNameService;
     
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
@@ -100,7 +108,17 @@ public class ChatService {
         if (!groupService.canAccessGroup(groupId, userId)) {
             throw new IllegalStateException("You do not have access to this group");
         }
-        return getRecentMessages("group-" + groupId);
+        
+        // メッセージを取得
+        List<ChatMessage> messages = chatMessageRepository.findTop50ByRoomIdOrderByCreatedAtDesc("group-" + groupId);
+        messages = messages.stream()
+                .sorted((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
+                .collect(Collectors.toList());
+        
+        // 匿名名を適用してDTOに変換
+        return messages.stream()
+                .map(message -> convertToGroupDto(message, userId, groupId))
+                .collect(Collectors.toList());
     }
     
     /**
@@ -125,7 +143,18 @@ public class ChatService {
      * Room ID format: "friend-{friendshipId}"
      */
     public List<ChatMessageDto> getFriendMessages(Long friendshipId, String currentUsername) {
-        // TODO: Validate that currentUser is part of this friendship
+        // フレンドシップの検証: currentUserがこのフレンドシップの一部であることを確認
+        Friend friend = friendRepository.findById(friendshipId)
+            .orElseThrow(() -> new RuntimeException("Friend relationship not found"));
+        
+        User currentUser = userRepository.findByUsername(currentUsername)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (!friend.getRequester().getId().equals(currentUser.getId()) && 
+            !friend.getAddressee().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("User is not part of this friendship");
+        }
+        
         return getFriendMessages(friendshipId);
     }
     
@@ -146,6 +175,38 @@ public class ChatService {
         dto.setRoomId(message.getRoomId());
         dto.setMessageType(message.getMessageType().toString());
         dto.setTimestamp(message.getCreatedAt().format(formatter));
+        return dto;
+    }
+    
+    /**
+     * グループメッセージを匿名名付きDTOに変換
+     */
+    private ChatMessageDto convertToGroupDto(ChatMessage message, Long viewerId, Long groupId) {
+        System.out.println("🔧 convertToGroupDto called - messageId: " + message.getId() + ", viewerId: " + viewerId + ", groupId: " + groupId);
+        
+        ChatMessageDto dto = new ChatMessageDto();
+        dto.setId(message.getId());
+        dto.setContent(message.getContent());
+        dto.setSenderUsername(message.getSender().getUsername());
+        
+        // 匿名名を取得（全員が同じ匿名名を見る2パラメータバージョン）
+        // viewerIdが送信者自身の場合は「あなた」を返す
+        Long senderId = message.getSender().getId();
+        String anonymousName;
+        if (viewerId.equals(senderId)) {
+            anonymousName = "あなた";
+            System.out.println("  → Self message, using: あなた");
+        } else {
+            anonymousName = anonymousNameService.getAnonymousName(senderId, groupId);
+            System.out.println("  → Other's message, anonymous name: " + anonymousName + " for senderId: " + senderId);
+        }
+        dto.setSenderDisplayName(anonymousName);
+        
+        dto.setRoomId(message.getRoomId());
+        dto.setMessageType(message.getMessageType().toString());
+        dto.setTimestamp(message.getCreatedAt().format(formatter));
+        
+        System.out.println("  → DTO created with senderDisplayName: " + dto.getSenderDisplayName());
         return dto;
     }
 }

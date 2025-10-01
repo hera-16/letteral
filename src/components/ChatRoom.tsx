@@ -1,20 +1,23 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatMessage, chatService, authService } from '@/services/api';
+import { ChatMessage, chatService, authService, anonymousService } from '@/services/api';
 import websocketService from '@/services/websocket';
 
 interface ChatRoomProps {
   user: any;
   roomId: string;
+  chatType?: 'friend' | 'group' | 'topic' | 'general';
+  chatId?: number;
   onLogout?: () => void; // オプショナルに変更
 }
 
-export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
+export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: ChatRoomProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [anonymousNames, setAnonymousNames] = useState<Record<number, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,8 +41,40 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
     // 過去のメッセージを取得
     const loadMessages = async () => {
       try {
-        const pastMessages = await chatService.getMessages(roomId);
-        setMessages(pastMessages); // サーバーから時系列順で取得
+        let pastMessages;
+        
+        // チャットタイプに応じて適切なエンドポイントを使用
+        if (chatType === 'group' && chatId) {
+          console.log('Loading group messages for groupId:', chatId);
+          pastMessages = await chatService.getGroupMessages(chatId);
+        } else if (chatType === 'friend' && chatId) {
+          console.log('Loading friend messages for friendshipId:', chatId);
+          pastMessages = await chatService.getFriendMessages(chatId);
+        } else if (chatType === 'topic' && chatId) {
+          console.log('Loading topic messages for topicId:', chatId);
+          pastMessages = await chatService.getTopicMessages(chatId);
+        } else {
+          console.log('Loading general messages for roomId:', roomId);
+          pastMessages = await chatService.getMessages(roomId);
+        }
+        
+        // JOIN/LEAVEメッセージをフィルタリング
+        const filteredMessages = pastMessages.filter(
+          msg => msg.messageType !== 'JOIN' && msg.messageType !== 'LEAVE'
+        );
+        setMessages(filteredMessages); // サーバーから時系列順で取得
+        console.log('Messages loaded:', filteredMessages.length, 'messages');
+        
+        // グループチャットの場合、匿名名マップを取得
+        if (chatType === 'group' && chatId) {
+          try {
+            const nameMap = await anonymousService.getAnonymousNames(chatId);
+            setAnonymousNames(nameMap);
+            console.log('Anonymous names loaded:', nameMap);
+          } catch (err) {
+            console.error('Failed to load anonymous names:', err);
+          }
+        }
       } catch (err: any) {
         console.error('Failed to load messages:', err);
         if (err.response?.status === 401) {
@@ -134,6 +169,13 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
   };
 
   const getMessageSenderName = (message: ChatMessage) => {
+    // グループチャットの場合は匿名名を使用
+    if (chatType === 'group' && message.senderUsername) {
+      // anonymousNamesはuserId -> anonymousNameのマップ
+      // senderUsernameからuserIdを取得する必要がある
+      // とりあえずsenderDisplayNameに匿名名が既に設定されているので、それを使用
+      return message.senderDisplayName || '匿名ユーザー';
+    }
     return message.senderDisplayName || message.senderUsername;
   };
 

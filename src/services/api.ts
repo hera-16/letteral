@@ -363,4 +363,15 @@ export const chatService = {
   },
 };
 
+export const anonymousService = {
+  async getAnonymousNames(groupId: number): Promise<Record<number, string>> {
+    const response = await api.get(`/anonymous/groups/${groupId}/names`);
+    return response.data;
+  },
+
+  async resetAnonymousNames(groupId: number): Promise<void> {
+    await api.delete(`/anonymous/groups/${groupId}/names`);
+  },
+};
+
 export default api;

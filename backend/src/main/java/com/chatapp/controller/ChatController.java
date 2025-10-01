@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.chatapp.dto.ChatMessageDto;
+import com.chatapp.model.User;
+import com.chatapp.repository.UserRepository;
+import com.chatapp.service.AnonymousNameService;
 import com.chatapp.service.ChatService;
 
 @Controller
@@ -27,11 +30,42 @@ public class ChatController {
     
     @Autowired
     private ChatService chatService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private AnonymousNameService anonymousNameService;
     
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload ChatMessageDto chatMessage) {
         // メッセージをデータベースに保存
         ChatMessageDto savedMessage = chatService.saveMessage(chatMessage);
+        
+        // グループチャットの場合は匿名名を適用
+        if (chatMessage.getRoomId().startsWith("group-")) {
+            try {
+                String groupIdStr = chatMessage.getRoomId().substring(6);
+                Long groupId = Long.valueOf(groupIdStr);
+                User sender = userRepository.findByUsername(chatMessage.getSenderUsername())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+                
+                // 匿名名を取得（全員が同じ匿名名を見る2パラメータバージョン）
+                String anonymousName = anonymousNameService.getAnonymousName(
+                        sender.getId(),  // targetUserId（送信者のID）
+                        groupId          // groupId
+                );
+                
+                savedMessage.setSenderDisplayName(anonymousName);
+                System.out.println("✅ Applied anonymous name: " + anonymousName + " for user: " + sender.getUsername() + " (ID: " + sender.getId() + ") in group: " + groupId);
+            } catch (NumberFormatException e) {
+                System.err.println("❌ Invalid group ID format: " + e.getMessage());
+            } catch (RuntimeException e) {
+                System.err.println("❌ Failed to apply anonymous name: " + e.getMessage());
+                e.printStackTrace();
+                // エラーが発生してもメッセージは送信する
+            }
+        }
         
         // 指定されたルームの全ユーザーにメッセージを送信
         messagingTemplate.convertAndSend("/topic/" + chatMessage.getRoomId(), savedMessage);
