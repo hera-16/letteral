@@ -21,6 +21,9 @@ public class ChatService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private GroupService groupService;
+    
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     public ChatMessageDto saveMessage(ChatMessageDto messageDto) {
@@ -52,11 +55,60 @@ public class ChatService {
     }
     
     /**
+     * Get messages by room ID (generic method for all room types).
+     * Validates access based on room type.
+     */
+    @SuppressWarnings("UnnecessaryTemporaryOnConversionFromString")
+    public List<ChatMessageDto> getMessagesByRoomId(String roomId, String currentUsername) {
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Parse room type and validate access
+        if (roomId.startsWith("group-")) {
+            long groupId = Long.parseLong(roomId.substring(6));
+            return getGroupMessages(groupId, currentUser.getId());
+        } else if (roomId.startsWith("friend-")) {
+            long friendshipId = Long.parseLong(roomId.substring(7));
+            return getFriendMessages(friendshipId);
+        } else if (roomId.startsWith("topic-")) {
+            long topicId = Long.parseLong(roomId.substring(6));
+            return getTopicMessages(topicId);
+        } else {
+            throw new IllegalArgumentException("Invalid room ID format: " + roomId);
+        }
+    }
+    
+    /**
      * Get recent messages for a group.
      * Room ID format: "group-{groupId}"
+     * Checks if user has access to the group.
      */
-    public List<ChatMessageDto> getGroupMessages(Long groupId) {
+    public List<ChatMessageDto> getGroupMessages(Long groupId, String currentUsername) {
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return getGroupMessages(groupId, currentUser.getId());
+    }
+    
+    /**
+     * Get recent messages for a group.
+     * Room ID format: "group-{groupId}"
+     * Checks if user has access to the group.
+     */
+    public List<ChatMessageDto> getGroupMessages(Long groupId, Long userId) {
+        // Check if user has access to this group (is a member)
+        if (!groupService.canAccessGroup(groupId, userId)) {
+            throw new IllegalStateException("You do not have access to this group");
+        }
         return getRecentMessages("group-" + groupId);
+    }
+    
+    /**
+     * Get recent messages for a topic.
+     * Room ID format: "topic-{topicId}"
+     */
+    public List<ChatMessageDto> getTopicMessages(Long topicId, String currentUsername) {
+        // Topics are public, so no access check needed
+        return getTopicMessages(topicId);
     }
     
     /**
@@ -65,6 +117,15 @@ public class ChatService {
      */
     public List<ChatMessageDto> getTopicMessages(Long topicId) {
         return getRecentMessages("topic-" + topicId);
+    }
+    
+    /**
+     * Get recent messages for a friend chat.
+     * Room ID format: "friend-{friendshipId}"
+     */
+    public List<ChatMessageDto> getFriendMessages(Long friendshipId, String currentUsername) {
+        // TODO: Validate that currentUser is part of this friendship
+        return getFriendMessages(friendshipId);
     }
     
     /**

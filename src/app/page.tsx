@@ -6,6 +6,7 @@ import SignupForm from '@/components/SignupForm';
 import FriendList from '@/components/FriendList';
 import GroupTopicList from '@/components/GroupTopicList';
 import ChatRoom from '@/components/ChatRoom';
+import GroupSettings from '@/components/GroupSettings';
 import { authService, User, Group, Topic } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
@@ -25,6 +26,7 @@ export default function Home() {
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
 
   useEffect(() => {
     // 初回ロード時にローカルストレージから認証情報を確認
@@ -162,12 +164,22 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {viewMode === 'chat' && chatTarget ? (
           <div>
-            <button
-              onClick={handleBackFromChat}
-              className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-            >
-              ← 戻る
-            </button>
+            <div className="flex gap-4 mb-4">
+              <button
+                onClick={handleBackFromChat}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                ← 戻る
+              </button>
+              {chatTarget.type === 'group' && (
+                <button
+                  onClick={() => setShowGroupSettings(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  ⚙️ グループ設定
+                </button>
+              )}
+            </div>
             <div className="mb-4">
               <h2 className="text-2xl font-bold">{chatTarget.name}</h2>
               <p className="text-gray-600 text-sm">
@@ -180,6 +192,16 @@ export default function Home() {
               user={user}
               roomId={chatTarget.roomId}
             />
+            {showGroupSettings && chatTarget.type === 'group' && chatTarget.id && (
+              <GroupSettings
+                groupId={chatTarget.id}
+                onClose={() => setShowGroupSettings(false)}
+                onUpdate={() => {
+                  // グループ情報を再読み込み
+                  setShowGroupSettings(false);
+                }}
+              />
+            )}
           </div>
         ) : (
           <>

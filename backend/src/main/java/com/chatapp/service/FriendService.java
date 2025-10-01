@@ -167,6 +167,28 @@ public class FriendService {
                 .collect(Collectors.toList());
     }
 
+    public List<com.chatapp.controller.FriendController.FriendWithIdDto> getFriendsWithIds(final Long userId) {
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        final List<Friend> friendships = friendRepository
+                .findAcceptedFriends(user);
+
+        return friendships.stream().map(friendship -> {
+            User friend = friendship.getRequester().getId().equals(userId) 
+                ? friendship.getAddressee()
+                : friendship.getRequester();
+            return new com.chatapp.controller.FriendController.FriendWithIdDto(
+                friendship.getId(),
+                friend.getId(),
+                friend.getUsername(),
+                friend.getDisplayName(),
+                friend.getEmail()
+            );
+        }).collect(Collectors.toList());
+    }
+
     public List<Friend> getPendingRequests(final Long userId) {
         final User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(

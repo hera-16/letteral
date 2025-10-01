@@ -145,6 +145,48 @@ public class GroupController {
     }
 
     /**
+     * Update group details (name and description).
+     */
+    @PutMapping("/{groupId}")
+    public ResponseEntity<Group> updateGroup(
+            @PathVariable final Long groupId,
+            @RequestBody final UpdateGroupRequest request,
+            final Authentication authentication) {
+        final Long userId = resolveUserId(authentication);
+        final Group updatedGroup = groupService.updateGroup(userId, groupId,
+                request.getName(), request.getDescription());
+        return ResponseEntity.ok(updatedGroup);
+    }
+
+    /**
+     * Add a member to a group.
+     */
+    @PostMapping("/{groupId}/members")
+    public ResponseEntity<List<User>> addMember(
+            @PathVariable final Long groupId,
+            @RequestBody final AddMemberRequest request,
+            final Authentication authentication) {
+        final Long userId = resolveUserId(authentication);
+        groupService.addMember(userId, groupId, request.getUsername());
+        final List<User> members = groupService.getGroupMembers(groupId);
+        return ResponseEntity.ok(members);
+    }
+
+    /**
+     * Remove a member from a group.
+     */
+    @DeleteMapping("/{groupId}/members/{memberId}")
+    public ResponseEntity<List<User>> removeMember(
+            @PathVariable final Long groupId,
+            @PathVariable final Long memberId,
+            final Authentication authentication) {
+        final Long userId = resolveUserId(authentication);
+        groupService.removeMember(userId, groupId, memberId);
+        final List<User> members = groupService.getGroupMembers(groupId);
+        return ResponseEntity.ok(members);
+    }
+
+    /**
      * Get all public topics.
      */
     @GetMapping("/public")
@@ -214,6 +256,39 @@ public class GroupController {
 
         public void setInviteCode(final String inviteCode) {
             this.inviteCode = inviteCode;
+        }
+    }
+
+    public static final class UpdateGroupRequest {
+        private String name;
+        private String description;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(final String name) {
+            this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(final String description) {
+            this.description = description;
+        }
+    }
+
+    public static final class AddMemberRequest {
+        private String username;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(final String username) {
+            this.username = username;
         }
     }
 }

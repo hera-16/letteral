@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { groupService, topicService, Group, Topic } from '@/services/api';
+import { groupService, topicService, friendService, Group, Topic } from '@/services/api';
 
 interface GroupTopicListProps {
   onSelectGroup: (group: Group) => void;
@@ -16,11 +16,23 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // フレンドリストを読み込む
+  const loadFriends = async () => {
+    try {
+      const data = await friendService.getFriends();
+      setFriends(data);
+    } catch (err) {
+      console.error('Failed to load friends:', err);
+    }
+  };
+
   // グループ作成用の状態
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
-  const [maxMembers, setMaxMembers] = useState(50);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [friends, setFriends] = useState<any[]>([]);
+  const [showAllFriends, setShowAllFriends] = useState(false);
 
   // トピック作成用の状態
   const [showCreateTopic, setShowCreateTopic] = useState(false);
@@ -60,15 +72,28 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await groupService.createInviteOnlyGroup({
+      const newGroup = await groupService.createInviteOnlyGroup({
         name: groupName,
         description: groupDescription,
-        maxMembers,
       });
+      
+      // グループ作成後、選択されたメンバーを追加
+      if (selectedMembers.length > 0 && newGroup.id) {
+        for (const username of selectedMembers) {
+          try {
+            await groupService.addGroupMember(newGroup.id, username);
+          } catch (err: any) {
+            console.error(`Failed to add member ${username}:`, err);
+            // メンバー追加エラーは無視して続行
+          }
+        }
+      }
+      
       setShowCreateGroup(false);
       setGroupName('');
       setGroupDescription('');
-      setMaxMembers(50);
+      setSelectedMembers([]);
+      setShowAllFriends(false);
       loadData();
     } catch (err: any) {
       alert(err.response?.data?.message || 'グループの作成に失敗しました');
@@ -158,7 +183,10 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
         {activeTab === 'myGroups' && (
           <>
             <button
-              onClick={() => setShowCreateGroup(true)}
+              onClick={() => {
+                setShowCreateGroup(true);
+                loadFriends();
+              }}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
               グループ作成
@@ -202,7 +230,6 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
                 )}
                 <div className="flex gap-4 mt-2 text-xs text-gray-500">
                   <span>招待制</span>
-                  <span>最大 {group.maxMembers} 人</span>
                   {group.inviteCode && <span className="font-mono">コード: {group.inviteCode}</span>}
                 </div>
               </div>
@@ -273,8 +300,8 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
 
       {/* グループ作成モーダル */}
       {showCreateGroup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">招待制グループを作成</h3>
             <form onSubmit={handleCreateGroup}>
               <div className="mb-4">
@@ -297,15 +324,65 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-semibold mb-2">最大メンバー数</label>
-                <input
-                  type="number"
-                  value={maxMembers}
-                  onChange={(e) => setMaxMembers(parseInt(e.target.value))}
-                  min="2"
-                  max="1000"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
+                <label className="block text-sm font-semibold mb-2">
+                  フレンドを招待（オプション）
+                </label>
+                {friends.length === 0 ? (
+                  <p className="text-sm text-gray-500">フレンドがいません</p>
+                ) : (
+                  <>
+                    <div className="border rounded-lg p-2 max-h-48 overflow-y-auto space-y-2">
+                      {(showAllFriends ? friends : friends.slice(0, 3)).map((friend: any) => (
+                        <label
+                          key={friend.id}
+                          className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedMembers.includes(friend.username)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedMembers([...selectedMembers, friend.username]);
+                              } else {
+                                setSelectedMembers(selectedMembers.filter(u => u !== friend.username));
+                              }
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm">
+                            {friend.displayName || friend.username}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {friends.length > 3 && !showAllFriends && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAllFriends(true);
+                          if (friends.length === 0) loadFriends();
+                        }}
+                        className="mt-2 text-sm text-blue-500 hover:text-blue-700"
+                      >
+                        もっと見る（残り{friends.length - 3}人）
+                      </button>
+                    )}
+                    {showAllFriends && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllFriends(false)}
+                        className="mt-2 text-sm text-blue-500 hover:text-blue-700"
+                      >
+                        閉じる
+                      </button>
+                    )}
+                  </>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
+                  {selectedMembers.length > 0 
+                    ? `${selectedMembers.length}人を招待` 
+                    : 'メンバーは後からでも追加できます'}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -316,7 +393,11 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreateGroup(false)}
+                  onClick={() => {
+                    setShowCreateGroup(false);
+                    setSelectedMembers([]);
+                    setShowAllFriends(false);
+                  }}
                   className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
                 >
                   キャンセル

@@ -33,6 +33,8 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
       return;
     }
 
+    let unsubscribe: (() => void) | null = null;
+
     // 過去のメッセージを取得
     const loadMessages = async () => {
       try {
@@ -51,37 +53,42 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
     // WebSocket接続を確立
     const connectWebSocket = async () => {
       try {
-        await websocketService.connect((message: ChatMessage) => {
-          // WebSocketで受信したメッセージのみをローカルステートに追加
+        console.log('Starting WebSocket connection...');
+        
+        // WebSocket接続を確立（引数なし）
+        await websocketService.connect();
+        
+        console.log('WebSocket connected, checking connection state...');
+        
+        // 接続が確立されるまで少し待つ
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // ルーム固有のメッセージを購読
+        console.log(`Attempting to subscribe to room: ${roomId}`);
+        unsubscribe = websocketService.subscribe(roomId, (message: ChatMessage) => {
+          console.log('Received message in ChatRoom:', message);
+          // JOIN/LEAVEメッセージは表示しない
+          if (message.messageType === 'JOIN' || message.messageType === 'LEAVE') {
+            return;
+          }
           setMessages((prev) => {
             // 重複チェック（同じIDのメッセージが既に存在しないか確認）
             const exists = prev.some(m => m.id && m.id === message.id);
-            if (exists) return prev;
+            if (exists) {
+              console.log('Message already exists, skipping:', message.id);
+              return prev;
+            }
+            console.log('Adding new message to state:', message.id);
             return [...prev, message];
           });
-        });
-
-        websocketService.subscribe(roomId, (message: ChatMessage) => {
-          // ルーム固有のメッセージを受信
-          setMessages((prev) => {
-            const exists = prev.some(m => m.id && m.id === message.id);
-            if (exists) return prev;
-            return [...prev, message];
-          });
-        });
-
-        // ユーザーが参加したことを通知
-        websocketService.addUser({
-          content: `${user.displayName || user.username} joined the chat`,
-          senderUsername: user.username,
-          roomId,
-          messageType: 'JOIN',
         });
 
         setConnected(true);
+        console.log('WebSocket connection setup complete');
       } catch (error) {
         console.error('Failed to connect WebSocket:', error);
         setConnected(false);
+        setError('WebSocket接続に失敗しました');
       }
     };
 
@@ -89,7 +96,11 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
     connectWebSocket();
 
     return () => {
-      websocketService.disconnect();
+      // クリーンアップ: サブスクリプション解除
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      // 注意: disconnect()は他のルームで使用している可能性があるため呼ばない
     };
   }, [user, roomId]);
 
@@ -177,48 +188,54 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
       </div>
 
       {/* メッセージリスト */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={message.id || index}
-            className={`${
-              message.messageType === 'CHAT'
-                ? message.senderUsername === user.username
-                  ? 'flex justify-end'
-                  : 'flex justify-start'
-                : 'flex justify-center'
-            }`}
-          >
-            {message.messageType === 'CHAT' ? (
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.senderUsername === user.username
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-900 border border-gray-200'
-                }`}
-              >
-                <div className="text-xs opacity-75 mb-1">
-                  {getMessageSenderName(message)}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {messages.map((message, index) => {
+          const isMyMessage = message.senderUsername === user.username;
+          
+          return (
+            <div
+              key={message.id || index}
+              className={`flex ${
+                message.messageType === 'CHAT'
+                  ? isMyMessage
+                    ? 'justify-end'
+                    : 'justify-start'
+                  : 'justify-center'
+              }`}
+            >
+              {message.messageType === 'CHAT' ? (
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                    isMyMessage
+                      ? 'bg-blue-500 text-white rounded-br-none'
+                      : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                  }`}
+                >
+                  {!isMyMessage && (
+                    <div className="text-xs font-semibold mb-1 opacity-75">
+                      {getMessageSenderName(message)}
+                    </div>
+                  )}
+                  <div className="break-words">{message.content}</div>
+                  {message.timestamp && (
+                    <div className={`text-xs mt-1 ${isMyMessage ? 'opacity-70' : 'opacity-50'}`}>
+                      {message.timestamp}
+                    </div>
+                  )}
                 </div>
-                <div>{message.content}</div>
-                {message.timestamp && (
-                  <div className="text-xs opacity-60 mt-1">
-                    {message.timestamp}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className={`text-sm italic ${getMessageTypeColor(message.messageType)}`}>
-                {message.content}
-                {message.timestamp && (
-                  <span className="ml-2 text-xs opacity-60">
-                    {message.timestamp}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+              ) : (
+                <div className={`text-sm italic ${getMessageTypeColor(message.messageType)}`}>
+                  {message.content}
+                  {message.timestamp && (
+                    <span className="ml-2 text-xs opacity-60">
+                      {message.timestamp}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 

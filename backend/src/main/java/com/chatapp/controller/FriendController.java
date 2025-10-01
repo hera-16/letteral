@@ -65,6 +65,21 @@ public final class FriendController {
     }
 
     /**
+     * Get all friends with friendship IDs.
+     */
+    @GetMapping("/list/detailed")
+    public ResponseEntity<List<FriendWithIdDto>> getFriendsWithIds(
+            final Authentication authentication) {
+        System.out.println("getFriendsWithIds called, authentication: " + authentication);
+        System.out.println("Principal: " + (authentication != null ? authentication.getPrincipal() : "null"));
+        final Long userId = resolveUserId(authentication);
+        System.out.println("Resolved userId: " + userId);
+        final List<FriendWithIdDto> friends = friendService.getFriendsWithIds(userId);
+        System.out.println("Found " + friends.size() + " friends");
+        return ResponseEntity.ok(friends);
+    }
+
+    /**
      * Get all pending friend requests (received).
      */
     @GetMapping("/requests/pending")
@@ -210,6 +225,32 @@ public final class FriendController {
         public String getAddresseeDisplayName() { return addresseeDisplayName; }
         public String getStatus() { return status; }
         public String getCreatedAt() { return createdAt; }
+    }
+
+    /**
+     * DTO representing friend with ID.
+     */
+    public static final class FriendWithIdDto {
+        private final Long friendshipId;
+        private final Long userId;
+        private final String username;
+        private final String displayName;
+        private final String email;
+
+        public FriendWithIdDto(final Long friendshipId, final Long userId,
+                final String username, final String displayName, final String email) {
+            this.friendshipId = friendshipId;
+            this.userId = userId;
+            this.username = username;
+            this.displayName = displayName;
+            this.email = email;
+        }
+
+        public Long getFriendshipId() { return friendshipId; }
+        public Long getUserId() { return userId; }
+        public String getUsername() { return username; }
+        public String getDisplayName() { return displayName; }
+        public String getEmail() { return email; }
     }
 
     /**

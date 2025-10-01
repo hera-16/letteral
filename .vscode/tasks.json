@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Backend",
+			"type": "shell",
+			"command": "mvn spring-boot:run",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Backend with Maven Wrapper",
+			"type": "shell",
+			"command": "cd backend && mvnw.cmd spring-boot:run",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

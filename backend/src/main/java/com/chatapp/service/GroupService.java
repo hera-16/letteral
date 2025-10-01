@@ -330,4 +330,163 @@ public class GroupService {
 
         return group.getInviteCode();
     }
+
+    /**
+     * Update group details.
+     *
+     * @param userId      user ID
+     * @param groupId     group ID
+     * @param name        new name
+     * @param description new description
+     * @return updated group
+     */
+    public Group updateGroup(final Long userId, final Long groupId,
+            final String name, final String description) {
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        final Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Group not found"));
+
+        // Check if user is admin
+        final GroupMember membership = groupMemberRepository
+                .findByGroupAndUser(group, user)
+                .orElseThrow(() -> new IllegalStateException(
+                        "You are not a member of this group"));
+
+        if (membership.getRole() != GroupMember.MemberRole.ADMIN) {
+            throw new IllegalStateException(
+                    "Only admins can update group details");
+        }
+
+        // Update group details
+        if (name != null && !name.trim().isEmpty()) {
+            group.setName(name.trim());
+        }
+        if (description != null) {
+            group.setDescription(description.trim());
+        }
+
+        return groupRepository.save(group);
+    }
+
+    /**
+     * Add a member to a group.
+     *
+     * @param adminUserId user ID performing the action
+     * @param groupId     group ID
+     * @param username    username of user to add
+     */
+    public void addMember(final Long adminUserId, final Long groupId,
+            final String username) {
+        final User adminUser = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        final User newUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found: " + username));
+
+        final Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Group not found"));
+
+        // Check if admin user has admin role
+        final GroupMember adminMembership = groupMemberRepository
+                .findByGroupAndUser(group, adminUser)
+                .orElseThrow(() -> new IllegalStateException(
+                        "You are not a member of this group"));
+
+        if (adminMembership.getRole() != GroupMember.MemberRole.ADMIN) {
+            throw new IllegalStateException(
+                    "Only admins can add members");
+        }
+
+        // Check if already a member
+        if (groupMemberRepository.existsByGroupAndUser(group, newUser)) {
+            throw new IllegalStateException(
+                    "User is already a member");
+        }
+
+        // Check max members limit
+        if (group.getMaxMembers() != null) {
+            final long currentMemberCount = groupMemberRepository
+                    .countByGroup(group);
+            if (currentMemberCount >= group.getMaxMembers()) {
+                throw new IllegalStateException("Group is full");
+            }
+        }
+
+        final GroupMember membership = new GroupMember(group, newUser,
+                GroupMember.MemberRole.MEMBER);
+        groupMemberRepository.save(membership);
+    }
+
+    /**
+     * Remove a member from a group.
+     *
+     * @param adminUserId  user ID performing the action
+     * @param groupId      group ID
+     * @param targetUserId user ID to remove
+     */
+    public void removeMember(final Long adminUserId, final Long groupId,
+            final Long targetUserId) {
+        final User adminUser = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        final User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Target user not found"));
+
+        final Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Group not found"));
+
+        // Check if admin user has admin role
+        final GroupMember adminMembership = groupMemberRepository
+                .findByGroupAndUser(group, adminUser)
+                .orElseThrow(() -> new IllegalStateException(
+                        "You are not a member of this group"));
+
+        if (adminMembership.getRole() != GroupMember.MemberRole.ADMIN) {
+            throw new IllegalStateException(
+                    "Only admins can remove members");
+        }
+
+        // Find target membership
+        final GroupMember targetMembership = groupMemberRepository
+                .findByGroupAndUser(group, targetUser)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Target user is not a member"));
+
+        // Cannot remove another admin
+        if (targetMembership.getRole() == GroupMember.MemberRole.ADMIN) {
+            throw new IllegalStateException(
+                    "Cannot remove an admin");
+        }
+
+        groupMemberRepository.delete(targetMembership);
+    }
+
+    /**
+     * Check if a user can access a group (is a member).
+     *
+     * @param groupId group ID
+     * @param userId  user ID
+     * @return true if user is a member
+     */
+    public boolean canAccessGroup(final Long groupId, final Long userId) {
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        final Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Group not found"));
+
+        return groupMemberRepository.existsByGroupAndUser(group, user);
+    }
 }

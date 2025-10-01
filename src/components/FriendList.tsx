@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { friendService, User, Friend } from '@/services/api';
+import { friendService, User, Friend, FriendWithId } from '@/services/api';
 
 interface FriendListProps {
   onSelectFriend: (friend: User, friendshipId: number) => void;
 }
 
 export default function FriendList({ onSelectFriend }: FriendListProps) {
-  const [friends, setFriends] = useState<User[]>([]);
+  const [friends, setFriends] = useState<FriendWithId[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [sentRequests, setSentRequests] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +25,33 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [friendsData, pendingData, sentData] = await Promise.all([
-        friendService.getFriends(),
+      
+      // トークンの確認
+      const token = localStorage.getItem('token');
+      console.log('Loading friend data, token exists:', !!token);
+      
+      // 一時的に古いエンドポイントも試す
+      let friendsData: FriendWithId[];
+      try {
+        console.log('Trying new endpoint: /friends/list/detailed');
+        friendsData = await friendService.getFriendsWithIds();
+        console.log('New endpoint succeeded:', friendsData);
+      } catch (detailedError: any) {
+        console.warn('New endpoint failed, falling back to old endpoint:', detailedError);
+        // フォールバック: 古いエンドポイントを使用
+        const oldFriendsData = await friendService.getFriends();
+        console.log('Old endpoint data:', oldFriendsData);
+        // User[]をFriendWithId[]に変換（friendshipIdはユーザーIDで代用）
+        friendsData = oldFriendsData.map(user => ({
+          friendshipId: user.id, // 一時的にuser.idを使用
+          userId: user.id,
+          username: user.username,
+          displayName: user.displayName || '',
+          email: user.email || ''
+        }));
+      }
+      
+      const [pendingData, sentData] = await Promise.all([
         friendService.getPendingRequests(),
         friendService.getSentRequests(),
       ]);
@@ -36,10 +61,19 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
       setError(null);
     } catch (err: any) {
       console.error('Friend data loading error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error status:', err.response?.status);
+      console.error('Token in localStorage:', localStorage.getItem('token'));
+      
       setFriends([]);
       setPendingRequests([]);
       setSentRequests([]);
-      setError(err.response?.data?.message || 'フレンド情報の取得に失敗しました');
+      
+      if (err.response?.status === 401) {
+        setError('認証エラー: ログインし直してください');
+      } else {
+        setError(err.response?.data?.message || 'フレンド情報の取得に失敗しました');
+      }
     } finally {
       setLoading(false);
     }
@@ -173,25 +207,25 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
           ) : (
             friends.map((friend) => (
               <div
-                key={friend.id}
+                key={friend.friendshipId}
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
               >
                 <div
                   className="flex-1 cursor-pointer"
-                  onClick={() => onSelectFriend(friend, friend.id)}
+                  onClick={() => onSelectFriend({ id: friend.userId, username: friend.username, displayName: friend.displayName, email: friend.email } as User, friend.friendshipId)}
                 >
                   <p className="font-semibold">{friend.displayName || friend.username}</p>
                   <p className="text-sm text-gray-500">@{friend.username}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => onSelectFriend(friend, friend.id)}
+                    onClick={() => onSelectFriend({ id: friend.userId, username: friend.username, displayName: friend.displayName, email: friend.email } as User, friend.friendshipId)}
                     className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     チャット
                   </button>
                   <button
-                    onClick={() => handleRemoveFriend(friend.id)}
+                    onClick={() => handleRemoveFriend(friend.friendshipId)}
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     削除

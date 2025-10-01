@@ -64,6 +64,14 @@ export interface Friend {
   respondedAt?: string;
 }
 
+export interface FriendWithId {
+  friendshipId: number;
+  userId: number;
+  username: string;
+  displayName: string;
+  email: string;
+}
+
 export interface User {
   id: number;
   username: string;
@@ -148,6 +156,11 @@ export const authService = {
 export const friendService = {
   async getFriends(): Promise<User[]> {
     const response = await api.get('/friends/list');
+    return response.data;
+  },
+
+  async getFriendsWithIds(): Promise<FriendWithId[]> {
+    const response = await api.get('/friends/list/detailed');
     return response.data;
   },
 
@@ -243,6 +256,21 @@ export const groupService = {
 
   async regenerateInviteCode(groupId: number): Promise<Group> {
     const response = await api.put(`/groups/${groupId}/invite-code/regenerate`);
+    return response.data;
+  },
+
+  async updateGroup(groupId: number, data: { name: string; description: string }): Promise<Group> {
+    const response = await api.put(`/groups/${groupId}`, data);
+    return response.data;
+  },
+
+  async addGroupMember(groupId: number, username: string): Promise<User[]> {
+    const response = await api.post(`/groups/${groupId}/members`, { username });
+    return response.data;
+  },
+
+  async removeGroupMember(groupId: number, memberId: number): Promise<User[]> {
+    const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
     return response.data;
   },
 
