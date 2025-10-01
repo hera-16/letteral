@@ -1,8 +1,7 @@
 package com.chatapp.config;
 
-import com.chatapp.security.AuthEntryPointJwt;
-import com.chatapp.security.AuthTokenFilter;
-import com.chatapp.service.CustomUserDetailsService;
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +22,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.chatapp.security.AuthEntryPointJwt;
+import com.chatapp.security.AuthTokenFilter;
+import com.chatapp.service.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
@@ -43,8 +44,8 @@ public class WebSecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider(
-            CustomUserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            CustomUserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(
                 userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);

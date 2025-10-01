@@ -195,4 +195,35 @@ public class FriendService {
 
         return friendRepository.countPendingRequests(user);
     }
+
+    public void resetAllFriendships(final Long userId) {
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        // Delete all friendships where user is either requester or addressee
+        friendRepository.deleteByRequester(user);
+        friendRepository.deleteByAddressee(user);
+    }
+
+    public List<com.chatapp.controller.FriendController.FriendshipDetail> getAllFriendshipsWithDetails(final Long userId) {
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found"));
+
+        // Get all friendships where user is involved
+        final List<Friend> allFriendships = friendRepository.findByRequesterOrAddressee(user, user);
+        
+        return allFriendships.stream()
+                .map(friendship -> new com.chatapp.controller.FriendController.FriendshipDetail(
+                        friendship.getId(),
+                        friendship.getRequester().getUsername(),
+                        friendship.getRequester().getDisplayName(),
+                        friendship.getAddressee().getUsername(),
+                        friendship.getAddressee().getDisplayName(),
+                        friendship.getStatus().name(),
+                        "N/A"
+                ))
+                .collect(Collectors.toList());
+    }
 }

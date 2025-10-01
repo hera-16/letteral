@@ -7,7 +7,7 @@ import websocketService from '@/services/websocket';
 interface ChatRoomProps {
   user: any;
   roomId: string;
-  onLogout: () => void;
+  onLogout?: () => void; // オプショナルに変更
 }
 
 export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
@@ -138,10 +138,10 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-96 bg-white border border-gray-200 rounded-lg">
       {/* エラーメッセージ */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mx-6 mt-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md m-4">
           <div className="flex items-center justify-between">
             <span>{error}</span>
             <button
@@ -154,41 +154,30 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
         </div>
       )}
 
-      {/* ヘッダー */}
-      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+      {/* ステータスバー */}
+      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              チャットルーム: {roomId}
-            </h1>
-            <p className="text-sm text-gray-600">
-              {user.displayName || user.username} としてログイン中
-            </p>
-          </div>
           <div className="flex items-center space-x-4">
             <div className={`flex items-center space-x-2 ${connected ? 'text-green-600' : 'text-red-600'}`}>
               <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}></div>
               <span className="text-sm">{connected ? '接続済み' : '未接続'}</span>
             </div>
-            <button
-              onClick={refreshMessages}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              title="メッセージを更新"
-            >
-              🔄
-            </button>
-            <button
-              onClick={onLogout}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              ログアウト
-            </button>
+            <span className="text-sm text-gray-600">
+              {user.displayName || user.username} としてログイン中
+            </span>
           </div>
+          <button
+            onClick={refreshMessages}
+            className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            title="メッセージを更新"
+          >
+            🔄
+          </button>
         </div>
       </div>
 
       {/* メッセージリスト */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.map((message, index) => (
           <div
             key={message.id || index}
@@ -234,7 +223,7 @@ export default function ChatRoom({ user, roomId, onLogout }: ChatRoomProps) {
       </div>
 
       {/* メッセージ入力フォーム */}
-      <div className="bg-white border-t border-gray-200 px-6 py-4">
+      <div className="bg-gray-50 border-t border-gray-200 px-4 py-4">
         <form onSubmit={sendMessage} className="flex space-x-4">
           <input
             type="text"

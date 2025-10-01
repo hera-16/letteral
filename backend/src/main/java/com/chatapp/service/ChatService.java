@@ -51,6 +51,30 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Get recent messages for a group.
+     * Room ID format: "group-{groupId}"
+     */
+    public List<ChatMessageDto> getGroupMessages(Long groupId) {
+        return getRecentMessages("group-" + groupId);
+    }
+    
+    /**
+     * Get recent messages for a topic.
+     * Room ID format: "topic-{topicId}"
+     */
+    public List<ChatMessageDto> getTopicMessages(Long topicId) {
+        return getRecentMessages("topic-" + topicId);
+    }
+    
+    /**
+     * Get recent messages for a friend chat.
+     * Room ID format: "friend-{friendshipId}"
+     */
+    public List<ChatMessageDto> getFriendMessages(Long friendshipId) {
+        return getRecentMessages("friend-" + friendshipId);
+    }
+    
     private ChatMessageDto convertToDto(ChatMessage message) {
         ChatMessageDto dto = new ChatMessageDto();
         dto.setId(message.getId());

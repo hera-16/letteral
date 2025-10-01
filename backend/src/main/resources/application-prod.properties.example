@@ -1,0 +1,60 @@
+# Production Environment Configuration
+# Copy this file to application-prod.properties and update with actual values
+
+# Server Configuration
+server.port=8080
+
+# Database Configuration (MySQL for production)
+spring.datasource.url=jdbc:mysql://localhost:3306/chatapp_db?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.username=chatapp_user
+spring.datasource.password=CHANGE_THIS_PASSWORD
+
+# Connection Pool Configuration
+spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+
+# JPA/Hibernate Configuration
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=false
+
+# Flyway Migration (enable if using Flyway)
+# spring.flyway.enabled=true
+# spring.flyway.locations=classpath:db/migration
+
+# Logging Configuration
+logging.level.root=WARN
+logging.level.com.example.chatapp=INFO
+logging.level.org.springframework.web=INFO
+
+# Log File Configuration
+logging.file.name=logs/chatapp.log
+logging.file.max-size=10MB
+logging.file.max-history=30
+
+# JWT Configuration (MUST be changed in production!)
+jwt.secret=CHANGE_THIS_TO_A_SECURE_RANDOM_SECRET_KEY_AT_LEAST_256_BITS_LONG
+jwt.expiration=86400000
+
+# CORS Configuration (update with actual frontend URL)
+cors.allowed-origins=https://yourfrontend.com,https://www.yourfrontend.com
+
+# File Upload Configuration
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+
+# Actuator Configuration (for monitoring)
+management.endpoints.web.exposure.include=health,info,metrics
+management.endpoint.health.show-details=when-authorized
+
+# SSL Configuration (if using HTTPS)
+# server.ssl.enabled=true
+# server.ssl.key-store=classpath:keystore.p12
+# server.ssl.key-store-password=YOUR_KEYSTORE_PASSWORD
+# server.ssl.key-store-type=PKCS12
+# server.ssl.key-alias=tomcat

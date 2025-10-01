@@ -26,4 +26,22 @@ public class ChatRestController {
     public List<ChatMessageDto> getMessages(@PathVariable final String roomId) {
         return chatService.getRecentMessages(roomId);
     }
+
+    @GetMapping("/groups/{groupId}/messages")
+    public List<ChatMessageDto> getGroupMessages(
+            @PathVariable final Long groupId) {
+        return chatService.getGroupMessages(groupId);
+    }
+
+    @GetMapping("/topics/{topicId}/messages")
+    public List<ChatMessageDto> getTopicMessages(
+            @PathVariable final Long topicId) {
+        return chatService.getTopicMessages(topicId);
+    }
+
+    @GetMapping("/friends/{friendshipId}/messages")
+    public List<ChatMessageDto> getFriendMessages(
+            @PathVariable final Long friendshipId) {
+        return chatService.getFriendMessages(friendshipId);
+    }
 }

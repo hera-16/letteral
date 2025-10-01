@@ -1,5 +1,7 @@
 package com.chatapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     
     @Id
@@ -38,6 +41,7 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
     
+    @JsonIgnore
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ChatMessage> messages;
     

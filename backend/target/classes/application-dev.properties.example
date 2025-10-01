@@ -1,0 +1,40 @@
+# Development Environment Configuration
+# This file contains settings for local development
+
+# Server Configuration
+server.port=8080
+
+# Database Configuration (H2 in-memory for development)
+spring.datasource.url=jdbc:h2:mem:chatdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# H2 Console (accessible at http://localhost:8080/h2-console)
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JPA/Hibernate Configuration
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# Logging Configuration
+logging.level.root=INFO
+logging.level.com.example.chatapp=DEBUG
+logging.level.org.springframework.web=DEBUG
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+
+# JWT Configuration
+jwt.secret=mySecretKeyForDevelopmentOnlyDoNotUseInProduction123456789
+jwt.expiration=86400000
+
+# CORS Configuration
+cors.allowed-origins=http://localhost:3000,http://localhost:3001
+
+# File Upload Configuration
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB

@@ -30,4 +30,11 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
 
     @Query("SELECT COUNT(f) FROM Friend f WHERE f.addressee = :user AND f.status = 'PENDING'")
     Long countPendingRequests(@Param("user") User user);
+
+    void deleteByRequester(User requester);
+
+    void deleteByAddressee(User addressee);
+
+    @Query("SELECT f FROM Friend f WHERE f.requester = :user1 OR f.addressee = :user2")
+    List<Friend> findByRequesterOrAddressee(@Param("user1") User requester, @Param("user2") User addressee);
 }
