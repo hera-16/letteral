@@ -172,8 +172,7 @@ public final class FriendController {
 
     private Long resolveUserId(final Authentication authentication) {
         final Object principal = authentication.getPrincipal();
-        if (principal instanceof UserPrincipal) {
-            final UserPrincipal userPrincipal = (UserPrincipal) principal;
+        if (principal instanceof UserPrincipal userPrincipal) {
             return userPrincipal.getId();
         }
         throw new IllegalStateException("Unsupported principal: " + principal);

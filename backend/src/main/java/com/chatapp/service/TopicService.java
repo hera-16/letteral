@@ -108,7 +108,7 @@ public class TopicService {
      */
     public Topic updateTopic(final Long topicId, final Long userId,
             final String name, final String description, final String category) {
-        final User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "User not found"));
 
@@ -142,7 +142,7 @@ public class TopicService {
      * @param userId  user ID (must be creator)
      */
     public void deactivateTopic(final Long topicId, final Long userId) {
-        final User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "User not found"));
 
@@ -167,7 +167,7 @@ public class TopicService {
      * @param userId  user ID (must be creator)
      */
     public void reactivateTopic(final Long topicId, final Long userId) {
-        final User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "User not found"));
 
@@ -192,7 +192,7 @@ public class TopicService {
      * @param userId  user ID (must be creator)
      */
     public void deleteTopic(final Long topicId, final Long userId) {
-        final User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "User not found"));
 

@@ -45,20 +45,17 @@ public class FriendService {
                 if (existingFriendship.isPresent()) {
                         final Friend existing = existingFriendship.get();
                         switch (existing.getStatus()) {
-                        case ACCEPTED:
-                                throw new IllegalStateException("Already friends");
-                        case PENDING:
-                                throw new IllegalStateException("Friend request already sent");
-                        case BLOCKED:
-                                throw new IllegalStateException(
+                        case ACCEPTED -> throw new IllegalStateException("Already friends");
+                        case PENDING -> throw new IllegalStateException("Friend request already sent");
+                        case BLOCKED -> throw new IllegalStateException(
                                                 "Cannot send friend request to blocked user");
-                        case REJECTED:
+                        case REJECTED -> {
                                 existing.setStatus(Friend.FriendStatus.PENDING);
                                 existing.setRequester(requester);
                                 existing.setAddressee(target);
                                 return friendRepository.save(existing);
-                        default:
-                                throw new IllegalStateException(
+                        }
+                        default -> throw new IllegalStateException(
                                                 "Unsupported status: " + existing.getStatus());
                         }
         }

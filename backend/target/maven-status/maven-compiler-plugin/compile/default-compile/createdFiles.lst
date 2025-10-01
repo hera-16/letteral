@@ -27,6 +27,7 @@ com\chatapp\service\FriendService$1.class
 com\chatapp\model\ChatMessage$MessageType.class
 com\chatapp\security\AuthTokenFilter.class
 com\chatapp\model\User.class
+com\chatapp\config\CorsProperties.class
 com\chatapp\model\ChatMessage.class
 com\chatapp\controller\FriendController$FriendshipDetail.class
 com\chatapp\repository\GroupRepository.class
@@ -42,5 +43,6 @@ com\chatapp\controller\GroupController$JoinByCodeRequest.class
 com\chatapp\websocket\WebSocketConfig.class
 com\chatapp\repository\UserRepository.class
 com\chatapp\model\Friend.class
+com\chatapp\config\JwtProperties.class
 com\chatapp\ChatBackendApplication.class
 com\chatapp\model\Friend$FriendStatus.class
