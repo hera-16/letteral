@@ -1,16 +1,17 @@
 package com.chatapp.service;
 
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.chatapp.dto.ChatMessageDto;
 import com.chatapp.model.ChatMessage;
 import com.chatapp.model.User;
 import com.chatapp.repository.ChatMessageRepository;
 import com.chatapp.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
