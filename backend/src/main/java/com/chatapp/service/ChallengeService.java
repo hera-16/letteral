@@ -1,14 +1,21 @@
 package com.chatapp.service;
 
-import com.chatapp.model.*;
-import com.chatapp.repository.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.chatapp.model.ChallengeCompletion;
+import com.chatapp.model.DailyChallenge;
+import com.chatapp.model.User;
+import com.chatapp.model.UserProgress;
+import com.chatapp.repository.ChallengeCompletionRepository;
+import com.chatapp.repository.DailyChallengeRepository;
+import com.chatapp.repository.UserProgressRepository;
+import com.chatapp.repository.UserRepository;
 
 /**
  * デイリーチャレンジのビジネスロジックを提供するサービス

@@ -1,13 +1,14 @@
 package com.chatapp.repository;
 
-import com.chatapp.model.DailyChallenge;
-import com.chatapp.model.DailyChallenge.ChallengeType;
-import com.chatapp.model.DailyChallenge.DifficultyLevel;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.chatapp.model.DailyChallenge;
+import com.chatapp.model.DailyChallenge.ChallengeType;
+import com.chatapp.model.DailyChallenge.DifficultyLevel;
 
 /**
  * デイリーチャレンジリポジトリ

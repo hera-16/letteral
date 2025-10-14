@@ -1,5 +1,20 @@
 package com.chatapp.controller;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.chatapp.dto.ApiResponse;
 import com.chatapp.model.ChallengeCompletion;
 import com.chatapp.model.DailyChallenge;
@@ -7,14 +22,6 @@ import com.chatapp.model.User;
 import com.chatapp.model.UserProgress;
 import com.chatapp.repository.UserRepository;
 import com.chatapp.service.ChallengeService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * デイリーチャレンジのREST APIコントローラー
