@@ -7,10 +7,11 @@ import FriendList from '@/components/FriendList';
 import GroupTopicList from '@/components/GroupTopicList';
 import ChatRoom from '@/components/ChatRoom';
 import GroupSettings from '@/components/GroupSettings';
+import DailyChallenges from '@/components/DailyChallenges';
 import { authService, User, Group, Topic } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
-type ViewMode = 'friends' | 'groups' | 'chat';
+type ViewMode = 'friends' | 'groups' | 'challenges' | 'chat';
 
 interface ChatTarget {
   type: 'friend' | 'group' | 'topic' | 'general';
@@ -22,7 +23,7 @@ interface ChatTarget {
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
-  const [viewMode, setViewMode] = useState<ViewMode>('friends');
+  const [viewMode, setViewMode] = useState<ViewMode>('challenges');
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -35,10 +36,15 @@ export default function Home() {
     
     console.log('Auth check:', { savedUser, token, isAuthenticated: authService.isAuthenticated() });
     
+    // デバッグ用: localStorageの全内容を表示
+    console.log('LocalStorage keys:', Object.keys(localStorage));
+    console.log('LocalStorage token length:', token?.length);
+    
     if (savedUser && token && authService.isAuthenticated()) {
       setUser(savedUser);
     } else {
       // トークンまたはユーザー情報が不完全な場合はクリア
+      console.log('認証情報をクリアします');
       authService.logout();
       setUser(null);
     }
@@ -95,7 +101,7 @@ export default function Home() {
 
   const handleBackFromChat = () => {
     setChatTarget(null);
-    setViewMode('friends');
+    setViewMode('challenges');
   };
 
   // 認証チェック中
@@ -210,6 +216,16 @@ export default function Home() {
             {/* ナビゲーションタブ */}
             <div className="flex gap-4 mb-6">
               <button
+                onClick={() => setViewMode('challenges')}
+                className={`px-6 py-3 rounded-lg font-semibold ${
+                  viewMode === 'challenges'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                🌸 デイリーチャレンジ
+              </button>
+              <button
                 onClick={() => setViewMode('friends')}
                 className={`px-6 py-3 rounded-lg font-semibold ${
                   viewMode === 'friends'
@@ -233,6 +249,7 @@ export default function Home() {
 
             {/* コンテンツエリア */}
             <div className="grid grid-cols-1 gap-6">
+              {viewMode === 'challenges' && <DailyChallenges />}
               {viewMode === 'friends' && (
                 <FriendList onSelectFriend={handleSelectFriend} />
               )}
