@@ -52,7 +52,7 @@ export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: C
           pastMessages = await chatService.getFriendMessages(chatId);
         } else if (chatType === 'topic' && chatId) {
           console.log('Loading topic messages for topicId:', chatId);
-          pastMessages = await chatService.getTopicMessages(chatId);
+          pastMessages = await chatService.getGroupMessages(chatId); // トピックもグループと同じAPI
         } else {
           console.log('Loading general messages for roomId:', roomId);
           pastMessages = await chatService.getMessages(roomId);

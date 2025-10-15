@@ -1,254 +1,505 @@
-f# チャットアプリケーション# チャットアプリケーション
+# 🎮 チャレキャラ - Challenge Character Platformf# チャットアプリケーション# チャットアプリケーション
 
 
 
-リアルタイムチャット機能を備えたモダンなWebアプリケーション。Spring Bootバックエンドと、フレンド管理、グループチャット、パブリックトピックをサポートします。Java Spring Boot（バックエンド）とNext.js（フロントエンド）で構築されたリアルタイムチャットアプリケーションです。
+> 「毎日のチャレンジで成長する」ソーシャルチャットアプリケーション
 
 
 
-## 📋 目次## 技術スタック
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black?logo=next.js)](https://nextjs.org/)リアルタイムチャット機能を備えたモダンなWebアプリケーション。Spring Bootバックエンドと、フレンド管理、グループチャット、パブリックトピックをサポートします。Java Spring Boot（バックエンド）とNext.js（フロントエンド）で構築されたリアルタイムチャットアプリケーションです。
+
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen?logo=spring)](https://spring.io/projects/spring-boot)
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+
+[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://openjdk.org/)
+
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)## 📋 目次## 技術スタック
 
 
-
-- [概要](#概要)### バックエンド
-
-- [主な機能](#主な機能)- **Java 17**
-
-- [技術スタック](#技術スタック)- **Spring Boot 3.2.0**
-
-- [プロジェクト構造](#プロジェクト構造)- **Spring Security** (JWT認証)
-
-- [クイックスタート](#クイックスタート)- **Spring Data JPA**
-
-- [ドキュメント](#ドキュメント)- **WebSocket** (STOMP Protocol)
-
-- [API エンドポイント](#apiエンドポイント)- **H2 Database** (開発用)
-
-- [開発ガイド](#開発ガイド)- **Maven**
-
-- [トラブルシューティング](#トラブルシューティング)
-
-### フロントエンド
-
----- **Next.js 14** (App Router)
-
-- **TypeScript**
-
-## 概要- **Tailwind CSS**
-
-- **Axios** (HTTP クライアント)
-
-このアプリケーションは、以下の3種類のチャット機能を提供する包括的なコミュニケーションプラットフォームです:- **STOMP.js** (WebSocket クライアント)
-
-- **SockJS** (WebSocket フォールバック)
-
-1. **フレンドチャット**: 1対1のプライベートメッセージング
-
-2. **招待制グループ**: 招待コードによる限定的なグループチャット## 機能
-
-3. **パブリックトピック**: 誰でも参加できるオープンな議論スペース
-
-- ✅ ユーザー新規登録・ログイン（JWT認証）
-
----- ✅ リアルタイムチャット（WebSocket）
-
-- ✅ メッセージ履歴の保存・取得
-
-## 主な機能- ✅ ユーザー入退室通知
-
-- ✅ レスポンシブデザイン
-
-### ✨ ユーザー管理
-
-- ユーザー登録・ログイン(JWT認証)## プロジェクト構造
-
-- プロフィール管理
-
-- セキュアなパスワードハッシュ化```
-
-chat-app/
-
-### 👥 フレンド機能├── backend/                    # Spring Boot バックエンド
-
-- フレンドリクエスト送信・承認・拒否│   ├── src/main/java/com/chatapp/
-
-- フレンド一覧表示│   │   ├── controller/        # REST API コントローラー
-
-- ユーザーブロック機能│   │   ├── dto/              # データ転送オブジェクト
-
-- 保留中のリクエスト管理│   │   ├── model/            # JPA エンティティ
-
-│   │   ├── repository/       # データアクセス層
-
-### 💬 グループチャット│   │   ├── security/         # 認証・認可設定
-
-- 招待制グループの作成│   │   ├── service/          # ビジネスロジック
-
-- 招待コードによる参加│   │   └── websocket/        # WebSocket設定
-
-- メンバー管理(管理者・メンバー)│   └── pom.xml              # Maven 設定
-
-- グループからの退出├── src/                      # Next.js フロントエンド
-
-- 管理者権限の昇格│   ├── app/                 # App Router ページ
-
-│   ├── components/          # React コンポーネント
-
-### 🌐 パブリックトピック│   └── services/           # API クライアント
-
-- トピックの作成・検索└── package.json            # Node.js 依存関係
-
-- カテゴリー別表示```
-
-- トピックのアクティブ/非アクティブ管理
-
-- 自由参加・退出## セットアップ手順
-
-
-
-### 🔔 リアルタイム通信### 前提条件
-
-- WebSocket (STOMP) によるリアルタイムメッセージング
-
-- メッセージ履歴の取得- **Java 17** 以上
-
-- 入退室通知- **Node.js 18** 以上
-
-- **Maven 3.6** 以上
 
 ---
 
-### 1. リポジトリのクローン
 
-## 技術スタック
 
-```bash
-
-### バックエンドgit clone <repository-url>
-
-- **Java 17**: 最新のLTS版Javacd chat-app
-
-- **Spring Boot 3.5.6**: アプリケーションフレームワーク```
-
-- **Spring Security**: JWT認証・認可
-
-- **Spring Data JPA**: データアクセス層### 2. バックエンドの起動
-
-- **Spring WebSocket**: リアルタイム通信
-
-- **MySQL 8.0**: 本番用データベース```bash
-
-- **H2 Database**: 開発・テスト用データベース# バックエンドディレクトリに移動
-
-- **Maven**: ビルドツールcd backend
+## ✨ 特徴- [概要](#概要)### バックエンド
 
 
 
-### フロントエンド (予定)# Maven で依存関係をインストール・ビルド
+🎯 **毎日のチャレンジ** - 日替わりのチャレンジに挑戦してバッジを獲得  - [主な機能](#主な機能)- **Java 17**
 
-- **React**: UIフレームワークmvn clean install
+💬 **リアルタイムチャット** - WebSocketでスムーズなコミュニケーション  
 
-- **SockJS / STOMP**: WebSocketクライアント
+👥 **フレンド機能** - 友達を追加してプライベートチャット  - [技術スタック](#技術スタック)- **Spring Boot 3.2.0**
 
-- **Axios**: HTTPクライアント# Spring Boot アプリケーションを起動
+🏆 **バッジシステム** - 達成感のある実績管理  
 
-mvn spring-boot:run
-
-### インフラストラクチャ```
-
-- **Docker**: コンテナ化
-
-- **Docker Compose**: マルチコンテナ管理バックエンドは http://localhost:8080 で起動します。
-
-- **Nginx**: リバースプロキシ
-
-- **Let's Encrypt**: SSL/TLS証明書### 3. フロントエンドの起動
+🎨 **ダークテーマ** - 目に優しいモダンなUI  - [プロジェクト構造](#プロジェクト構造)- **Spring Security** (JWT認証)
 
 
 
----新しいターミナルウィンドウで：
+---- [クイックスタート](#クイックスタート)- **Spring Data JPA**
 
 
 
-## プロジェクト構造```bash
+## 🚀 クイックスタート- [ドキュメント](#ドキュメント)- **WebSocket** (STOMP Protocol)
 
-# プロジェクトルートに移動（chat-app フォルダ）
 
-```cd chat-app
+
+### 📋 必要な環境- [API エンドポイント](#apiエンドポイント)- **H2 Database** (開発用)
+
+
+
+- **Java 17** 以上- [開発ガイド](#開発ガイド)- **Maven**
+
+- **Node.js 18** 以上
+
+- **MySQL 8.0** (本番環境)- [トラブルシューティング](#トラブルシューティング)
+
+
+
+### ⚡ 3ステップで起動### フロントエンド
+
+
+
+```bash---- **Next.js 14** (App Router)
+
+# 1️⃣ バックエンドを起動 (ターミナル1)
+
+cd backend- **TypeScript**
+
+mvnw.cmd spring-boot:run
+
+## 概要- **Tailwind CSS**
+
+# 2️⃣ フロントエンドを起動 (ターミナル2)
+
+npm install- **Axios** (HTTP クライアント)
+
+npm run dev
+
+このアプリケーションは、以下の3種類のチャット機能を提供する包括的なコミュニケーションプラットフォームです:- **STOMP.js** (WebSocket クライアント)
+
+# 3️⃣ ブラウザでアクセス
+
+# 👉 http://localhost:3000- **SockJS** (WebSocket フォールバック)
+
+```
+
+1. **フレンドチャット**: 1対1のプライベートメッセージング
+
+### 🎬 初回セットアップ
+
+2. **招待制グループ**: 招待コードによる限定的なグループチャット## 機能
+
+1. **データベース作成**
+
+```sql3. **パブリックトピック**: 誰でも参加できるオープンな議論スペース
+
+CREATE DATABASE chatapp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+```- ✅ ユーザー新規登録・ログイン（JWT認証）
+
+
+
+2. **環境変数設定** (`backend/.env`)---- ✅ リアルタイムチャット（WebSocket）
+
+```env
+
+JWT_SECRET=your-secret-key-here- ✅ メッセージ履歴の保存・取得
+
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/chatapp
+
+SPRING_DATASOURCE_USERNAME=root## 主な機能- ✅ ユーザー入退室通知
+
+SPRING_DATASOURCE_PASSWORD=your-password
+
+```- ✅ レスポンシブデザイン
+
+
+
+3. **起動して完了!** 🎉### ✨ ユーザー管理
+
+
+
+---- ユーザー登録・ログイン(JWT認証)## プロジェクト構造
+
+
+
+## 🏗️ 技術スタック- プロフィール管理
+
+
+
+### フロントエンド- セキュアなパスワードハッシュ化```
+
+| 技術 | バージョン | 用途 |
+
+|------|-----------|------|chat-app/
+
+| ![Next.js](https://img.shields.io/badge/-Next.js-000000?logo=next.js) | 15.5.4 | フレームワーク |
+
+| ![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white) | 5.0 | 型安全性 |### 👥 フレンド機能├── backend/                    # Spring Boot バックエンド
+
+| ![Tailwind CSS](https://img.shields.io/badge/-Tailwind-38B2AC?logo=tailwind-css&logoColor=white) | 3.0 | スタイリング |
+
+| ![SockJS](https://img.shields.io/badge/-SockJS-010101?logo=socketdotio) | 1.6.1 | WebSocket |- フレンドリクエスト送信・承認・拒否│   ├── src/main/java/com/chatapp/
+
+
+
+### バックエンド- フレンド一覧表示│   │   ├── controller/        # REST API コントローラー
+
+| 技術 | バージョン | 用途 |
+
+|------|-----------|------|- ユーザーブロック機能│   │   ├── dto/              # データ転送オブジェクト
+
+| ![Java](https://img.shields.io/badge/-Java%2017-007396?logo=openjdk&logoColor=white) | 17 | 実行環境 |
+
+| ![Spring Boot](https://img.shields.io/badge/-Spring%20Boot-6DB33F?logo=spring-boot&logoColor=white) | 3.5.6 | フレームワーク |- 保留中のリクエスト管理│   │   ├── model/            # JPA エンティティ
+
+| ![MySQL](https://img.shields.io/badge/-MySQL-4479A1?logo=mysql&logoColor=white) | 8.0 | データベース |
+
+| ![JWT](https://img.shields.io/badge/-JWT-000000?logo=json-web-tokens) | - | 認証 |│   │   ├── repository/       # データアクセス層
+
+
+
+---### 💬 グループチャット│   │   ├── security/         # 認証・認可設定
+
+
+
+## 📂 プロジェクト構造- 招待制グループの作成│   │   ├── service/          # ビジネスロジック
+
+
+
+```- 招待コードによる参加│   │   └── websocket/        # WebSocket設定
 
 チャレキャラ/
 
-├── backend/                        # Spring Bootバックエンド# Node.js 依存関係をインストール
+├── src/                    # Next.js フロントエンド- メンバー管理(管理者・メンバー)│   └── pom.xml              # Maven 設定
 
-│   ├── src/npm install
+│   ├── app/               # App Router (ページ)
 
-│   │   ├── main/
+│   │   ├── page.tsx      # トップページ- グループからの退出├── src/                      # Next.js フロントエンド
+
+│   │   └── dashboard.tsx # ダッシュボード
+
+│   ├── components/        # UIコンポーネント- 管理者権限の昇格│   ├── app/                 # App Router ページ
+
+│   │   ├── DailyChallenges.tsx
+
+│   │   ├── Badges.tsx│   ├── components/          # React コンポーネント
+
+│   │   └── ChatRoom.tsx
+
+│   └── services/          # API通信### 🌐 パブリックトピック│   └── services/           # API クライアント
+
+│       ├── api.ts
+
+│       └── websocket.ts- トピックの作成・検索└── package.json            # Node.js 依存関係
+
+│
+
+├── backend/               # Spring Boot バックエンド- カテゴリー別表示```
+
+│   ├── src/main/java/com/chatapp/
+
+│   │   ├── controller/   # REST API- トピックのアクティブ/非アクティブ管理
+
+│   │   ├── service/      # ビジネスロジック
+
+│   │   ├── model/        # データモデル- 自由参加・退出## セットアップ手順
+
+│   │   ├── repository/   # データアクセス
+
+│   │   └── security/     # 認証・認可
+
+│   └── pom.xml           # Maven依存関係
+
+│### 🔔 リアルタイム通信### 前提条件
+
+└── docs/                  # ドキュメント
+
+    ├── API_REFERENCE.md- WebSocket (STOMP) によるリアルタイムメッセージング
+
+    └── DEPLOYMENT.md
+
+```- メッセージ履歴の取得- **Java 17** 以上
+
+
+
+---- 入退室通知- **Node.js 18** 以上
+
+
+
+## 🎮 主な機能- **Maven 3.6** 以上
+
+
+
+### 1. デイリーチャレンジ---
+
+毎日3つの新しいチャレンジが登場。達成するとバッジを獲得できます。
+
+### 1. リポジトリのクローン
+
+**チャレンジ例:**
+
+- 🏃 「10分間ジョギング」## 技術スタック
+
+- 📚 「本を30ページ読む」
+
+- 💧 「水を2リットル飲む」```bash
+
+
+
+### 2. リアルタイムチャット### バックエンドgit clone <repository-url>
+
+WebSocket (STOMP) を使用した高速なメッセージング。
+
+- **Java 17**: 最新のLTS版Javacd chat-app
+
+**対応チャット種別:**
+
+- 👤 フレンドチャット (1対1)- **Spring Boot 3.5.6**: アプリケーションフレームワーク```
+
+- 👥 グループチャット (招待制)
+
+- 🌐 パブリックトピック (誰でも参加可能)- **Spring Security**: JWT認証・認可
+
+
+
+### 3. フレンド管理- **Spring Data JPA**: データアクセス層### 2. バックエンドの起動
+
+- フレンドリクエスト送信・承認
+
+- ブロック機能- **Spring WebSocket**: リアルタイム通信
+
+- フレンド一覧表示
+
+- **MySQL 8.0**: 本番用データベース```bash
+
+### 4. バッジシステム
+
+- 達成バッジの収集- **H2 Database**: 開発・テスト用データベース# バックエンドディレクトリに移動
+
+- バッジコレクション表示
+
+- プロフィールで自慢- **Maven**: ビルドツールcd backend
+
+
+
+---
+
+
+
+## 🔧 開発者向け情報### フロントエンド (予定)# Maven で依存関係をインストール・ビルド
+
+
+
+### API エンドポイント- **React**: UIフレームワークmvn clean install
+
+
+
+#### 認証- **SockJS / STOMP**: WebSocketクライアント
+
+```
+
+POST /api/auth/signup    # 新規登録- **Axios**: HTTPクライアント# Spring Boot アプリケーションを起動
+
+POST /api/auth/signin    # ログイン
+
+```mvn spring-boot:run
+
+
+
+#### チャレンジ### インフラストラクチャ```
+
+```
+
+GET  /api/challenges/daily          # 今日のチャレンジ取得- **Docker**: コンテナ化
+
+POST /api/challenges/{id}/complete  # チャレンジ完了
+
+```- **Docker Compose**: マルチコンテナ管理バックエンドは http://localhost:8080 で起動します。
+
+
+
+#### チャット- **Nginx**: リバースプロキシ
+
+```
+
+GET  /api/chat/messages/{roomId}    # メッセージ履歴- **Let's Encrypt**: SSL/TLS証明書### 3. フロントエンドの起動
+
+WebSocket /ws                        # リアルタイム通信
+
+```
+
+
+
+#### フレンド---新しいターミナルウィンドウで：
+
+```
+
+GET  /api/friends                   # フレンド一覧
+
+POST /api/friends/request/{id}      # リクエスト送信
+
+POST /api/friends/accept/{id}       # リクエスト承認## プロジェクト構造```bash
+
+```
+
+# プロジェクトルートに移動（chat-app フォルダ）
+
+詳細は [API_REFERENCE.md](docs/API_REFERENCE.md) を参照。
+
+```cd chat-app
+
+### ビルド・テスト
+
+チャレキャラ/
+
+```bash
+
+# バックエンドテスト├── backend/                        # Spring Bootバックエンド# Node.js 依存関係をインストール
+
+cd backend
+
+mvnw test│   ├── src/npm install
+
+
+
+# フロントエンドビルド│   │   ├── main/
+
+npm run build
 
 │   │   │   ├── java/com/example/chatapp/# Next.js 開発サーバーを起動
 
-│   │   │   │   ├── config/        # 設定クラスnpm run dev
+# 型チェック
+
+npm run type-check│   │   │   │   ├── config/        # 設定クラスnpm run dev
+
+```
 
 │   │   │   │   ├── controller/    # REST & WebSocketコントローラー```
 
+---
+
 │   │   │   │   ├── model/         # エンティティクラス
+
+## 🌈 カラーテーマ
 
 │   │   │   │   ├── repository/    # データアクセス層フロントエンドは http://localhost:3000 で起動します。
 
+アプリケーションは統一されたダークテーマを採用:
+
 │   │   │   │   ├── service/       # ビジネスロジック
 
-│   │   │   │   ├── security/      # セキュリティ関連### 4. アプリケーションへのアクセス
+| 色名 | Hex | 用途 |
 
-│   │   │   │   └── dto/           # データ転送オブジェクト
+|------|-----|------|│   │   │   │   ├── security/      # セキュリティ関連### 4. アプリケーションへのアクセス
 
-│   │   │   └── resources/1. ブラウザで http://localhost:3000 にアクセス
+| Dark | `#222831` | 背景 |
 
-│   │   │       ├── application.properties2. 「新規登録」でアカウントを作成
+| Medium | `#393E46` | カード背景 |│   │   │   │   └── dto/           # データ転送オブジェクト
 
-│   │   │       ├── application-dev.properties.example3. ログイン後、チャットルームでメッセージを送信
+| Cyan | `#00ADB5` | アクセント |
 
-│   │   │       ├── application-prod.properties.example
+| Light | `#EEEEEE` | テキスト |│   │   │   └── resources/1. ブラウザで http://localhost:3000 にアクセス
 
-│   │   │       └── db/migration/  # データベーススキーマ## API エンドポイント
 
-│   │   └── test/                  # テストコード
+
+---│   │   │       ├── application.properties2. 「新規登録」でアカウントを作成
+
+
+
+## 📚 ドキュメント│   │   │       ├── application-dev.properties.example3. ログイン後、チャットルームでメッセージを送信
+
+
+
+| ドキュメント | 説明 |│   │   │       ├── application-prod.properties.example
+
+|------------|------|
+
+| [API_REFERENCE.md](docs/API_REFERENCE.md) | API仕様書 |│   │   │       └── db/migration/  # データベーススキーマ## API エンドポイント
+
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | デプロイ手順 |
+
+| [FEATURE_REQUIREMENTS.md](docs/FEATURE_REQUIREMENTS.md) | 機能要件 |│   │   └── test/                  # テストコード
+
+| [PRODUCTION_SETUP.md](backend/PRODUCTION_SETUP.md) | 本番環境設定 |
 
 │   ├── pom.xml                    # Maven依存関係### 認証
 
+---
+
 │   ├── Dockerfile                 # Dockerイメージ定義- `POST /api/auth/signup` - 新規ユーザー登録
+
+## 🤝 コントリビューション
 
 │   └── README.md                  # バックエンドドキュメント- `POST /api/auth/signin` - ログイン
 
+プルリクエスト大歓迎です!
+
 │
 
-├── docs/                          # プロジェクトドキュメント### チャット
+1. Fork this repository
 
-│   ├── API_REFERENCE.md          # API仕様書- `GET /api/chat/messages/{roomId}` - チャットメッセージ取得
+2. Create feature branch (`git checkout -b feature/amazing`)├── docs/                          # プロジェクトドキュメント### チャット
+
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+
+4. Push to branch (`git push origin feature/amazing`)│   ├── API_REFERENCE.md          # API仕様書- `GET /api/chat/messages/{roomId}` - チャットメッセージ取得
+
+5. Open Pull Request
 
 │   ├── FEATURE_REQUIREMENTS.md   # 機能要件- `WebSocket /ws` - リアルタイム通信
 
+---
+
 │   ├── FRONTEND_INTEGRATION.md   # フロントエンド統合ガイド
+
+## 📄 ライセンス
 
 │   └── DEPLOYMENT.md             # デプロイメントガイド## データベース
 
+MIT License - 詳細は [LICENSE](LICENSE) を参照
+
 │
+
+---
 
 ├── docker-compose.yml            # Docker Compose設定開発環境では H2 インメモリデータベースを使用します。
 
+## 🙏 謝辞
+
 └── README.md                     # このファイル
 
-```- **H2 Console**: http://localhost:8080/h2-console
+- [Spring Framework](https://spring.io/)
 
-- **JDBC URL**: `jdbc:h2:mem:chatdb`
+- [Next.js](https://nextjs.org/)```- **H2 Console**: http://localhost:8080/h2-console
 
----- **Username**: `sa`
+- [Tailwind CSS](https://tailwindcss.com/)
 
-- **Password**: `password`
+- [MySQL](https://www.mysql.com/)- **JDBC URL**: `jdbc:h2:mem:chatdb`
 
-## クイックスタート
 
-## 設定
 
-### 必要な環境
+------- **Username**: `sa`
+
+
+
+<div align="center">- **Password**: `password`
+
+
+
+**Made with ❤️ for challenge lovers**## クイックスタート
+
+
+
+[🌟 Star this repo](https://github.com/hera-16/letteral) | [🐛 Report Bug](https://github.com/hera-16/letteral/issues) | [💡 Request Feature](https://github.com/hera-16/letteral/issues)## 設定
+
+
+
+</div>### 必要な環境
+
 
 ### バックエンド設定
 
