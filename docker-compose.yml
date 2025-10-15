@@ -1,0 +1,71 @@
+# Docker Compose Configuration for Chat Application
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0.33
+    container_name: chatapp-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: chatapp_db
+      MYSQL_USER: chatapp_user
+      MYSQL_PASSWORD: chatapp_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/main/resources/db/migration:/docker-entrypoint-initdb.d
+    networks:
+      - chatapp-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatapp-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/chatapp_db?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: chatapp_user
+      SPRING_DATASOURCE_PASSWORD: chatapp_password
+      JWT_SECRET: your_secure_jwt_secret_key_here_at_least_256_bits
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://frontend:80
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - chatapp-network
+    restart: unless-stopped
+
+  # React Frontend (optional)
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: chatapp-frontend
+  #   environment:
+  #     REACT_APP_API_BASE_URL: http://localhost:8080
+  #     REACT_APP_WS_URL: http://localhost:8080/ws
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - chatapp-network
+  #   restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  chatapp-network:
+    driver: bridge

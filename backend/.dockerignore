@@ -1,0 +1,29 @@
+# Docker ignore file for backend
+
+# Maven build artifacts
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+*.env.local
+
+# Application properties with sensitive data
+application-prod.properties
+application-local.properties
