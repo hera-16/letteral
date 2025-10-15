@@ -65,30 +65,13 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
       setLoading(true);
       setError(null);
       
-      // トークンの存在確認
-      const token = localStorage.getItem('token');
-      console.log('トークン確認:', {
-        hasToken: !!token,
-        tokenLength: token?.length,
-        tokenPrefix: token?.substring(0, 30)
-      });
-      
-      console.log('チャレンジデータを読み込み中...');
       const [challengesRes, progressRes] = await Promise.all([
         api.get('/challenges/today'),
         api.get('/challenges/progress')
       ]);
 
-      console.log('チャレンジレスポンス:', challengesRes);
-      console.log('チャレンジデータ:', challengesRes.data);
-      console.log('チャレンジ配列:', challengesRes.data.data);
-      console.log('進捗レスポンス:', progressRes);
-
       if (challengesRes.data.success) {
-        console.log('チャレンジ数:', challengesRes.data.data.length);
         setChallenges(challengesRes.data.data);
-      } else {
-        console.error('チャレンジ取得失敗:', challengesRes.data);
       }
 
       if (progressRes.data.success) {
@@ -96,11 +79,6 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
         setCompletionError(null);
       }
     } catch (error: any) {
-      console.error('データの読み込みに失敗しました:', error);
-      console.error('エラーレスポンス:', error.response);
-      console.error('エラーステータス:', error.response?.status);
-      console.error('エラーデータ:', error.response?.data);
-      
       const status = error.response?.status;
       if (status === 404) {
         setError('APIエンドポイントが見つかりません。バックエンドを再起動してください。');
@@ -385,32 +363,11 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
       {/* チャレンジリスト */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">今日のチャレンジ</h2>
-          
-          {/* デバッグ用リセットボタン（開発環境のみ） */}
-          {process.env.NODE_ENV === 'development' && (
-            <button
-              onClick={async () => {
-                if (confirm('達成履歴をリセットしますか？（開発用）')) {
-                  try {
-                    await api.delete('/challenges/debug/reset-today');
-                    alert('リセット完了！ページをリロードしてください。');
-                    window.location.reload();
-                  } catch (error) {
-                    console.error('リセット失敗:', error);
-                    alert('リセットに失敗しました。手動でMySQLをリセットしてください。');
-                  }
-                }
-              }}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600"
-            >
-              🔧 デバッグ: 今日の達成をリセット
-            </button>
-          )}
+          <h2 className="text-xl font-bold" style={{ color: '#EEEEEE' }}>今日のチャレンジ</h2>
         </div>
         
         {completionError && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <div className="mb-4 p-4" style={{ backgroundColor: '#393E46', border: '1px solid #ff6b6b', color: '#ff6b6b', borderRadius: '0.5rem' }}>
             {completionError}
           </div>
         )}
@@ -429,31 +386,9 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
                 ? '今日の上限である3件を達成しました。ゆっくり休んでくださいね！'
                 : '今日のチャレンジは全て達成しました!'}
             </p>
-            
-            {/* デバッグ用: リセットボタン */}
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={async () => {
-                  if (confirm('全てのデータをリセットしますか？（達成記録、バッジ、進捗）')) {
-                    try {
-                      const response = await api.delete('/debug/reset-all');
-                      alert(response.data.data || 'リセット完了！');
-                      window.location.reload();
-                    } catch (error: any) {
-                      console.error('リセット失敗:', error);
-                      alert('リセットに失敗しました: ' + (error.response?.data?.message || error.message));
-                    }
-                  }
-                }}
-                className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
-                🔧 デバッグ: 全てリセット
-              </button>
-            )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {challenges.map((challenge) => (
+          <div className="space-y-4">{challenges.map((challenge) => (
               <div 
                 key={challenge.id} 
                 className="p-5 border rounded-lg shadow-sm hover:shadow-md transition-shadow"

@@ -40,24 +40,36 @@
 
 ### 本番環境の環境変数
 
-以下の環境変数を設定します:
+本番環境では、`backend/.env.example` をコピーして `backend/.env` を作成し、以下の環境変数を設定します:
 
 ```bash
-# データベース設定
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_NAME=chatapp_db
-export DB_USER=chatapp_user
-export DB_PASSWORD=your_secure_database_password
+# backend/.env ファイルを作成
+cd backend
+cp .env.example .env
+nano .env  # または好きなエディタで編集
+```
 
-# JWT設定
-export JWT_SECRET=your_very_long_and_secure_random_secret_key_at_least_256_bits
+**必須の環境変数:**
 
-# CORS設定
-export CORS_ALLOWED_ORIGINS=https://yourfrontend.com,https://www.yourfrontend.com
+```bash
+# JWT設定 (必須)
+# 強力なランダム文字列を生成して設定してください (64文字以上推奨)
+# 生成方法: PowerShell: [Convert]::ToBase64String((1..64 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+JWT_SECRET=your_very_long_and_secure_random_secret_key_at_least_64_characters
 
-# サーバー設定
-export SERVER_PORT=8080
+# データベース設定 (必須)
+# 本番環境のMySQLサーバー接続情報
+# SSLを有効化することを推奨: useSSL=true
+SPRING_DATASOURCE_URL=jdbc:mysql://your-db-host:3306/chatapp?useSSL=true&serverTimezone=Asia/Tokyo
+SPRING_DATASOURCE_USERNAME=chatapp_user
+SPRING_DATASOURCE_PASSWORD=your_secure_database_password
+
+# CORS設定 (必須)
+# フロントエンドのURLをカンマ区切りで指定
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com,https://www.your-frontend-domain.com
+
+# サーバー設定 (オプション)
+SERVER_PORT=8080
 ```
 
 ### systemd サービスファイルの例
@@ -77,19 +89,29 @@ SuccessExitStatus=143
 StandardOutput=journal
 StandardError=journal
 
-# Environment variables
-Environment="SPRING_PROFILES_ACTIVE=prod"
-Environment="SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/chatapp_db?useSSL=true&serverTimezone=UTC"
-Environment="SPRING_DATASOURCE_USERNAME=chatapp_user"
-Environment="SPRING_DATASOURCE_PASSWORD=your_secure_password"
-Environment="JWT_SECRET=your_jwt_secret"
-Environment="CORS_ALLOWED_ORIGINS=https://yourfrontend.com"
+# 環境変数ファイルから読み込み
+EnvironmentFile=/opt/chatapp/.env
 
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
+```
+
+または、環境変数を直接指定する場合:
+
+```ini
+[Service]
+# ... 他の設定 ...
+
+# Environment variables
+Environment="SPRING_PROFILES_ACTIVE=prod"
+Environment="JWT_SECRET=your_jwt_secret"
+Environment="SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/chatapp?useSSL=true&serverTimezone=Asia/Tokyo"
+Environment="SPRING_DATASOURCE_USERNAME=chatapp_user"
+Environment="SPRING_DATASOURCE_PASSWORD=your_secure_password"
+Environment="CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com"
 ```
 
 サービスを有効化:
@@ -152,16 +174,27 @@ mysql -u chatapp_user -p chatapp_db < backend/src/main/resources/db/migration/V2
 
 1. **環境変数ファイルの作成**
 
-`.env` ファイルを作成:
+本番環境用の `.env` ファイルを作成 (プロジェクトルートに配置):
 
 ```env
-MYSQL_ROOT_PASSWORD=root_password
-MYSQL_DATABASE=chatapp_db
+# MySQL Configuration
+MYSQL_ROOT_PASSWORD=secure_root_password_here
+MYSQL_DATABASE=chatapp
 MYSQL_USER=chatapp_user
-MYSQL_PASSWORD=chatapp_password
-JWT_SECRET=your_secure_jwt_secret_key_here
-CORS_ALLOWED_ORIGINS=https://yourfrontend.com
+MYSQL_PASSWORD=secure_chatapp_password_here
+
+# Application Configuration
+JWT_SECRET=your_secure_random_jwt_secret_at_least_64_characters_long
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com,https://www.your-frontend-domain.com
+SERVER_PORT=8080
+
+# Database URL for Spring Boot
+SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/chatapp?useSSL=true&serverTimezone=Asia/Tokyo
+SPRING_DATASOURCE_USERNAME=chatapp_user
+SPRING_DATASOURCE_PASSWORD=secure_chatapp_password_here
 ```
+
+**重要:** 本番環境では強力なパスワードとランダムなJWTシークレットを使用してください。
 
 2. **コンテナのビルドと起動**
 

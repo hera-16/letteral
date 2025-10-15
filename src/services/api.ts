@@ -13,12 +13,6 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('APIリクエスト:', {
-      url: config.url,
-      method: config.method,
-      hasToken: !!token,
-      tokenPrefix: token ? token.substring(0, 20) + '...' : 'なし'
-    });
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,20 +30,12 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // トークンが無効または期限切れの場合
-      console.warn('401 Unauthorized - 自動ログアウトは一時的に無効化');
-      console.error('401エラー詳細:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        headers: error.config?.headers,
-        response: error.response?.data
-      });
-      // 一時的に自動ログアウトを無効化してデバッグ
-      // localStorage.removeItem('token');
-      // localStorage.removeItem('user');
-      // if (typeof window !== 'undefined') {
-      //   window.location.href = '/';
-      // }
+      // トークンが無効または期限切れの場合、ログアウト
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }

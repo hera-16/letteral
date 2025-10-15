@@ -174,17 +174,6 @@ public final class FriendController {
         return ResponseEntity.ok("All friendships have been reset");
     }
 
-    /**
-     * Get all friendships with details for the authenticated user (admin/testing purpose).
-     */
-    @GetMapping("/debug/all")
-    public ResponseEntity<List<FriendshipDetail>> getAllFriendshipsWithDetails(
-            final Authentication authentication) {
-        final Long userId = resolveUserId(authentication);
-        final List<FriendshipDetail> details = friendService.getAllFriendshipsWithDetails(userId);
-        return ResponseEntity.ok(details);
-    }
-
     private Long resolveUserId(final Authentication authentication) {
         final Object principal = authentication.getPrincipal();
         if (principal instanceof UserPrincipal userPrincipal) {

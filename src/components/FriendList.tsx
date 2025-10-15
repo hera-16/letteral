@@ -26,24 +26,15 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
     try {
       setLoading(true);
       
-      // トークンの確認
-      const token = localStorage.getItem('token');
-      console.log('Loading friend data, token exists:', !!token);
-      
-      // 一時的に古いエンドポイントも試す
       let friendsData: FriendWithId[];
       try {
-        console.log('Trying new endpoint: /friends/list/detailed');
         friendsData = await friendService.getFriendsWithIds();
-        console.log('New endpoint succeeded:', friendsData);
       } catch (detailedError: any) {
-        console.warn('New endpoint failed, falling back to old endpoint:', detailedError);
         // フォールバック: 古いエンドポイントを使用
         const oldFriendsData = await friendService.getFriends();
-        console.log('Old endpoint data:', oldFriendsData);
         // User[]をFriendWithId[]に変換（friendshipIdはユーザーIDで代用）
         friendsData = oldFriendsData.map(user => ({
-          friendshipId: user.id, // 一時的にuser.idを使用
+          friendshipId: user.id,
           userId: user.id,
           username: user.username,
           displayName: user.displayName || '',
@@ -60,11 +51,6 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
       setSentRequests(Array.isArray(sentData) ? sentData : []);
       setError(null);
     } catch (err: any) {
-      console.error('Friend data loading error:', err);
-      console.error('Error response:', err.response);
-      console.error('Error status:', err.response?.status);
-      console.error('Token in localStorage:', localStorage.getItem('token'));
-      
       setFriends([]);
       setPendingRequests([]);
       setSentRequests([]);

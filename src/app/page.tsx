@@ -38,17 +38,10 @@ export default function Home() {
     const savedUser = authService.getCurrentUser();
     const token = localStorage.getItem('token');
     
-    console.log('Auth check:', { savedUser, token, isAuthenticated: authService.isAuthenticated() });
-    
-    // デバッグ用: localStorageの全内容を表示
-    console.log('LocalStorage keys:', Object.keys(localStorage));
-    console.log('LocalStorage token length:', token?.length);
-    
     if (savedUser && token && authService.isAuthenticated()) {
       setUser(savedUser);
     } else {
       // トークンまたはユーザー情報が不完全な場合はクリア
-      console.log('認証情報をクリアします');
       authService.logout();
       setUser(null);
     }
