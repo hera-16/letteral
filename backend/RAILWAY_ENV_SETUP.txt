@@ -1,0 +1,68 @@
+# ==========================================
+# Railway 環境変数設定ガイド
+# ==========================================
+# Railway Dashboard → あなたのサービス → Variables タブ
+# 以下の環境変数を1つずつ追加してください
+
+# ------------------------------------------
+# 1. JWT設定 (必須)
+# ------------------------------------------
+# Variable Name: JWT_SECRET
+# Value: (以下のコマンドで生成した値を貼り付け)
+# PowerShellで生成: [Convert]::ToBase64String((1..64 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+
+JWT_SECRET=your-generated-secret-here
+
+# Variable Name: JWT_EXPIRATION
+# Value: 86400000
+
+JWT_EXPIRATION=86400000
+
+# ------------------------------------------
+# 2. データベース設定 (Railway MySQLを使用)
+# ------------------------------------------
+# Variable Name: SPRING_DATASOURCE_URL
+# Value: jdbc:mysql://${{MYSQL_HOST}}:${{MYSQL_PORT}}/${{MYSQL_DATABASE}}?useSSL=true&requireSSL=false&serverTimezone=Asia/Tokyo&allowPublicKeyRetrieval=true
+
+SPRING_DATASOURCE_URL=jdbc:mysql://${{MYSQL_HOST}}:${{MYSQL_PORT}}/${{MYSQL_DATABASE}}?useSSL=true&requireSSL=false&serverTimezone=Asia/Tokyo&allowPublicKeyRetrieval=true
+
+# Variable Name: SPRING_DATASOURCE_USERNAME
+# Value: ${{MYSQL_USER}}
+
+SPRING_DATASOURCE_USERNAME=${{MYSQL_USER}}
+
+# Variable Name: SPRING_DATASOURCE_PASSWORD
+# Value: ${{MYSQL_PASSWORD}}
+
+SPRING_DATASOURCE_PASSWORD=${{MYSQL_PASSWORD}}
+
+# ------------------------------------------
+# 3. CORS設定 (必須)
+# ------------------------------------------
+# Variable Name: CORS_ALLOWED_ORIGINS
+# Value: https://letteral.vercel.app,https://letteral-*.vercel.app
+
+CORS_ALLOWED_ORIGINS=https://letteral.vercel.app,https://letteral-*.vercel.app
+
+# ------------------------------------------
+# 4. サーバー設定 (オプション)
+# ------------------------------------------
+# Variable Name: SERVER_PORT
+# Value: 8080
+
+SERVER_PORT=8080
+
+# ------------------------------------------
+# 設定完了後
+# ------------------------------------------
+# 1. 「Add Variable」で各変数を追加
+# 2. 自動的に再デプロイが開始されます
+# 3. Deployments タブでデプロイ状況を確認
+
+# ------------------------------------------
+# 注意事項
+# ------------------------------------------
+# - ${{VARIABLE_NAME}} はRailwayの変数参照構文です
+# - MySQLサービスの環境変数を自動的に参照します
+# - JWT_SECRETは必ず強力なランダム文字列を生成してください
+# - デプロイ完了後、Settingsタブで公開URLを確認してください
