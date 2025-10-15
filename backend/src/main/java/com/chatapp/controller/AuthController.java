@@ -13,8 +13,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -82,10 +84,15 @@ public class AuthController {
             Map<String, String> error = new HashMap<>();
             error.put("error", "ユーザー名またはパスワードが正しくありません");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (Exception e) {
-            logger.error("Login error for user: {}", loginRequest.getUsername(), e);
+        } catch (AuthenticationException e) {
+            logger.error("Authentication error for user: {}", loginRequest.getUsername(), e);
             Map<String, String> error = new HashMap<>();
-            error.put("error", "ログイン処理中にエラーが発生しました");
+            error.put("error", "認証処理中にエラーが発生しました");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        } catch (DataAccessException e) {
+            logger.error("Database error during login for user: {}", loginRequest.getUsername(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "データベース接続エラーが発生しました");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
