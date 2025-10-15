@@ -1,5 +1,18 @@
 package com.chatapp.controller;
 
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.chatapp.dto.ApiResponse;
 import com.chatapp.dto.ChallengeShareDtos.ChallengeShareResponse;
 import com.chatapp.dto.ChallengeShareDtos.CreateShareRequest;
@@ -9,11 +22,6 @@ import com.chatapp.model.ChallengeShareReaction.ReactionType;
 import com.chatapp.model.User;
 import com.chatapp.repository.UserRepository;
 import com.chatapp.service.ChallengeShareService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/shares")
@@ -43,9 +51,7 @@ public class ChallengeShareController {
                     request.getComment(),
                     request.getMood());
             return ResponseEntity.ok(ApiResponse.success(response));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()

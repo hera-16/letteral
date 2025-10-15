@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
 import FriendList from '@/components/FriendList';
-import GroupTopicList from '@/components/GroupTopicList';
+import GroupList from '@/components/GroupList';
 import ChatRoom from '@/components/ChatRoom';
-import { authService, User, Group, Topic } from '@/services/api';
+import { authService, User, Group } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
 type ViewMode = 'friends' | 'groups' | 'chat';
 
 interface ChatTarget {
-  type: 'friend' | 'group' | 'topic' | 'general';
+  type: 'friend' | 'group' | 'general';
   id?: number;
   name: string;
   roomId: string;
@@ -67,16 +67,6 @@ export default function Home() {
       id: group.id,
       name: group.name,
       roomId: `group-${group.id}`,
-    });
-    setViewMode('chat');
-  };
-
-  const handleSelectTopic = (topic: Topic) => {
-    setChatTarget({
-      type: 'topic',
-      id: topic.id,
-      name: topic.name,
-      roomId: `topic-${topic.id}`,
     });
     setViewMode('chat');
   };
@@ -150,8 +140,7 @@ export default function Home() {
               <h2 className="text-2xl font-bold">{chatTarget.name}</h2>
               <p className="text-gray-600 text-sm">
                 {chatTarget.type === 'friend' && 'フレンドチャット'}
-                {chatTarget.type === 'group' && '招待制グループ'}
-                {chatTarget.type === 'topic' && 'パブリックトピック'}
+                {chatTarget.type === 'group' && '匿名グループチャット'}
               </p>
             </div>
             <ChatRoom
@@ -182,7 +171,7 @@ export default function Home() {
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                🏘️ グループ & トピック
+                🏘️ 匿名グループ
               </button>
             </div>
 
@@ -192,10 +181,7 @@ export default function Home() {
                 <FriendList onSelectFriend={handleSelectFriend} />
               )}
               {viewMode === 'groups' && (
-                <GroupTopicList
-                  onSelectGroup={handleSelectGroup}
-                  onSelectTopic={handleSelectTopic}
-                />
+                <GroupList onSelectGroup={handleSelectGroup} />
               )}
             </div>
           </>

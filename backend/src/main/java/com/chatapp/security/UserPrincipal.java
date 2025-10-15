@@ -1,18 +1,19 @@
 package com.chatapp.security;
 
-import com.chatapp.model.User;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.Collections;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.chatapp.model.User;
+
 public class UserPrincipal implements UserDetails {
     
-    private Long id;
-    private String username;
-    private String email;
-    private String password;
+    private final Long id;
+    private final String username;
+    private final String email;
+    private final String password;
     
     public UserPrincipal(Long id, String username, String email, String password) {
         this.id = id;
