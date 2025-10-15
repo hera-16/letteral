@@ -39,14 +39,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     List<Group> findByGroupType(Group.GroupType groupType);
 
     /**
-     * Find all public topic groups.
-     *
-     * @return list of public topic groups
-     */
-    @Query("SELECT g FROM Group g WHERE g.groupType = 'PUBLIC_TOPIC' ORDER BY g.createdAt DESC")
-    List<Group> findAllPublicTopics();
-
-    /**
      * Find all groups that a user is a member of.
      *
      * @param userId the user ID

@@ -9,9 +9,8 @@ interface GroupTopicListProps {
 }
 
 export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTopicListProps) {
-  const [activeTab, setActiveTab] = useState<'myGroups' | 'publicTopics' | 'allTopics'>('myGroups');
+  const [activeTab, setActiveTab] = useState<'myGroups' | 'allTopics'>('myGroups');
   const [myGroups, setMyGroups] = useState<Group[]>([]);
-  const [publicTopics, setPublicTopics] = useState<Group[]>([]);
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,9 +53,6 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
       if (activeTab === 'myGroups') {
         const data = await groupService.getMyInviteOnlyGroups();
         setMyGroups(data);
-      } else if (activeTab === 'publicTopics') {
-        const data = await groupService.getPublicTopics();
-        setPublicTopics(data);
       } else if (activeTab === 'allTopics') {
         const data = await topicService.getAllTopics();
         setAllTopics(data);
@@ -131,15 +127,6 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
     }
   };
 
-  const handleJoinPublicTopic = async (groupId: number) => {
-    try {
-      await groupService.joinPublicTopic(groupId);
-      alert('パブリックトピックに参加しました!');
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'トピックへの参加に失敗しました');
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h2 className="text-2xl font-bold mb-4">グループ & トピック</h2>
@@ -155,16 +142,6 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
           }`}
         >
           マイグループ
-        </button>
-        <button
-          onClick={() => setActiveTab('publicTopics')}
-          className={`px-4 py-2 ${
-            activeTab === 'publicTopics'
-              ? 'border-b-2 border-blue-500 text-blue-500 font-semibold'
-              : 'text-gray-600'
-          }`}
-        >
-          パブリックトピック
         </button>
         <button
           onClick={() => setActiveTab('allTopics')}
@@ -231,34 +208,6 @@ export default function GroupTopicList({ onSelectGroup, onSelectTopic }: GroupTo
                 <div className="flex gap-4 mt-2 text-xs text-gray-500">
                   <span>招待制</span>
                   {group.inviteCode && <span className="font-mono">コード: {group.inviteCode}</span>}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* パブリックトピック一覧 */}
-      {!loading && activeTab === 'publicTopics' && (
-        <div className="space-y-2">
-          {publicTopics.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">パブリックトピックがありません</p>
-          ) : (
-            publicTopics.map((group) => (
-              <div key={group.id} className="p-4 border rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 cursor-pointer" onClick={() => onSelectGroup(group)}>
-                    <h3 className="font-semibold">{group.name}</h3>
-                    {group.description && (
-                      <p className="text-sm text-gray-600 mt-1">{group.description}</p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleJoinPublicTopic(group.id)}
-                    className="ml-4 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    参加
-                  </button>
                 </div>
               </div>
             ))

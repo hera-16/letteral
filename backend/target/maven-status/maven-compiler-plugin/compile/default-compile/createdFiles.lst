@@ -1,5 +1,4 @@
 com\chatapp\service\ChallengeService.class
-com\chatapp\repository\TopicRepository.class
 com\chatapp\dto\ChallengeShareDtos$CreateShareRequest.class
 com\chatapp\repository\GroupMemberRepository.class
 com\chatapp\service\AnonymousNameService.class
@@ -7,10 +6,8 @@ com\chatapp\dto\ChallengeShareDtos$UserSummary.class
 com\chatapp\model\GroupMemberAlias.class
 com\chatapp\model\Group.class
 com\chatapp\service\GroupService.class
-com\chatapp\service\TopicService.class
 com\chatapp\repository\BadgeRepository.class
 com\chatapp\repository\ChallengeCompletionRepository.class
-com\chatapp\controller\TopicController$UpdateTopicRequest.class
 com\chatapp\repository\ChatMessageRepository.class
 com\chatapp\repository\ChallengeShareReactionRepository$ReactionCountProjection.class
 com\chatapp\dto\ChatMessageDto.class
@@ -24,7 +21,6 @@ com\chatapp\service\FriendService.class
 com\chatapp\controller\AuthController.class
 com\chatapp\model\DailyChallenge$ChallengeType.class
 com\chatapp\repository\ChallengeShareReactionRepository.class
-com\chatapp\controller\TopicController.class
 com\chatapp\controller\FriendController.class
 com\chatapp\model\UserProgress.class
 com\chatapp\security\AuthTokenFilter.class
@@ -43,7 +39,6 @@ com\chatapp\model\Group$GroupType.class
 com\chatapp\model\ChallengeShareReaction$ReactionType.class
 com\chatapp\security\AuthEntryPointJwt.class
 com\chatapp\controller\GroupController.class
-com\chatapp\model\Topic.class
 com\chatapp\service\BadgeService.class
 com\chatapp\controller\ChallengeController.class
 com\chatapp\model\GroupMember$MemberRole.class
@@ -74,7 +69,6 @@ com\chatapp\dto\ChallengeShareDtos$PagedShareResponse.class
 com\chatapp\model\UserBadge.class
 com\chatapp\dto\ChallengeShareDtos$ChallengeSummary.class
 com\chatapp\controller\FriendController$FriendStatsResponse.class
-com\chatapp\controller\TopicController$CreateTopicRequest.class
 com\chatapp\service\FriendService$1.class
 com\chatapp\model\ChatMessage$MessageType.class
 com\chatapp\model\ChallengeShareReadStatus.class

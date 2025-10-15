@@ -12,7 +12,6 @@ C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chat
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\controller\DebugController.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\controller\FriendController.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\controller\GroupController.java
-C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\controller\TopicController.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\dto\ApiResponse.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\dto\ChallengeShareDtos.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\dto\ChatMessageDto.java
@@ -30,7 +29,6 @@ C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chat
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\Group.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\GroupMember.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\GroupMemberAlias.java
-C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\Topic.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\User.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\UserBadge.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\model\UserProgress.java
@@ -45,7 +43,6 @@ C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chat
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\GroupMemberAliasRepository.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\GroupMemberRepository.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\GroupRepository.java
-C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\TopicRepository.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\UserBadgeRepository.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\UserProgressRepository.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\repository\UserRepository.java
@@ -62,6 +59,5 @@ C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chat
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\service\CustomUserDetailsService.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\service\FriendService.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\service\GroupService.java
-C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\service\TopicService.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\websocket\WebSocketConfig.java
 C:\Users\User\OneDrive\hera-16\チャレキャラ\backend\src\main\java\com\chatapp\websocket\WebSocketEventListener.java

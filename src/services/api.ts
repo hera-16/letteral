@@ -192,7 +192,7 @@ export interface Group {
   id: number;
   name: string;
   description?: string;
-  groupType: 'INVITE_ONLY' | 'PUBLIC_TOPIC';
+  groupType: 'INVITE_ONLY';
   inviteCode?: string;
   maxMembers: number;
   creator: User;
@@ -210,23 +210,6 @@ export interface CreateGroupRequest {
   name: string;
   description?: string;
   maxMembers?: number;
-}
-
-// トピック関連の型定義
-export interface Topic {
-  id: number;
-  name: string;
-  description?: string;
-  category: string;
-  creator: User;
-  createdAt: string;
-  isActive: boolean;
-}
-
-export interface CreateTopicRequest {
-  name: string;
-  description?: string;
-  category: string;
 }
 
 export const authService = {
@@ -375,72 +358,6 @@ export const groupService = {
     const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
     return response.data;
   },
-
-  async getPublicTopics(): Promise<Group[]> {
-    const response = await api.get('/groups/public');
-    return response.data;
-  },
-
-  async joinPublicTopic(groupId: number): Promise<GroupMember> {
-    const response = await api.post(`/groups/public/${groupId}/join`);
-    return response.data;
-  },
-};
-
-export const topicService = {
-  async getAllTopics(): Promise<Topic[]> {
-    const response = await api.get('/topics');
-    return response.data;
-  },
-
-  async createTopic(data: CreateTopicRequest): Promise<Topic> {
-    const response = await api.post('/topics', data);
-    return response.data;
-  },
-
-  async getTopic(topicId: number): Promise<Topic> {
-    const response = await api.get(`/topics/${topicId}`);
-    return response.data;
-  },
-
-  async getTopicsByCategory(category: string): Promise<Topic[]> {
-    const response = await api.get(`/topics/category/${category}`);
-    return response.data;
-  },
-
-  async getAllCategories(): Promise<string[]> {
-    const response = await api.get('/topics/categories');
-    return response.data;
-  },
-
-  async searchTopics(query: string): Promise<Topic[]> {
-    const response = await api.get(`/topics/search?q=${encodeURIComponent(query)}`);
-    return response.data;
-  },
-
-  async updateTopic(topicId: number, data: Partial<CreateTopicRequest>): Promise<Topic> {
-    const response = await api.put(`/topics/${topicId}`, data);
-    return response.data;
-  },
-
-  async deactivateTopic(topicId: number): Promise<Topic> {
-    const response = await api.put(`/topics/${topicId}/deactivate`);
-    return response.data;
-  },
-
-  async reactivateTopic(topicId: number): Promise<Topic> {
-    const response = await api.put(`/topics/${topicId}/reactivate`);
-    return response.data;
-  },
-
-  async deleteTopic(topicId: number): Promise<void> {
-    await api.delete(`/topics/${topicId}`);
-  },
-
-  async getMyTopics(): Promise<Topic[]> {
-    const response = await api.get('/topics/my');
-    return response.data;
-  },
 };
 
 export const chatService = {
@@ -451,11 +368,6 @@ export const chatService = {
 
   async getGroupMessages(groupId: number): Promise<ChatMessage[]> {
     const response = await api.get(`/chat/groups/${groupId}/messages`);
-    return response.data;
-  },
-
-  async getTopicMessages(topicId: number): Promise<ChatMessage[]> {
-    const response = await api.get(`/chat/topics/${topicId}/messages`);
     return response.data;
   },
 

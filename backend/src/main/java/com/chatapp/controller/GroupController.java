@@ -186,27 +186,6 @@ public class GroupController {
         return ResponseEntity.ok(members);
     }
 
-    /**
-     * Get all public topics.
-     */
-    @GetMapping("/public")
-    public ResponseEntity<List<Group>> getAllPublicTopics() {
-        final List<Group> groups = groupService.getAllPublicTopics();
-        return ResponseEntity.ok(groups);
-    }
-
-    /**
-     * Join a public topic group.
-     */
-    @PostMapping("/public/{groupId}/join")
-    public ResponseEntity<Group> joinPublicTopic(
-            @PathVariable final Long groupId,
-            final Authentication authentication) {
-        final Long userId = resolveUserId(authentication);
-        final Group group = groupService.joinPublicTopic(userId, groupId);
-        return ResponseEntity.ok(group);
-    }
-
     private Long resolveUserId(final Authentication authentication) {
         final Object principal = authentication.getPrincipal();
         if (principal instanceof UserPrincipal userPrincipal) {

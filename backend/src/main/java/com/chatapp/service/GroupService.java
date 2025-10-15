@@ -91,15 +91,6 @@ public class GroupService {
     }
 
     /**
-     * Get all public topics.
-     *
-     * @return list of public topic groups
-     */
-    public List<Group> getAllPublicTopics() {
-        return groupRepository.findAllPublicTopics();
-    }
-
-    /**
      * Get group details by ID.
      *
      * @param groupId group ID
@@ -145,38 +136,6 @@ public class GroupService {
             if (currentMemberCount >= group.getMaxMembers()) {
                 throw new IllegalStateException("Group is full");
             }
-        }
-
-        final GroupMember membership = new GroupMember(group, user,
-                GroupMember.MemberRole.MEMBER);
-        groupMemberRepository.save(membership);
-
-        return group;
-    }
-
-    /**
-     * Join a public topic group.
-     *
-     * @param userId  user ID
-     * @param groupId group ID
-     * @return the group joined
-     */
-    public Group joinPublicTopic(final Long userId, final Long groupId) {
-        final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "User not found"));
-
-        final Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Group not found"));
-
-        if (group.getGroupType() != Group.GroupType.PUBLIC_TOPIC) {
-            throw new IllegalStateException("This is not a public topic group");
-        }
-
-        // Check if already a member
-        if (groupMemberRepository.existsByGroupAndUser(group, user)) {
-            throw new IllegalStateException("Already a member of this group");
         }
 
         final GroupMember membership = new GroupMember(group, user,
