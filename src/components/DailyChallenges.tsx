@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from '@/services/api';
+import api, { badgeService, UserBadge } from '@/services/api';
+import BadgeNotificationModal from './BadgeNotificationModal';
 
 interface DailyChallenge {
   id: number;
@@ -26,9 +27,19 @@ interface ProgressData {
   todayCompletedCount: number;
   pointsToNextLevel: number;
   progressPercentage: number;
+  dailyLimit: number;
 }
 
-export default function DailyChallenges() {
+interface DailyChallengesProps {
+  onRequestShare?: (challengeId: number) => void;
+}
+
+interface CompletionSummary {
+  challengeId: number;
+  challengeTitle: string;
+}
+
+export default function DailyChallenges({ onRequestShare }: DailyChallengesProps) {
   const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
   const [progressData, setProgressData] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +47,14 @@ export default function DailyChallenges() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [encouragementMessage, setEncouragementMessage] = useState('');
+  const [newBadges, setNewBadges] = useState<UserBadge[]>([]);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
+  const [lastCompletion, setLastCompletion] = useState<CompletionSummary | null>(null);
+
+  const hasReachedDailyLimit = progressData ? progressData.todayCompletedCount >= progressData.dailyLimit : false;
 
   useEffect(() => {
     loadData();
@@ -61,14 +80,20 @@ export default function DailyChallenges() {
       ]);
 
       console.log('チャレンジレスポンス:', challengesRes);
+      console.log('チャレンジデータ:', challengesRes.data);
+      console.log('チャレンジ配列:', challengesRes.data.data);
       console.log('進捗レスポンス:', progressRes);
 
       if (challengesRes.data.success) {
+        console.log('チャレンジ数:', challengesRes.data.data.length);
         setChallenges(challengesRes.data.data);
+      } else {
+        console.error('チャレンジ取得失敗:', challengesRes.data);
       }
 
       if (progressRes.data.success) {
         setProgressData(progressRes.data.data);
+        setCompletionError(null);
       }
     } catch (error: any) {
       console.error('データの読み込みに失敗しました:', error);
@@ -91,6 +116,10 @@ export default function DailyChallenges() {
 
   const completeChallenge = async (challengeId: number) => {
     try {
+      if (hasReachedDailyLimit) {
+        setCompletionError('今日達成できるデイリーチャレンジは3つまでです。明日またチャレンジしましょう！');
+        return;
+      }
       setCompletingId(challengeId);
       const response = await api.post(`/challenges/${challengeId}/complete`, {
         note: ''
@@ -98,17 +127,74 @@ export default function DailyChallenges() {
 
       if (response.data.success) {
         const data = response.data.data;
+        setCompletionError(null);
+        
+        // 励ましメッセージをランダム選択
+        const encouragements = [
+          '素晴らしい！一歩前進です！ 🌟',
+          'よくできました！自分を誇りに思ってください！ ✨',
+          'すごい！着実に成長していますね！ 🌱',
+          '達成おめでとう！その調子です！ 🎉',
+          '頑張りましたね！小さな成功の積み重ねが大きな変化に！ 💪',
+          'やった！自分を信じる力が育っています！ 🌈',
+          '素敵です！あなたの努力が花開いています！ 🌸',
+          'お疲れ様！今日も一つ成長できましたね！ ⭐',
+        ];
+        const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+        
         setSuccessMessage(data.message + (data.levelUpMessage ? ' ' + data.levelUpMessage : ''));
+        setEncouragementMessage(randomEncouragement);
         setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 5000);
+        setShowConfetti(true);
+        
+        // 3秒後にメッセージを消す
+        setTimeout(() => {
+          setShowSuccess(false);
+          setShowConfetti(false);
+        }, 5000);
+
+        // レスポンスから新規バッジを取得
+        if (data.newBadges && data.newBadges.length > 0) {
+          setNewBadges(data.newBadges);
+          setShowBadgeModal(true);
+        }
+
+        if (data.completion && data.completion.challenge) {
+          setLastCompletion({
+            challengeId: data.completion.challenge.id,
+            challengeTitle: data.completion.challenge.title,
+          });
+        } else {
+          setLastCompletion(null);
+        }
 
         // データを再読み込み
         await loadData();
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'チャレンジの達成に失敗しました');
+      const message = error.response?.data?.message || 'チャレンジの達成に失敗しました';
+      setCompletionError(message);
+      setLastCompletion(null);
     } finally {
       setCompletingId(null);
+    }
+  };
+
+  const handleCloseBadgeModal = async () => {
+    setShowBadgeModal(false);
+    setNewBadges([]);
+    // バッジを既読にする
+    try {
+      await badgeService.markBadgesAsRead();
+    } catch (error) {
+      console.error('バッジの既読化に失敗しました:', error);
+    }
+  };
+
+  const handleRequestShare = () => {
+    if (lastCompletion) {
+      onRequestShare?.(lastCompletion.challengeId);
+      setLastCompletion(null);
     }
   };
 
@@ -168,10 +254,70 @@ export default function DailyChallenges() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
+      {/* 紙吹雪エフェクト */}
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-confetti"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: '-10%',
+                animationDelay: `${Math.random() * 0.5}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+              }}
+            >
+              {['🌸', '✨', '⭐', '🌟', '💫', '🎉'][Math.floor(Math.random() * 6)]}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* 成功メッセージ */}
       {showSuccess && (
-        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg animate-fade-in">
-          {successMessage}
+        <div className="mb-4 p-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-400 rounded-xl shadow-lg animate-bounce-in">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-4xl animate-spin-slow">🎉</span>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-green-800 mb-1">チャレンジ達成！</h3>
+              <p className="text-green-700">{successMessage}</p>
+            </div>
+          </div>
+          <div className="mt-3 p-3 bg-white bg-opacity-70 rounded-lg">
+            <p className="text-lg font-semibold text-purple-700 text-center">
+              {encouragementMessage}
+            </p>
+          </div>
+          {lastCompletion && onRequestShare && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={handleRequestShare}
+                className="px-5 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow hover:from-purple-600 hover:to-pink-600 transition-all"
+              >
+                🌟 タイムラインに共有する
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {lastCompletion && onRequestShare && (
+        <div className="mb-6 p-5 bg-purple-50 border border-purple-200 rounded-xl shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-purple-800">直近の達成をみんなとシェアしよう！</h3>
+              <p className="text-purple-700 text-sm">
+                「{lastCompletion.challengeTitle}」をタイムラインに投稿して仲間からの応援を受け取ろう。
+              </p>
+            </div>
+            <button
+              onClick={handleRequestShare}
+              className="self-start md:self-auto px-5 py-2 bg-white text-purple-700 border border-purple-300 rounded-full font-semibold shadow-sm hover:shadow transition-all"
+            >
+              🌟 タイムラインに共有する
+            </button>
+          </div>
         </div>
       )}
 
@@ -180,7 +326,9 @@ export default function DailyChallenges() {
         <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-800">あなたの花の成長</h2>
-            <div className="text-6xl">{progressData.flowerEmoji}</div>
+            <div className="text-6xl hover:scale-110 transition-transform cursor-pointer animate-pulse-glow">
+              {progressData.flowerEmoji}
+            </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -205,10 +353,16 @@ export default function DailyChallenges() {
             <div className="text-center p-3 bg-white rounded-lg">
               <div className="text-sm text-gray-600">今日の達成</div>
               <div className="text-2xl font-bold text-green-600">
-                {progressData.todayCompletedCount}個
+                {progressData.todayCompletedCount} / {progressData.dailyLimit}個
               </div>
             </div>
           </div>
+
+          {hasReachedDailyLimit && (
+            <div className="mt-2 text-sm font-semibold text-purple-700">
+              素晴らしい！今日は3件のチャレンジをすべてやり遂げました。
+            </div>
+          )}
 
           {/* プログレスバー */}
           <div className="mb-2">
@@ -218,9 +372,11 @@ export default function DailyChallenges() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 relative overflow-hidden"
                 style={{ width: `${progressData.progressPercentage}%` }}
-              ></div>
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-shimmer"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -228,12 +384,72 @@ export default function DailyChallenges() {
 
       {/* チャレンジリスト */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">今日のチャレンジ</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-800">今日のチャレンジ</h2>
+          
+          {/* デバッグ用リセットボタン（開発環境のみ） */}
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={async () => {
+                if (confirm('達成履歴をリセットしますか？（開発用）')) {
+                  try {
+                    await api.delete('/challenges/debug/reset-today');
+                    alert('リセット完了！ページをリロードしてください。');
+                    window.location.reload();
+                  } catch (error) {
+                    console.error('リセット失敗:', error);
+                    alert('リセットに失敗しました。手動でMySQLをリセットしてください。');
+                  }
+                }
+              }}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600"
+            >
+              🔧 デバッグ: 今日の達成をリセット
+            </button>
+          )}
+        </div>
         
+        {completionError && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {completionError}
+          </div>
+        )}
+
+        {hasReachedDailyLimit && !completionError && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
+            今日のデイリーチャレンジは3件までです。よく頑張りました！
+          </div>
+        )}
+
         {challenges.length === 0 ? (
           <div className="text-center p-8 bg-gray-50 rounded-lg">
             <p className="text-gray-600 mb-2">🎉 素晴らしい!</p>
-            <p className="text-gray-600">今日のチャレンジは全て達成しました!</p>
+            <p className="text-gray-600 mb-4">
+              {hasReachedDailyLimit
+                ? '今日の上限である3件を達成しました。ゆっくり休んでくださいね！'
+                : '今日のチャレンジは全て達成しました!'}
+            </p>
+            
+            {/* デバッグ用: リセットボタン */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={async () => {
+                  if (confirm('全てのデータをリセットしますか？（達成記録、バッジ、進捗）')) {
+                    try {
+                      const response = await api.delete('/debug/reset-all');
+                      alert(response.data.data || 'リセット完了！');
+                      window.location.reload();
+                    } catch (error: any) {
+                      console.error('リセット失敗:', error);
+                      alert('リセットに失敗しました: ' + (error.response?.data?.message || error.message));
+                    }
+                  }
+                }}
+                className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                🔧 デバッグ: 全てリセット
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -264,16 +480,28 @@ export default function DailyChallenges() {
                 
                 <button
                   onClick={() => completeChallenge(challenge.id)}
-                  disabled={completingId === challenge.id}
+                  disabled={completingId === challenge.id || hasReachedDailyLimit}
                   className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  {completingId === challenge.id ? '達成中...' : '達成!'}
+                  {completingId === challenge.id
+                    ? '達成中...'
+                    : hasReachedDailyLimit
+                      ? '今日の上限に達しました'
+                      : '達成!'}
                 </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* バッジ獲得モーダル */}
+      {showBadgeModal && newBadges.length > 0 && (
+        <BadgeNotificationModal
+          badges={newBadges}
+          onClose={handleCloseBadgeModal}
+        />
+      )}
     </div>
   );
 }

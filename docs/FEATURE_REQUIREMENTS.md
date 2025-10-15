@@ -232,3 +232,117 @@ public class Topic {
 3. ⏳ 必要なエンティティ・リポジトリ実装確認
 4. ⏳ Group, GroupMember, Topic エンティティ作成
 5. ⏳ 対応するサービス・コントローラ実装
+
+---
+
+## 自己肯定感向上ダッシュボード拡張
+
+デイリーチャレンジ機能を中心に、ユーザーの努力を「共有」と「可視化」で後押しする機能群を追加する。
+
+### A. チャレンジ共有タイムライン
+
+#### 目的
+- 達成の瞬間を仲間と共有し、ポジティブなフィードバックを獲得できる場を提供する。
+- 「応援」「共感」「すごい！」など手軽なリアクションで相互承認を促進する。
+
+#### ユーザーストーリー
+- ユーザーはチャレンジ完了時にメモ／感想を添えて共有タイムラインへ投稿できる。
+- 他のメンバーはタイムラインをスクロールして閲覧し、ワンタップでリアクションできる。
+- フィードを既読にすると新着バッジのモーダルと同様、未読数がクリアされる。
+
+#### データモデル（追加）
+```java
+@Entity
+public class ChallengeShare {
+    @Id @GeneratedValue
+    private Long id;
+
+    @ManyToOne(optional = false)
+    private User user;
+
+    @ManyToOne(optional = false)
+    private DailyChallenge challenge;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String comment; // 共有メッセージ（最大500文字程度）
+
+    private String mood; // 任意：today, proud, grateful など
+
+    private LocalDateTime sharedAt;
+}
+
+@Entity
+public class ChallengeShareReaction {
+    @Id @GeneratedValue
+    private Long id;
+
+    @ManyToOne(optional = false)
+    private ChallengeShare share;
+
+    @ManyToOne(optional = false)
+    private User user;
+
+    @Enumerated(EnumType.STRING)
+    private ReactionType type; // ENCOURAGE, EMPATHY, AWESOME
+
+    private LocalDateTime reactedAt;
+}
+```
+
+#### API エンドポイント案
+- `POST /api/shares` — チャレンジ達成時の共有投稿（note, mood, visibility）
+- `GET /api/shares?cursor=` — タイムライン取得（ページネーション、最新優先）
+- `POST /api/shares/{shareId}/reactions` — リアクション追加／切替
+- `DELETE /api/shares/{shareId}/reactions/{type}` — リアクション解除
+- `GET /api/shares/unread-count` — 未読数取得（バッジ通知と同じUIで表示）
+
+#### フロントエンド UI
+- `ChallengeShareFeed.tsx`：無限スクロールのカード型リスト、バッジメダル表示。
+- `ShareComposer.tsx`：達成時モーダルから連動して投稿できる入力フォーム。
+- `ReactionBar.tsx`：3種リアクションのトグルボタン＋リアクション数。
+
+#### 実装ステップ
+1. エンティティ・リポジトリ作成（Share, Reaction）
+2. ShareService／ShareController 実装、認可は本人＋閲覧権限ユーザーに限定
+3. フロントエンド：既存の`DailyChallenges`コンポーネントから投稿導線追加
+4. タイムラインページ／リアクションUI／未読数バッジ連携
+5. E2E テスト：投稿→リアクション→未読数クリアまで
+
+---
+
+### B. 統計グラフ・進捗可視化
+
+#### 目的
+- 小さな成功の蓄積を視覚化し、自己肯定感を定着させる。
+- カテゴリ別／期間別のバランスを確認し、翌週の目標設定を支援。
+
+#### 指標と可視化
+| 観点 | 指標 | 可視化 | メモ |
+|------|------|--------|------|
+| 週間トレンド | 日ごとの達成数、獲得ポイント、ストリーク | 折れ線グラフ | 1週間／4週間切替 |
+| カテゴリバランス | カテゴリ別達成数 | 100%積み上げ棒 or ドーナツチャート | 「偏り」の可視化 |
+| 月間カレンダー | 日別達成状況、バッジ獲得日 | カレンダービュー | ホバーで詳細表示 |
+| レベル進捗 | 現在の花レベル、次レベルまでの残ポイント | プログレスバー | ダッシュボード上部 |
+
+#### API エンドポイント案
+- `GET /api/statistics/summary?range=weekly|monthly` — メイン集計（累積・平均）
+- `GET /api/statistics/daily?start=&end=` — 日別達成数リスト（チャート用）
+- `GET /api/statistics/category?range=` — カテゴリ別割合
+- `GET /api/statistics/calendar?year=&month=` — カレンダーデータ（1日1オブジェクト）
+
+#### バックエンド実装メモ
+- `ChallengeCompletionRepository` に期間／カテゴリでグルーピングするカスタムクエリを追加。
+- `UserProgress` と連動させて花レベルの進捗を計算（次レベルの残ポイント）。
+- 集計処理は `StatisticsService` として切り出し、レスポンスDTOを Tailwind グラフと合わせる。
+
+#### フロントエンド UI
+- `StatisticsDashboard.tsx`：`@/app/dashboard` 内に配置、Tabs で週間／月間を切替。
+- グラフライブラリは `react-chartjs-2` または `recharts` を想定。
+- カレンダー表示は `react-day-picker` 等で実装し、達成日はハイライト、バッジ日はアイコン付与。
+
+#### 実装ステップ
+1. DTO／サービス層での集計ロジック実装＋単体テスト
+2. エンドポイント公開と OpenAPI ドキュメント更新
+3. フロントエンド：API フック作成、グラフコンポーネント実装
+4. カレンダービュー＋バッジイベント連携
+5. 統合テスト／スナップショットテストで視覚崩れを確認

@@ -155,6 +155,20 @@ app.jwt.expiration=86400000
 
 アプリケーションは `http://localhost:8080` で起動します。
 
+### 5. デフォルトのテストユーザー
+
+アプリケーション起動時に、次のテストユーザーが自動的に作成されます。すべてのアカウントで共通パスワード `password123` を使用できます。
+
+| ユーザー名 | 表示名 | メールアドレス |
+| --- | --- | --- |
+| alice | Alice Wonderland | alice@example.com |
+| bob | Bob Builder | bob@example.com |
+| charlie | Charlie Chaplin | charlie@example.com |
+| diana | Diana Prince | diana@example.com |
+| eve | Eve Online | eve@example.com |
+
+> 🔐 **補足:** パスワードはアプリ内で BCrypt によってハッシュ化されて保存されます。ログインテスト時のみプレーンテキストの `password123` を使用してください。
+
 ---
 
 ## 📡 API エンドポイント

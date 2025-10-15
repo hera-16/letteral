@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
 import FriendList from '@/components/FriendList';
@@ -8,6 +8,7 @@ import GroupTopicList from '@/components/GroupTopicList';
 import ChatRoom from '@/components/ChatRoom';
 import GroupSettings from '@/components/GroupSettings';
 import DailyChallenges from '@/components/DailyChallenges';
+import ChallengeShareTimeline from '@/components/ChallengeShareTimeline';
 import { authService, User, Group, Topic } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
@@ -28,6 +29,8 @@ export default function Home() {
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [pendingShareChallengeId, setPendingShareChallengeId] = useState<number | null>(null);
+  const timelineSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // 初回ロード時にローカルストレージから認証情報を確認
@@ -102,6 +105,14 @@ export default function Home() {
   const handleBackFromChat = () => {
     setChatTarget(null);
     setViewMode('challenges');
+  };
+
+  const handleRequestShare = (challengeId: number) => {
+    setViewMode('challenges');
+    setPendingShareChallengeId(challengeId);
+    setTimeout(() => {
+      timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   };
 
   // 認証チェック中
@@ -225,6 +236,12 @@ export default function Home() {
               >
                 🌸 デイリーチャレンジ
               </button>
+              <a
+                href="/badges"
+                className="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+              >
+                🏆 獲得バッジ
+              </a>
               <button
                 onClick={() => setViewMode('friends')}
                 className={`px-6 py-3 rounded-lg font-semibold ${
@@ -249,7 +266,23 @@ export default function Home() {
 
             {/* コンテンツエリア */}
             <div className="grid grid-cols-1 gap-6">
-              {viewMode === 'challenges' && <DailyChallenges />}
+              {viewMode === 'challenges' && (
+                <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6 items-start">
+                  <div>
+                    <div className="bg-blue-100 p-4 rounded mb-4">
+                      <p>デバッグ: viewMode = {viewMode}</p>
+                    </div>
+                    <DailyChallenges onRequestShare={handleRequestShare} />
+                  </div>
+                  <div ref={timelineSectionRef} className="scroll-mt-24">
+                    <ChallengeShareTimeline
+                      pendingShareChallengeId={pendingShareChallengeId}
+                      onSharePosted={() => setPendingShareChallengeId(null)}
+                      onPendingShareConsumed={() => setPendingShareChallengeId(null)}
+                    />
+                  </div>
+                </div>
+              )}
               {viewMode === 'friends' && (
                 <FriendList onSelectFriend={handleSelectFriend} />
               )}

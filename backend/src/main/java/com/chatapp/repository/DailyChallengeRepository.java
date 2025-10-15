@@ -1,14 +1,14 @@
 package com.chatapp.repository;
 
-import java.util.List;
-
+import com.chatapp.model.DailyChallenge;
+import com.chatapp.model.DailyChallenge.ChallengeType;
+import com.chatapp.model.DailyChallenge.DifficultyLevel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.chatapp.model.DailyChallenge;
-import com.chatapp.model.DailyChallenge.ChallengeType;
-import com.chatapp.model.DailyChallenge.DifficultyLevel;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * デイリーチャレンジリポジトリ
@@ -20,6 +20,8 @@ public interface DailyChallengeRepository extends JpaRepository<DailyChallenge, 
      * アクティブなチャレンジを取得
      */
     List<DailyChallenge> findByIsActiveTrue();
+
+    Optional<DailyChallenge> findByTitle(String title);
     
     /**
      * タイプ別にアクティブなチャレンジを取得

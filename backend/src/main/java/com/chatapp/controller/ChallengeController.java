@@ -1,27 +1,22 @@
 package com.chatapp.controller;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.chatapp.dto.ApiResponse;
 import com.chatapp.model.ChallengeCompletion;
 import com.chatapp.model.DailyChallenge;
 import com.chatapp.model.User;
+import com.chatapp.model.UserBadge;
 import com.chatapp.model.UserProgress;
 import com.chatapp.repository.UserRepository;
+import com.chatapp.service.BadgeService;
 import com.chatapp.service.ChallengeService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * デイリーチャレンジのREST APIコントローラー
@@ -31,10 +26,12 @@ import com.chatapp.service.ChallengeService;
 public class ChallengeController {
     
     private final ChallengeService challengeService;
+    private final BadgeService badgeService;
     private final UserRepository userRepository;
     
-    public ChallengeController(ChallengeService challengeService, UserRepository userRepository) {
+    public ChallengeController(ChallengeService challengeService, BadgeService badgeService, UserRepository userRepository) {
         this.challengeService = challengeService;
+        this.badgeService = badgeService;
         this.userRepository = userRepository;
     }
     
@@ -83,6 +80,7 @@ public class ChallengeController {
      * チャレンジを達成する
      * POST /api/challenges/{challengeId}/complete
      */
+    @SuppressWarnings("unchecked")
     @PostMapping("/{challengeId}/complete")
     public ResponseEntity<ApiResponse<Map<String, Object>>> completeChallenge(
             @PathVariable Long challengeId,
@@ -95,7 +93,11 @@ public class ChallengeController {
             
             String note = request != null ? request.get("note") : null;
             
-            ChallengeCompletion completion = challengeService.completeChallenge(user.getId(), challengeId, note);
+            // チャレンジ達成（completionとnewBadgesを含むMapが返される）
+            Map<String, Object> completionResult = challengeService.completeChallenge(user.getId(), challengeId, note);
+            ChallengeCompletion completion = (ChallengeCompletion) completionResult.get("completion");
+            List<UserBadge> newBadges = (List<UserBadge>) completionResult.get("newBadges");
+            
             UserProgress progress = challengeService.getUserProgress(user.getId());
             
             // レスポンスデータを構築
@@ -103,6 +105,7 @@ public class ChallengeController {
             responseData.put("completion", completion);
             responseData.put("progress", progress);
             responseData.put("flowerEmoji", progress.getFlowerEmoji());
+            responseData.put("newBadges", newBadges); // 新規バッジリストを追加
             responseData.put("message", "チャレンジ達成おめでとうございます! +" + completion.getPointsEarned() + "ポイント");
             
             // レベルアップした場合は特別なメッセージ
@@ -142,6 +145,7 @@ public class ChallengeController {
             progressData.put("progress", progress);
             progressData.put("flowerEmoji", progress.getFlowerEmoji());
             progressData.put("todayCompletedCount", todayCount);
+            progressData.put("dailyLimit", challengeService.getDailyCompletionLimit());
             progressData.put("pointsToNextLevel", 100 - (progress.getTotalPoints() % 100));
             progressData.put("progressPercentage", (progress.getTotalPoints() % 100));
             
@@ -223,6 +227,66 @@ public class ChallengeController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("統計情報の取得に失敗しました: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * ユーザーの獲得バッジ一覧を取得
+     * GET /api/challenges/badges
+     */
+    @GetMapping("/badges")
+    public ResponseEntity<ApiResponse<List<UserBadge>>> getUserBadges(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+            
+            List<UserBadge> badges = badgeService.getUserBadges(user);
+            
+            return ResponseEntity.ok(ApiResponse.success(badges));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("バッジ一覧の取得に失敗しました: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 新規獲得バッジを取得（未読のバッジ）
+     * GET /api/challenges/badges/new
+     */
+    @GetMapping("/badges/new")
+    public ResponseEntity<ApiResponse<List<UserBadge>>> getNewBadges(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+            
+            List<UserBadge> newBadges = badgeService.getNewBadges(user);
+            
+            return ResponseEntity.ok(ApiResponse.success(newBadges));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("新規バッジの取得に失敗しました: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * バッジを既読にする
+     * POST /api/challenges/badges/mark-read
+     */
+    @PostMapping("/badges/mark-read")
+    public ResponseEntity<ApiResponse<Void>> markBadgesAsRead(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+            
+            badgeService.markBadgesAsRead(user);
+            
+            return ResponseEntity.ok(ApiResponse.success(null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("バッジの既読化に失敗しました: " + e.getMessage()));
         }
     }
 }

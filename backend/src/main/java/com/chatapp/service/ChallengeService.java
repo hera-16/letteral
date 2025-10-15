@@ -1,21 +1,13 @@
 package com.chatapp.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
-
+import com.chatapp.model.*;
+import com.chatapp.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.chatapp.model.ChallengeCompletion;
-import com.chatapp.model.DailyChallenge;
-import com.chatapp.model.User;
-import com.chatapp.model.UserProgress;
-import com.chatapp.repository.ChallengeCompletionRepository;
-import com.chatapp.repository.DailyChallengeRepository;
-import com.chatapp.repository.UserProgressRepository;
-import com.chatapp.repository.UserRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * デイリーチャレンジのビジネスロジックを提供するサービス
@@ -27,17 +19,21 @@ public class ChallengeService {
     private final UserProgressRepository userProgressRepository;
     private final ChallengeCompletionRepository challengeCompletionRepository;
     private final UserRepository userRepository;
+    private final BadgeService badgeService;
     private final Random random = new Random();
+    private static final int DAILY_COMPLETION_LIMIT = 3;
     
     public ChallengeService(
             DailyChallengeRepository dailyChallengeRepository,
             UserProgressRepository userProgressRepository,
             ChallengeCompletionRepository challengeCompletionRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            BadgeService badgeService) {
         this.dailyChallengeRepository = dailyChallengeRepository;
         this.userProgressRepository = userProgressRepository;
         this.challengeCompletionRepository = challengeCompletionRepository;
         this.userRepository = userRepository;
+        this.badgeService = badgeService;
     }
     
     /**
@@ -48,19 +44,32 @@ public class ChallengeService {
         // ユーザーの今日の達成済みチャレンジを取得
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         List<ChallengeCompletion> todayCompletions = challengeCompletionRepository.findTodayCompletions(userId, startOfDay);
+        if (todayCompletions.size() >= DAILY_COMPLETION_LIMIT) {
+            return Collections.emptyList();
+        }
+        
+        // デバッグログ
+        System.out.println("=== デバッグ: getTodayRecommendedChallenges ===");
+        System.out.println("userId: " + userId);
+        System.out.println("startOfDay: " + startOfDay);
+        System.out.println("todayCompletions.size(): " + todayCompletions.size());
         
         // 全アクティブチャレンジを取得
         List<DailyChallenge> allChallenges = dailyChallengeRepository.findByIsActiveTrue();
+        System.out.println("allChallenges.size(): " + allChallenges.size());
         
         // 今日達成済みのチャレンジIDを抽出
         List<Long> completedChallengeIds = todayCompletions.stream()
                 .map(completion -> completion.getChallenge().getId())
                 .toList();
+        System.out.println("completedChallengeIds: " + completedChallengeIds);
         
         // 未達成のチャレンジのみにフィルタリング
         List<DailyChallenge> availableChallenges = allChallenges.stream()
                 .filter(challenge -> !completedChallengeIds.contains(challenge.getId()))
                 .toList();
+        System.out.println("availableChallenges.size(): " + availableChallenges.size());
+        System.out.println("=========================================");
         
         // ランダムに3つ選択（3つ未満の場合は全て返す）
         if (availableChallenges.size() <= 3) {
@@ -83,9 +92,10 @@ public class ChallengeService {
     /**
      * チャレンジを達成する
      * ポイントを加算し、ストリークを更新し、花レベルを計算する
+     * @return Map with completion and newBadges
      */
     @Transactional
-    public ChallengeCompletion completeChallenge(Long userId, Long challengeId, String note) {
+    public Map<String, Object> completeChallenge(Long userId, Long challengeId, String note) {
         // ユーザーとチャレンジを取得
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
@@ -95,16 +105,14 @@ public class ChallengeService {
         
         // 今日既に達成済みかチェック
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        boolean alreadyCompleted = challengeCompletionRepository.existsByUserAndChallenge(user, challenge);
-        
-        if (alreadyCompleted) {
-            List<ChallengeCompletion> todayCompletions = challengeCompletionRepository.findTodayCompletions(userId, startOfDay);
-            boolean completedToday = todayCompletions.stream()
-                    .anyMatch(completion -> completion.getChallenge().getId().equals(challengeId));
-            
-            if (completedToday) {
-                throw new RuntimeException("このチャレンジは今日既に達成済みです");
-            }
+        List<ChallengeCompletion> todayCompletions = challengeCompletionRepository.findTodayCompletions(userId, startOfDay);
+        if (todayCompletions.size() >= DAILY_COMPLETION_LIMIT) {
+            throw new RuntimeException("今日達成できるデイリーチャレンジは3つまでです");
+        }
+        boolean completedToday = todayCompletions.stream()
+                .anyMatch(completion -> completion.getChallenge().getId().equals(challengeId));
+        if (completedToday) {
+            throw new RuntimeException("このチャレンジは今日既に達成済みです");
         }
         
         // ユーザー進捗を取得または作成
@@ -135,7 +143,17 @@ public class ChallengeService {
         completion.setPointsEarned(challenge.getPoints());
         completion.setNote(note);
         
-        return challengeCompletionRepository.save(completion);
+        ChallengeCompletion savedCompletion = challengeCompletionRepository.save(completion);
+        
+        // バッジ獲得条件をチェック
+        List<UserBadge> newBadges = badgeService.checkAndAwardBadges(user);
+        
+        // 結果をMapで返す
+        Map<String, Object> result = new HashMap<>();
+        result.put("completion", savedCompletion);
+        result.put("newBadges", newBadges);
+        
+        return result;
     }
     
     /**
@@ -174,6 +192,10 @@ public class ChallengeService {
     public int getTodayCompletedCount(Long userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         return challengeCompletionRepository.findTodayCompletions(userId, startOfDay).size();
+    }
+
+    public int getDailyCompletionLimit() {
+        return DAILY_COMPLETION_LIMIT;
     }
     
     /**

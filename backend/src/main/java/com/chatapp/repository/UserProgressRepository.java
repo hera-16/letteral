@@ -1,14 +1,13 @@
 package com.chatapp.repository;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.chatapp.model.User;
+import com.chatapp.model.UserProgress;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.chatapp.model.User;
-import com.chatapp.model.UserProgress;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * ユーザー進捗リポジトリ

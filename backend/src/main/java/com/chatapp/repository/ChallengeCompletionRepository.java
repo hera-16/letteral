@@ -1,16 +1,15 @@
 package com.chatapp.repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
+import com.chatapp.model.ChallengeCompletion;
+import com.chatapp.model.DailyChallenge;
+import com.chatapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.chatapp.model.ChallengeCompletion;
-import com.chatapp.model.DailyChallenge;
-import com.chatapp.model.User;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * チャレンジ達成記録リポジトリ
@@ -54,4 +53,15 @@ public interface ChallengeCompletionRepository extends JpaRepository<ChallengeCo
      * 最近の達成記録を取得（全ユーザー）
      */
     List<ChallengeCompletion> findTop10ByOrderByCompletedAtDesc();
+    
+    /**
+     * ユーザーの総達成数を取得
+     */
+    long countByUser(User user);
+    
+    /**
+     * ユーザーのカテゴリ別達成数を取得
+     */
+    @Query("SELECT COUNT(cc) FROM ChallengeCompletion cc WHERE cc.user = :user AND cc.challenge.challengeType = :challengeType")
+    long countByChallengeType(@Param("user") User user, @Param("challengeType") DailyChallenge.ChallengeType challengeType);
 }

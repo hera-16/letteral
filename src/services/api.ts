@@ -117,6 +117,76 @@ export interface FriendStats {
   pendingRequests: number;
 }
 
+export interface ChallengeCompletionSummary {
+  id: number;
+  challenge: DailyChallengeSummary;
+  note?: string;
+  completedAt: string;
+  pointsEarned: number;
+}
+
+export interface DailyChallengeSummary {
+  id: number;
+  title: string;
+  description?: string;
+  challengeType: string;
+  difficultyLevel?: string;
+  points: number;
+}
+
+export type ChallengeShareReactionType = 'ENCOURAGE' | 'EMPATHY' | 'AWESOME';
+
+export interface ChallengeShareUserSummary {
+  id: number;
+  username: string;
+  displayName?: string;
+}
+
+export interface ChallengeShareChallengeSummary {
+  id: number;
+  title: string;
+  challengeType: string;
+  points: number;
+}
+
+export interface ChallengeShare {
+  id: number;
+  user: ChallengeShareUserSummary;
+  challenge: ChallengeShareChallengeSummary;
+  comment: string;
+  mood?: string;
+  sharedAt: string;
+  reactions: Partial<Record<ChallengeShareReactionType, number>>;
+  userReaction?: ChallengeShareReactionType | null;
+}
+
+export interface PagedChallengeShares {
+  shares: ChallengeShare[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+}
+
+// バッジ関連の型定義
+export interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  badgeType: string;
+  icon: string;
+  requirementValue: number;
+  createdAt: string;
+}
+
+export interface UserBadge {
+  id: number;
+  badge: Badge;
+  earnedAt: string;
+  isNew: boolean;
+}
+
 // グループ関連の型定義
 export interface Group {
   id: number;
@@ -403,6 +473,67 @@ export const anonymousService = {
 
   async resetAnonymousNames(groupId: number): Promise<void> {
     await api.delete(`/anonymous/groups/${groupId}/names`);
+  },
+};
+
+export const badgeService = {
+  async getUserBadges(): Promise<UserBadge[]> {
+    const response = await api.get('/challenges/badges');
+    return response.data.success ? response.data.data : [];
+  },
+
+  async getNewBadges(): Promise<UserBadge[]> {
+    const response = await api.get('/challenges/badges/new');
+    return response.data.success ? response.data.data : [];
+  },
+
+  async markBadgesAsRead(): Promise<void> {
+    await api.post('/challenges/badges/mark-read');
+  },
+};
+
+export const challengeServiceApi = {
+  async getHistory(): Promise<ChallengeCompletionSummary[]> {
+    const response = await api.get('/challenges/history');
+    return response.data.success ? response.data.data : [];
+  },
+};
+
+export const challengeShareService = {
+  async createShare(payload: { challengeId: number; comment: string; mood?: string }): Promise<ChallengeShare> {
+    const response = await api.post('/shares', payload);
+    return response.data.data;
+  },
+
+  async getTimeline(page = 0, size = 10): Promise<PagedChallengeShares> {
+    const response = await api.get('/shares', { params: { page, size } });
+    return response.data.success ? response.data.data : {
+      shares: [],
+      page,
+      size,
+      totalElements: 0,
+      totalPages: 0,
+      hasNext: false,
+    };
+  },
+
+  async addReaction(shareId: number, type: ChallengeShareReactionType): Promise<ChallengeShare> {
+    const response = await api.post(`/shares/${shareId}/reactions`, { type });
+    return response.data.data;
+  },
+
+  async removeReaction(shareId: number, type: ChallengeShareReactionType): Promise<ChallengeShare> {
+    const response = await api.delete(`/shares/${shareId}/reactions/${type}`);
+    return response.data.data;
+  },
+
+  async getUnreadCount(): Promise<number> {
+    const response = await api.get('/shares/unread-count');
+    return response.data.success ? response.data.data?.count ?? 0 : 0;
+  },
+
+  async markRead(): Promise<void> {
+    await api.post('/shares/mark-read');
   },
 };
 
