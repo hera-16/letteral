@@ -9,10 +9,11 @@ import ChatRoom from '@/components/ChatRoom';
 import GroupSettings from '@/components/GroupSettings';
 import DailyChallenges from '@/components/DailyChallenges';
 import ChallengeShareTimeline from '@/components/ChallengeShareTimeline';
+import Badges from '@/components/Badges';
 import { authService, User, Group } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
-type ViewMode = 'friends' | 'groups' | 'challenges' | 'chat';
+type ViewMode = 'friends' | 'groups' | 'challenges' | 'chat' | 'badges';
 
 interface ChatTarget {
   type: 'friend' | 'group' | 'general';
@@ -108,10 +109,10 @@ export default function Home() {
   // 認証チェック中
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: '#00ADB5' }}></div>
+          <p style={{ color: '#EEEEEE' }}>読み込み中...</p>
         </div>
       </div>
     );
@@ -120,9 +121,9 @@ export default function Home() {
   if (!user) {
     if (showSignupSuccess) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
           <div className="max-w-md w-full">
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-center">
+            <div className="px-4 py-3 rounded text-center" style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}>
               <p className="font-bold">登録が完了しました!</p>
               <p>ログイン画面に移動します...</p>
             </div>
@@ -149,18 +150,21 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: '#222831' }}>
       {/* ヘッダー */}
-      <header className="bg-white shadow">
+      <header className="shadow" style={{ backgroundColor: '#393E46' }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">チャットアプリ</h1>
+          <h1 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>チャットアプリ</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-700">
+            <span style={{ color: '#EEEEEE' }}>
               {user.displayName || user.username} さん
             </span>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              className="px-4 py-2 rounded-lg transition-colors"
+              style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
             >
               ログアウト
             </button>
@@ -174,22 +178,28 @@ export default function Home() {
             <div className="flex gap-4 mb-4">
               <button
                 onClick={handleBackFromChat}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                className="px-4 py-2 rounded-lg transition-opacity"
+                style={{ backgroundColor: '#393E46', color: '#EEEEEE' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               >
                 ← 戻る
               </button>
               {chatTarget.type === 'group' && (
                 <button
                   onClick={() => setShowGroupSettings(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  className="px-4 py-2 rounded-lg transition-opacity"
+                  style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
                   ⚙️ グループ設定
                 </button>
               )}
             </div>
             <div className="mb-4">
-              <h2 className="text-2xl font-bold">{chatTarget.name}</h2>
-              <p className="text-gray-600 text-sm">
+              <h2 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>{chatTarget.name}</h2>
+              <p className="text-sm" style={{ color: '#00ADB5' }}>
                 {chatTarget.type === 'friend' && 'フレンドチャット'}
                 {chatTarget.type === 'group' && '匿名グループチャット'}
               </p>
@@ -217,39 +227,43 @@ export default function Home() {
             <div className="flex gap-4 mb-6">
               <button
                 onClick={() => setViewMode('challenges')}
-                className={`px-6 py-3 rounded-lg font-semibold ${
-                  viewMode === 'challenges'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className="px-6 py-3 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: viewMode === 'challenges' ? '#00ADB5' : '#393E46',
+                  color: '#EEEEEE'
+                }}
               >
                 🌸 デイリーチャレンジ
               </button>
-              <a
-                href="/badges"
-                className="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+              <button
+                onClick={() => setViewMode('badges')}
+                className="px-6 py-3 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: viewMode === 'badges' ? '#00ADB5' : '#393E46',
+                  color: '#EEEEEE'
+                }}
               >
                 🏆 獲得バッジ
-              </a>
+              </button>
               <button
                 onClick={() => setViewMode('friends')}
-                className={`px-6 py-3 rounded-lg font-semibold ${
-                  viewMode === 'friends'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className="px-6 py-3 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: viewMode === 'friends' ? '#00ADB5' : '#393E46',
+                  color: '#EEEEEE'
+                }}
               >
                 👥 フレンド
               </button>
               <button
                 onClick={() => setViewMode('groups')}
-                className={`px-6 py-3 rounded-lg font-semibold ${
-                  viewMode === 'groups'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className="px-6 py-3 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: viewMode === 'groups' ? '#00ADB5' : '#393E46',
+                  color: '#EEEEEE'
+                }}
               >
-                🏘️ グループ & トピック
+                🏘️ 匿名グループ
               </button>
             </div>
 
@@ -258,9 +272,6 @@ export default function Home() {
               {viewMode === 'challenges' && (
                 <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6 items-start">
                   <div>
-                    <div className="bg-blue-100 p-4 rounded mb-4">
-                      <p>デバッグ: viewMode = {viewMode}</p>
-                    </div>
                     <DailyChallenges onRequestShare={handleRequestShare} />
                   </div>
                   <div ref={timelineSectionRef} className="scroll-mt-24">
@@ -271,6 +282,9 @@ export default function Home() {
                     />
                   </div>
                 </div>
+              )}
+              {viewMode === 'badges' && (
+                <Badges />
               )}
               {viewMode === 'friends' && (
                 <FriendList onSelectFriend={handleSelectFriend} />

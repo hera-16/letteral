@@ -191,15 +191,15 @@ export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: C
   };
 
   return (
-    <div className="flex flex-col h-96 bg-white border border-gray-200 rounded-lg">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '384px', backgroundColor: '#393E46', border: '1px solid #00ADB5', borderRadius: '0.5rem' }}>
       {/* エラーメッセージ */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md m-4">
+        <div style={{ backgroundColor: '#393E46', border: '1px solid #ff6b6b', color: '#ff6b6b', padding: '1rem', borderRadius: '0.375rem', margin: '1rem' }}>
           <div className="flex items-center justify-between">
             <span>{error}</span>
             <button
               onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900"
+              style={{ color: '#ff6b6b', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
             >
               ×
             </button>
@@ -208,20 +208,20 @@ export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: C
       )}
 
       {/* ステータスバー */}
-      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
+      <div style={{ backgroundColor: '#222831', borderBottom: '1px solid #00ADB5', padding: '0.5rem 1rem' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className={`flex items-center space-x-2 ${connected ? 'text-green-600' : 'text-red-600'}`}>
               <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-              <span className="text-sm">{connected ? '接続済み' : '未接続'}</span>
+              <span style={{ fontSize: '0.875rem', color: '#EEEEEE' }}>{connected ? '接続済み' : '未接続'}</span>
             </div>
-            <span className="text-sm text-gray-600">
+            <span style={{ fontSize: '0.875rem', color: '#00ADB5' }}>
               {user.displayName || user.username} としてログイン中
             </span>
           </div>
           <button
             onClick={refreshMessages}
-            className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 500, color: '#EEEEEE', backgroundColor: '#00ADB5', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }}
             title="メッセージを更新"
           >
             🔄
@@ -230,7 +230,7 @@ export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: C
       </div>
 
       {/* メッセージリスト */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {messages.map((message, index) => {
           const isMyMessage = message.senderUsername === user.username;
           
@@ -247,29 +247,34 @@ export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: C
             >
               {message.messageType === 'CHAT' ? (
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
-                    isMyMessage
-                      ? 'bg-blue-500 text-white rounded-br-none'
-                      : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                  }`}
+                  style={{
+                    maxWidth: '75%',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    backgroundColor: isMyMessage ? '#00ADB5' : '#222831',
+                    color: '#EEEEEE',
+                    borderBottomRightRadius: isMyMessage ? '0' : '0.5rem',
+                    borderBottomLeftRadius: isMyMessage ? '0.5rem' : '0'
+                  }}
                 >
                   {!isMyMessage && (
-                    <div className="text-xs font-semibold mb-1 opacity-75">
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', opacity: 0.75 }}>
                       {getMessageSenderName(message)}
                     </div>
                   )}
-                  <div className="break-words">{message.content}</div>
+                  <div style={{ wordBreak: 'break-word' }}>{message.content}</div>
                   {message.timestamp && (
-                    <div className={`text-xs mt-1 ${isMyMessage ? 'opacity-70' : 'opacity-50'}`}>
+                    <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: isMyMessage ? 0.7 : 0.5 }}>
                       {message.timestamp}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className={`text-sm italic ${getMessageTypeColor(message.messageType)}`}>
+                <div style={{ fontSize: '0.875rem', fontStyle: 'italic' }} className={getMessageTypeColor(message.messageType)}>
                   {message.content}
                   {message.timestamp && (
-                    <span className="ml-2 text-xs opacity-60">
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', opacity: 0.6 }}>
                       {message.timestamp}
                     </span>
                   )}
@@ -282,20 +287,38 @@ export default function ChatRoom({ user, roomId, chatType, chatId, onLogout }: C
       </div>
 
       {/* メッセージ入力フォーム */}
-      <div className="bg-gray-50 border-t border-gray-200 px-4 py-4">
+      <div style={{ backgroundColor: '#222831', borderTop: '1px solid #00ADB5', padding: '1rem' }}>
         <form onSubmit={sendMessage} className="flex space-x-4">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="メッセージを入力..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            style={{
+              flex: 1,
+              padding: '0.5rem 1rem',
+              backgroundColor: '#393E46',
+              color: '#EEEEEE',
+              border: '1px solid #00ADB5',
+              borderRadius: '0.5rem',
+              outline: 'none'
+            }}
             disabled={!connected}
           />
           <button
             type="submit"
             disabled={!connected || !newMessage.trim()}
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              padding: '0.5rem 1.5rem',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: '#EEEEEE',
+              backgroundColor: '#00ADB5',
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: connected && newMessage.trim() ? 'pointer' : 'not-allowed',
+              opacity: connected && newMessage.trim() ? 1 : 0.5
+            }}
           >
             送信
           </button>

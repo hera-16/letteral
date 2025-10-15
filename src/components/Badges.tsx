@@ -30,8 +30,8 @@ export default function Badges() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">バッジを読み込み中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: '#00ADB5' }}></div>
+          <p style={{ color: '#EEEEEE' }}>バッジを読み込み中...</p>
         </div>
       </div>
     );
@@ -39,11 +39,11 @@ export default function Badges() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <p className="text-red-600 text-lg font-medium">⚠️ {error}</p>
+      <div style={{ backgroundColor: '#393E46', border: '1px solid #ff6b6b', borderRadius: '0.5rem', padding: '1.5rem', textAlign: 'center' }}>
+        <p style={{ color: '#ff6b6b', fontSize: '1.125rem', fontWeight: 500 }}>⚠️ {error}</p>
         <button
           onClick={loadBadges}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#ff6b6b', color: '#EEEEEE', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}
         >
           再試行
         </button>
@@ -53,26 +53,26 @@ export default function Badges() {
 
   const getBadgeStyle = (isNew: boolean) => {
     return isNew
-      ? 'bg-gradient-to-br from-yellow-100 to-amber-100 border-yellow-400 shadow-lg animate-pulse-glow'
-      : 'bg-white border-gray-200';
+      ? { backgroundColor: '#393E46', border: '2px solid #00ADB5', boxShadow: '0 0 20px rgba(0, 173, 181, 0.5)' }
+      : { backgroundColor: '#222831', border: '2px solid #393E46' };
   };
 
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
+      <div style={{ background: 'linear-gradient(to right, #00ADB5, #393E46)', borderRadius: '0.75rem', padding: '1.5rem', color: '#EEEEEE' }}>
         <h2 className="text-3xl font-bold mb-2">🏆 獲得バッジ</h2>
-        <p className="text-purple-100">
-          あなたが達成した素晴らしい成果の記録です！
+        <p style={{ color: '#EEEEEE', opacity: 0.9 }}>
+          あなたが達成した素晴らしい成果の記録です!
         </p>
         <div className="mt-4 flex items-center gap-4">
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+          <div style={{ backgroundColor: 'rgba(34, 40, 49, 0.8)', backdropFilter: 'blur(10px)', borderRadius: '0.5rem', padding: '0.5rem 1rem' }}>
             <span className="text-2xl font-bold">{badges.length}</span>
             <span className="text-sm ml-2">個獲得</span>
           </div>
           {badges.filter(b => b.isNew).length > 0 && (
-            <div className="bg-yellow-400 text-yellow-900 rounded-lg px-4 py-2 font-semibold animate-bounce-in">
-              🎉 新バッジ {badges.filter(b => b.isNew).length}個！
+            <div style={{ backgroundColor: '#00ADB5', color: '#222831', borderRadius: '0.5rem', padding: '0.5rem 1rem', fontWeight: 600 }}>
+              🎉 新バッジ {badges.filter(b => b.isNew).length}個!
             </div>
           )}
         </div>
@@ -80,20 +80,20 @@ export default function Badges() {
 
       {/* バッジがない場合 */}
       {badges.length === 0 ? (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-12 text-center border-2 border-dashed border-gray-300">
+        <div style={{ background: 'linear-gradient(to bottom right, #393E46, #222831)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center', border: '2px dashed #00ADB5' }}>
           <div className="text-6xl mb-4">🌱</div>
-          <h3 className="text-2xl font-bold text-gray-700 mb-2">
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#EEEEEE', marginBottom: '0.5rem' }}>
             まだバッジがありません
           </h3>
-          <p className="text-gray-600 mb-6">
-            チャレンジを達成して、最初のバッジを獲得しましょう！
+          <p style={{ color: '#EEEEEE', opacity: 0.8, marginBottom: '1.5rem' }}>
+            チャレンジを達成して、最初のバッジを獲得しましょう!
           </p>
-          <a
-            href="/"
-            className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+          <button
+            onClick={() => window.location.href = '/'}
+            style={{ display: 'inline-block', padding: '0.75rem 1.5rem', backgroundColor: '#00ADB5', color: '#EEEEEE', borderRadius: '0.5rem', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
             チャレンジを始める
-          </a>
+          </button>
         </div>
       ) : (
         /* バッジグリッド */
@@ -101,34 +101,48 @@ export default function Badges() {
           {badges.map((userBadge) => (
             <div
               key={userBadge.id}
-              className={`border-2 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl ${getBadgeStyle(userBadge.isNew)}`}
+              style={{
+                ...getBadgeStyle(userBadge.isNew),
+                borderRadius: '0.75rem',
+                padding: '1.5rem',
+                transition: 'all 0.3s',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 173, 181, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               {/* 新バッジリボン */}
               {userBadge.isNew && (
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce-in">
+                <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', background: 'linear-gradient(to right, #00ADB5, #00d4e0)', color: '#222831', fontSize: '0.75rem', fontWeight: 'bold', padding: '0.25rem 0.75rem', borderRadius: '9999px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)' }}>
                   NEW!
                 </div>
               )}
 
               {/* バッジアイコン */}
               <div className="text-center mb-4">
-                <div className="text-6xl mb-3 animate-bounce-in">
+                <div className="text-6xl mb-3">
                   {userBadge.badge.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#EEEEEE', marginBottom: '0.25rem' }}>
                   {userBadge.badge.name}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p style={{ fontSize: '0.875rem', color: '#EEEEEE', opacity: 0.8 }}>
                   {userBadge.badge.description}
                 </p>
               </div>
 
               {/* 獲得日時 */}
-              <div className="border-t pt-3 mt-3">
-                <p className="text-xs text-gray-500 text-center">
+              <div style={{ borderTop: '1px solid #393E46', paddingTop: '0.75rem', marginTop: '0.75rem' }}>
+                <p style={{ fontSize: '0.75rem', color: '#EEEEEE', opacity: 0.6, textAlign: 'center' }}>
                   獲得日時
                 </p>
-                <p className="text-sm text-gray-700 text-center font-medium">
+                <p style={{ fontSize: '0.875rem', color: '#00ADB5', textAlign: 'center', fontWeight: 500 }}>
                   {new Date(userBadge.earnedAt).toLocaleDateString('ja-JP', {
                     year: 'numeric',
                     month: 'long',
@@ -139,7 +153,7 @@ export default function Badges() {
 
               {/* バッジタイプ */}
               <div className="mt-2 text-center">
-                <span className="inline-block bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
+                <span style={{ display: 'inline-block', backgroundColor: '#393E46', color: '#00ADB5', fontSize: '0.75rem', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
                   {getBadgeTypeLabel(userBadge.badge.badgeType)}
                 </span>
               </div>
@@ -150,8 +164,8 @@ export default function Badges() {
 
       {/* バッジ統計 */}
       {badges.length > 0 && (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">
+        <div style={{ background: 'linear-gradient(to bottom right, #393E46, #222831)', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #00ADB5' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#EEEEEE', marginBottom: '1rem' }}>
             📊 バッジ統計
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -207,10 +221,10 @@ function getBadgeTypeLabel(badgeType: string): string {
 // 統計カードコンポーネント
 function StatCard({ icon, label, value }: { icon: string; label: string; value: number }) {
   return (
-    <div className="bg-white rounded-lg p-4 text-center shadow-sm border border-gray-200">
+    <div style={{ backgroundColor: '#222831', borderRadius: '0.5rem', padding: '1rem', textAlign: 'center', border: '1px solid #393E46' }}>
       <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-2xl font-bold text-gray-800">{value}</div>
-      <div className="text-xs text-gray-600">{label}</div>
+      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#00ADB5' }}>{value}</div>
+      <div style={{ fontSize: '0.75rem', color: '#EEEEEE', opacity: 0.8 }}>{label}</div>
     </div>
   );
 }

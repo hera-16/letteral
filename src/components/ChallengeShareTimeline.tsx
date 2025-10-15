@@ -162,15 +162,16 @@ export default function ChallengeShareTimeline({
 
   return (
     <div className="space-y-6">
-      <section className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">チャレンジを共有</h2>
+      <section className="rounded-lg shadow p-6" style={{ backgroundColor: '#393E46' }}>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: '#EEEEEE' }}>チャレンジを共有</h2>
         <form onSubmit={handleSubmitShare} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">共有するチャレンジ</label>
+            <label className="block text-sm font-semibold mb-2" style={{ color: '#EEEEEE' }}>共有するチャレンジ</label>
             <select
               value={composerChallengeId}
               onChange={(e) => setComposerChallengeId(Number(e.target.value) || '')}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
+              style={{ backgroundColor: '#222831', border: '1px solid #00ADB5', color: '#EEEEEE' }}
             >
               <option value="">達成したチャレンジを選択</option>
               {completions.map((completion) => (
@@ -180,34 +181,36 @@ export default function ChallengeShareTimeline({
               ))}
             </select>
             {completions.length === 0 && (
-              <p className="mt-2 text-sm text-gray-500">まずはデイリーチャレンジを達成してみましょう！</p>
+              <p className="mt-2 text-sm" style={{ color: '#EEEEEE' }}>まずはデイリーチャレンジを達成してみましょう！</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">ひとことメッセージ</label>
+            <label className="block text-sm font-semibold mb-2" style={{ color: '#EEEEEE' }}>ひとことメッセージ</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
               placeholder="今日の気づきや感謝の気持ちを書いてみましょう"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
+              style={{ backgroundColor: '#222831', border: '1px solid #00ADB5', color: '#EEEEEE' }}
             />
           </div>
 
           <div>
-            <span className="block text-sm font-semibold text-gray-700 mb-2">今の気分</span>
+            <span className="block text-sm font-semibold mb-2" style={{ color: '#EEEEEE' }}>今の気分</span>
             <div className="flex flex-wrap gap-2">
               {MOOD_OPTIONS.map((option) => (
                 <button
                   type="button"
                   key={option.value}
                   onClick={() => setMood((prev) => (prev === option.value ? '' : option.value))}
-                  className={`px-3 py-2 rounded-full border transition-all ${
-                    mood === option.value
-                      ? 'bg-purple-500 text-white border-purple-500 shadow'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
-                  }`}
+                  className="px-3 py-2 rounded-full border transition-all"
+                  style={{
+                    backgroundColor: mood === option.value ? '#00ADB5' : '#222831',
+                    color: '#EEEEEE',
+                    borderColor: mood === option.value ? '#00ADB5' : '#393E46'
+                  }}
                 >
                   <span className="mr-1">{option.emoji}</span>
                   {option.label}
@@ -217,12 +220,12 @@ export default function ChallengeShareTimeline({
           </div>
 
           {composerError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+            <div className="p-3 border rounded text-sm" style={{ backgroundColor: '#393E46', borderColor: '#00ADB5', color: '#EEEEEE' }}>
               {composerError}
             </div>
           )}
           {composerSuccess && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
+            <div className="p-3 border rounded text-sm" style={{ backgroundColor: '#00ADB5', borderColor: '#00ADB5', color: '#EEEEEE' }}>
               {composerSuccess}
             </div>
           )}
@@ -231,7 +234,10 @@ export default function ChallengeShareTimeline({
             <button
               type="submit"
               disabled={submittingShare || !composerChallengeId}
-              className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold shadow hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 rounded-lg font-semibold shadow transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
+              onMouseEnter={(e) => !submittingShare && composerChallengeId && (e.currentTarget.style.opacity = '0.8')}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
             >
               {submittingShare ? '共有中...' : 'タイムラインに投稿'}
             </button>
@@ -241,44 +247,44 @@ export default function ChallengeShareTimeline({
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-800">みんなの達成</h2>
+          <h2 className="text-xl font-bold" style={{ color: '#EEEEEE' }}>みんなの達成</h2>
         </div>
 
         {loading && shares.length === 0 ? (
-          <div className="p-6 bg-white rounded-lg shadow text-center text-gray-500">読み込み中...</div>
+          <div className="p-6 rounded-lg shadow text-center" style={{ backgroundColor: '#393E46', color: '#EEEEEE' }}>読み込み中...</div>
         ) : shares.length === 0 ? (
-          <div className="p-6 bg-white rounded-lg shadow text-center text-gray-500">
+          <div className="p-6 rounded-lg shadow text-center" style={{ backgroundColor: '#393E46', color: '#EEEEEE' }}>
             まだ共有がありません。最初の一歩を踏み出してみましょう！
           </div>
         ) : (
           <div className="space-y-4">
             {shares.map((share) => (
-              <article key={share.id} className="bg-white rounded-lg shadow p-5">
+              <article key={share.id} className="rounded-lg shadow p-5" style={{ backgroundColor: '#393E46' }}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-lg">🌸</span>
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold" style={{ color: '#EEEEEE' }}>
                           {share.user.displayName || share.user.username}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm" style={{ color: '#00ADB5' }}>
                           {new Date(share.sharedAt).toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <div className="mt-3">
-                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{share.comment}</p>
+                      <p className="whitespace-pre-wrap leading-relaxed" style={{ color: '#EEEEEE' }}>{share.comment}</p>
                       {share.mood && (
-                        <span className="inline-flex items-center mt-3 px-3 py-1 text-sm font-medium bg-purple-50 text-purple-600 rounded-full">
+                        <span className="inline-flex items-center mt-3 px-3 py-1 text-sm font-medium rounded-full" style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}>
                           🌱 気分: {share.mood}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm text-center min-w-[140px]">
+                  <div className="px-3 py-2 rounded-lg text-sm text-center min-w-[140px]" style={{ backgroundColor: '#222831', color: '#00ADB5' }}>
                     <div className="font-semibold">{share.challenge.title}</div>
-                    <div className="text-xs mt-1 text-purple-500">
+                    <div className="text-xs mt-1" style={{ color: '#EEEEEE' }}>
                       {share.challenge.challengeType}
                     </div>
                     <div className="text-xs mt-1">+{share.challenge.points}pt</div>
@@ -294,15 +300,16 @@ export default function ChallengeShareTimeline({
                         key={type}
                         type="button"
                         onClick={() => handleToggleReaction(share, type)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full border transition-all ${
-                          isActive
-                            ? 'bg-pink-100 border-pink-300 text-pink-600'
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-pink-300'
-                        }`}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border transition-all"
+                        style={{
+                          backgroundColor: isActive ? '#00ADB5' : '#222831',
+                          borderColor: isActive ? '#00ADB5' : '#393E46',
+                          color: '#EEEEEE'
+                        }}
                       >
                         <ReactionEmoji type={type} />
                         <span className="text-sm font-medium">{REACTION_LABELS[type]}</span>
-                        <span className="text-xs text-gray-500">{count}</span>
+                        <span className="text-xs">{count}</span>
                       </button>
                     );
                   })}
@@ -315,7 +322,10 @@ export default function ChallengeShareTimeline({
                 <button
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                  className="px-6 py-2 rounded-lg transition-opacity disabled:opacity-50"
+                  style={{ backgroundColor: '#393E46', color: '#EEEEEE' }}
+                  onMouseEnter={(e) => !loadingMore && (e.currentTarget.style.opacity = '0.8')}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
                   {loadingMore ? '読み込み中...' : 'もっと見る'}
                 </button>

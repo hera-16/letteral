@@ -200,10 +200,10 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
 
   const getDifficultyColor = (level: string) => {
     switch (level) {
-      case 'EASY': return 'bg-green-100 text-green-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'HARD': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'EASY': return 'text-green-400';
+      case 'MEDIUM': return 'text-yellow-400';
+      case 'HARD': return 'text-red-400';
+      default: return 'text-gray-400';
     }
   };
 
@@ -323,57 +323,57 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
 
       {/* 進捗情報 */}
       {progressData && (
-        <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-md">
+        <div className="mb-6 p-6 rounded-lg shadow-md" style={{ backgroundColor: '#393E46' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">あなたの花の成長</h2>
+            <h2 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>あなたの花の成長</h2>
             <div className="text-6xl hover:scale-110 transition-transform cursor-pointer animate-pulse-glow">
               {progressData.flowerEmoji}
             </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="text-center p-3 bg-white rounded-lg">
-              <div className="text-sm text-gray-600">レベル</div>
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#222831' }}>
+              <div className="text-sm" style={{ color: '#EEEEEE' }}>レベル</div>
+              <div className="text-2xl font-bold" style={{ color: '#00ADB5' }}>
                 {progressData.progress.flowerLevel}
               </div>
             </div>
-            <div className="text-center p-3 bg-white rounded-lg">
-              <div className="text-sm text-gray-600">合計ポイント</div>
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#222831' }}>
+              <div className="text-sm" style={{ color: '#EEEEEE' }}>合計ポイント</div>
+              <div className="text-2xl font-bold" style={{ color: '#00ADB5' }}>
                 {progressData.progress.totalPoints}
               </div>
             </div>
-            <div className="text-center p-3 bg-white rounded-lg">
-              <div className="text-sm text-gray-600">連続達成</div>
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#222831' }}>
+              <div className="text-sm" style={{ color: '#EEEEEE' }}>連続達成</div>
+              <div className="text-2xl font-bold" style={{ color: '#00ADB5' }}>
                 {progressData.progress.currentStreak}日
               </div>
             </div>
-            <div className="text-center p-3 bg-white rounded-lg">
-              <div className="text-sm text-gray-600">今日の達成</div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#222831' }}>
+              <div className="text-sm" style={{ color: '#EEEEEE' }}>今日の達成</div>
+              <div className="text-2xl font-bold" style={{ color: '#00ADB5' }}>
                 {progressData.todayCompletedCount} / {progressData.dailyLimit}個
               </div>
             </div>
           </div>
 
           {hasReachedDailyLimit && (
-            <div className="mt-2 text-sm font-semibold text-purple-700">
+            <div className="mt-2 text-sm font-semibold" style={{ color: '#00ADB5' }}>
               素晴らしい！今日は3件のチャレンジをすべてやり遂げました。
             </div>
           )}
 
           {/* プログレスバー */}
           <div className="mb-2">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
+            <div className="flex justify-between text-sm mb-1" style={{ color: '#EEEEEE' }}>
               <span>次のレベルまで</span>
               <span>{progressData.pointsToNextLevel}ポイント</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div className="w-full rounded-full h-3 overflow-hidden" style={{ backgroundColor: '#222831' }}>
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 relative overflow-hidden"
-                style={{ width: `${progressData.progressPercentage}%` }}
+                className="h-full transition-all duration-500 relative overflow-hidden"
+                style={{ width: `${progressData.progressPercentage}%`, backgroundColor: '#00ADB5' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-shimmer"></div>
               </div>
@@ -416,15 +416,15 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
         )}
 
         {hasReachedDailyLimit && !completionError && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
+          <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#393E46', border: '1px solid #00ADB5', color: '#EEEEEE', borderRadius: '0.5rem' }}>
             今日のデイリーチャレンジは3件までです。よく頑張りました！
           </div>
         )}
 
         {challenges.length === 0 ? (
-          <div className="text-center p-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-600 mb-2">🎉 素晴らしい!</p>
-            <p className="text-gray-600 mb-4">
+          <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: '#393E46', borderRadius: '0.5rem' }}>
+            <p style={{ color: '#EEEEEE', marginBottom: '0.5rem' }}>🎉 素晴らしい!</p>
+            <p style={{ color: '#EEEEEE', marginBottom: '1rem' }}>
               {hasReachedDailyLimit
                 ? '今日の上限である3件を達成しました。ゆっくり休んでくださいね！'
                 : '今日のチャレンジは全て達成しました!'}
@@ -456,23 +456,24 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
             {challenges.map((challenge) => (
               <div 
                 key={challenge.id} 
-                className="p-5 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                className="p-5 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                style={{ backgroundColor: '#393E46', borderColor: '#00ADB5' }}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(challenge.difficultyLevel)}`}>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(challenge.difficultyLevel)}`} style={{ backgroundColor: '#222831' }}>
                         {getDifficultyLabel(challenge.difficultyLevel)}
                       </span>
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full" style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}>
                         {getChallengeTypeLabel(challenge.challengeType)}
                       </span>
-                      <span className="text-sm text-gray-600">+{challenge.points}pt</span>
+                      <span className="text-sm" style={{ color: '#EEEEEE' }}>+{challenge.points}pt</span>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">
+                    <h3 className="text-lg font-bold mb-1" style={{ color: '#EEEEEE' }}>
                       {challenge.title}
                     </h3>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-sm" style={{ color: '#EEEEEE' }}>
                       {challenge.description}
                     </p>
                   </div>
@@ -481,7 +482,14 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
                 <button
                   onClick={() => completeChallenge(challenge.id)}
                   disabled={completingId === challenge.id || hasReachedDailyLimit}
-                  className="w-full mt-3 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full mt-3 px-4 py-2 font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
+                  onMouseEnter={(e) => {
+                    if (completingId !== challenge.id && !hasReachedDailyLimit) {
+                      e.currentTarget.style.opacity = '0.8';
+                    }
+                  }}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
                   {completingId === challenge.id
                     ? '達成中...'
