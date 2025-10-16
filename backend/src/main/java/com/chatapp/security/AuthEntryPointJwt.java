@@ -20,12 +20,16 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
         String jwtError = (String) request.getAttribute("jwtError");
+        String authenticatedUser = (String) request.getAttribute("jwtAuthenticatedUser");
         String header = (String) request.getAttribute("jwtHeader");
         if (header == null) {
             header = request.getHeader("Authorization");
         }
 
         String message = jwtError != null ? jwtError : authException.getMessage();
+        if (authenticatedUser != null) {
+            message = message + " | AuthenticatedUser=" + authenticatedUser;
+        }
         if (header != null) {
             message = message + " | Authorization=" + header;
         }

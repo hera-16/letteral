@@ -49,6 +49,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    request.setAttribute("jwtAuthenticatedUser", username);
                 } else {
                     logger.warn("❌ JWT validation failed for URI: " + requestURI);
                     request.setAttribute("jwtError", "JWT validation failed");
