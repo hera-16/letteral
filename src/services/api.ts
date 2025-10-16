@@ -41,9 +41,19 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register') || requestUrl.includes('/auth/signup');
+      
+      // 認証エンドポイント自体の401エラーは通常のエラーとして扱う（自動ログアウトしない）
+      if (isAuthEndpoint) {
+        console.log('🔓 Auth endpoint returned 401 (invalid credentials) - not logging out');
+        return Promise.reject(error);
+      }
+      
       // トークンが無効または期限切れの場合、ログアウト
       const isAlreadyOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/';
       
+      console.warn('⚠️ 401 Unauthorized for:', requestUrl, '- Logging out');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
