@@ -12,13 +12,21 @@ const api = axios.create({
 // JWTトークンをリクエストヘッダーに追加するインターセプター
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Request to:', config.url, '| Token length:', token.length, '| First 20 chars:', token.substring(0, 20));
+    // ログイン・サインアップ時はトークンを送信しない
+    const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/auth/register') || config.url?.includes('/auth/signup');
+    
+    if (!isAuthEndpoint) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('🔐 Request to:', config.url, '| Token length:', token.length, '| First 20 chars:', token.substring(0, 20));
+      } else {
+        console.warn('⚠️ No token found for request to:', config.url);
+      }
     } else {
-      console.warn('⚠️ No token found for request to:', config.url);
+      console.log('🔓 Auth endpoint - no token required:', config.url);
     }
+    
     return config;
   },
   (error) => {
