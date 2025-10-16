@@ -63,6 +63,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         } catch (IllegalArgumentException e) {
             logger.error("❌ Illegal argument for URI: " + request.getRequestURI() + " | Error: " + e.getMessage());
             request.setAttribute("jwtError", "IllegalArgumentException: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("❌ Unexpected authentication error for URI: " + request.getRequestURI() + " | Error: " + e.getMessage(), e);
+            request.setAttribute("jwtError", "Unexpected auth error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
         
         filterChain.doFilter(request, response);
