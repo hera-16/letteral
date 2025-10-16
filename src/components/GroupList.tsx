@@ -35,6 +35,17 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
   const [inviteCode, setInviteCode] = useState('');
 
   useEffect(() => {
+    // 認証状態を確認
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    console.log('GroupList mounted - Token exists:', !!token, 'User exists:', !!user);
+    
+    if (!token) {
+      setError('ログインが必要です');
+      setLoading(false);
+      return;
+    }
+    
     loadData();
   }, []);
 
@@ -42,10 +53,20 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
     try {
       setLoading(true);
       const data = await groupService.getMyInviteOnlyGroups();
-      setMyGroups(data);
+      setMyGroups(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'データの取得に失敗しました');
+      console.error('Failed to load groups:', err);
+      const status = err.response?.status;
+      if (status === 401) {
+        setError('ログインセッションが期限切れです。再度ログインしてください。');
+      } else if (status === 404) {
+        // 404の場合は空のグループとして扱う
+        setMyGroups([]);
+        setError(null);
+      } else {
+        setError(err.response?.data?.message || 'データの取得に失敗しました');
+      }
     } finally {
       setLoading(false);
     }
