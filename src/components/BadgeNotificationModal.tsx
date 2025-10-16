@@ -6,9 +6,10 @@ import { UserBadge } from '@/services/api';
 interface BadgeNotificationModalProps {
   badges: UserBadge[];
   onClose: () => void;
+  onNavigateToBadges?: () => void;
 }
 
-export default function BadgeNotificationModal({ badges, onClose }: BadgeNotificationModalProps) {
+export default function BadgeNotificationModal({ badges, onClose, onNavigateToBadges }: BadgeNotificationModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [show, setShow] = useState(true);
 
@@ -139,13 +140,15 @@ export default function BadgeNotificationModal({ badges, onClose }: BadgeNotific
 
           {/* バッジ一覧へのリンク */}
           <div className="mt-4">
-            <a
-              href="/badges"
-              className="text-purple-600 hover:text-purple-700 text-sm font-medium underline"
-              onClick={handleClose}
+            <button
+              onClick={() => {
+                handleClose();
+                onNavigateToBadges?.();
+              }}
+              className="text-purple-600 hover:text-purple-700 text-sm font-medium underline bg-transparent border-none cursor-pointer"
             >
               すべてのバッジを見る
-            </a>
+            </button>
           </div>
         </div>
       </div>

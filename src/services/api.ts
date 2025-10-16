@@ -31,10 +31,18 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // トークンが無効または期限切れの場合、ログアウト
+      const isAlreadyOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/';
+      
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
+      
+      if (typeof window !== 'undefined' && !isAlreadyOnLoginPage) {
+        // ユーザーに通知してからログイン画面へ遷移
+        console.warn('セッションが期限切れです。再度ログインしてください。');
+        // 次のイベントループでリダイレクトすることで、エラーメッセージが先に表示される
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
       }
     }
     return Promise.reject(error);

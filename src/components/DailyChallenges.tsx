@@ -32,6 +32,7 @@ interface ProgressData {
 
 interface DailyChallengesProps {
   onRequestShare?: (challengeId: number) => void;
+  onNavigateToBadges?: () => void;
 }
 
 interface CompletionSummary {
@@ -39,7 +40,7 @@ interface CompletionSummary {
   challengeTitle: string;
 }
 
-export default function DailyChallenges({ onRequestShare }: DailyChallengesProps) {
+export default function DailyChallenges({ onRequestShare, onNavigateToBadges }: DailyChallengesProps) {
   const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
   const [progressData, setProgressData] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -443,6 +444,7 @@ export default function DailyChallenges({ onRequestShare }: DailyChallengesProps
         <BadgeNotificationModal
           badges={newBadges}
           onClose={handleCloseBadgeModal}
+          onNavigateToBadges={onNavigateToBadges}
         />
       )}
     </div>

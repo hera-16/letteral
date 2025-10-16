@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import { badgeService, UserBadge } from '@/services/api';
 
-export default function Badges() {
+interface BadgesProps {
+  onNavigateToChallenges?: () => void;
+}
+
+export default function Badges({ onNavigateToChallenges }: BadgesProps) {
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +93,7 @@ export default function Badges() {
             チャレンジを達成して、最初のバッジを獲得しましょう!
           </p>
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => onNavigateToChallenges?.()}
             style={{ display: 'inline-block', padding: '0.75rem 1.5rem', backgroundColor: '#00ADB5', color: '#EEEEEE', borderRadius: '0.5rem', fontWeight: 600, border: 'none', cursor: 'pointer' }}
           >
             チャレンジを始める

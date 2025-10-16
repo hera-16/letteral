@@ -265,7 +265,10 @@ export default function Home() {
               {viewMode === 'challenges' && (
                 <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6 items-start">
                   <div>
-                    <DailyChallenges onRequestShare={handleRequestShare} />
+                    <DailyChallenges 
+                      onRequestShare={handleRequestShare}
+                      onNavigateToBadges={() => setViewMode('badges')}
+                    />
                   </div>
                   <div ref={timelineSectionRef} className="scroll-mt-24">
                     <ChallengeShareTimeline
@@ -277,7 +280,7 @@ export default function Home() {
                 </div>
               )}
               {viewMode === 'badges' && (
-                <Badges />
+                <Badges onNavigateToChallenges={() => setViewMode('challenges')} />
               )}
               {viewMode === 'friends' && (
                 <FriendList onSelectFriend={handleSelectFriend} />
