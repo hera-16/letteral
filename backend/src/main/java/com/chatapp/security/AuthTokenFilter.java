@@ -35,11 +35,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             String requestURI = request.getRequestURI();
             
             if (jwt != null) {
-                logger.debug("🔐 JWT found for request: {} | Token length: {}", requestURI, jwt.length());
-                
+                logger.debug("🔐 JWT found for request: " + requestURI + " | Token length: " + jwt.length());
+
                 if (jwtUtils.validateJwtToken(jwt)) {
                     String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                    logger.debug("✅ JWT valid for user: {} | URI: {}", username, requestURI);
+                    logger.debug("✅ JWT valid for user: " + username + " | URI: " + requestURI);
                     
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -48,15 +48,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                     
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    logger.warn("❌ JWT validation failed for URI: {}", requestURI);
+                    logger.warn("❌ JWT validation failed for URI: " + requestURI);
+                    request.setAttribute("jwtError", "JWT validation failed");
                 }
             } else {
-                logger.debug("⚠️ No JWT token found in request to: {}", requestURI);
+                logger.debug("⚠️ No JWT token found in request to: " + requestURI);
             }
         } catch (JwtException e) {
-            logger.error("❌ JWT Exception for URI: {} | Error: {}", request.getRequestURI(), e.getMessage());
+            logger.error("❌ JWT Exception for URI: " + request.getRequestURI() + " | Error: " + e.getMessage());
+            request.setAttribute("jwtError", "JwtException: " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            logger.error("❌ Illegal argument for URI: {} | Error: {}", request.getRequestURI(), e.getMessage());
+            logger.error("❌ Illegal argument for URI: " + request.getRequestURI() + " | Error: " + e.getMessage());
+            request.setAttribute("jwtError", "IllegalArgumentException: " + e.getMessage());
         }
         
         filterChain.doFilter(request, response);
