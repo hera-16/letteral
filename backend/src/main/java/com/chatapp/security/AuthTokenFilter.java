@@ -32,18 +32,31 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            String requestURI = request.getRequestURI();
+            
+            if (jwt != null) {
+                logger.debug("🔐 JWT found for request: {} | Token length: {}", requestURI, jwt.length());
                 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (jwtUtils.validateJwtToken(jwt)) {
+                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                    logger.debug("✅ JWT valid for user: {} | URI: {}", username, requestURI);
+                    
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    logger.warn("❌ JWT validation failed for URI: {}", requestURI);
+                }
+            } else {
+                logger.debug("⚠️ No JWT token found in request to: {}", requestURI);
             }
-        } catch (JwtException | IllegalArgumentException e) {
-            logger.error("Cannot set user authentication: {}", e);
+        } catch (JwtException e) {
+            logger.error("❌ JWT Exception for URI: {} | Error: {}", request.getRequestURI(), e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("❌ Illegal argument for URI: {} | Error: {}", request.getRequestURI(), e.getMessage());
         }
         
         filterChain.doFilter(request, response);
