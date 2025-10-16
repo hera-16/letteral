@@ -33,6 +33,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         try {
             String jwt = parseJwt(request);
             String requestURI = request.getRequestURI();
+            String headerAuth = request.getHeader("Authorization");
+            request.setAttribute("jwtHeader", headerAuth);
             
             if (jwt != null) {
                 logger.debug("🔐 JWT found for request: " + requestURI + " | Token length: " + jwt.length());
@@ -53,6 +55,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 }
             } else {
                 logger.debug("⚠️ No JWT token found in request to: " + requestURI);
+                request.setAttribute("jwtError", "No JWT token found. Authorization header: " + headerAuth);
             }
         } catch (JwtException e) {
             logger.error("❌ JWT Exception for URI: " + request.getRequestURI() + " | Error: " + e.getMessage());
