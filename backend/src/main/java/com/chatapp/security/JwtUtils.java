@@ -44,13 +44,19 @@ public class JwtUtils {
     
     public boolean validateJwtToken(String authToken) {
         try {
+            System.out.println("🔍 Validating JWT | Length: " + authToken.length() + " | First 30 chars: " + authToken.substring(0, Math.min(30, authToken.length())));
+            System.out.println("🔑 JWT Secret length: " + jwtSecret.length() + " | First 10 chars: " + jwtSecret.substring(0, Math.min(10, jwtSecret.length())));
+            
             Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(authToken);
+            
+            System.out.println("✅ JWT validation successful");
             return true;
         } catch (SecurityException e) {
             System.err.println("❌ Invalid JWT signature: " + e.getMessage());
+            System.err.println("   This usually means the JWT_SECRET environment variable doesn't match");
         } catch (MalformedJwtException e) {
             System.err.println("❌ Invalid JWT token (malformed): " + e.getMessage());
         } catch (ExpiredJwtException e) {
@@ -61,6 +67,7 @@ public class JwtUtils {
             System.err.println("❌ JWT claims string is empty: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("❌ JWT validation error: " + e.getClass().getName() + " | " + e.getMessage());
+            e.printStackTrace();
         }
         
         return false;

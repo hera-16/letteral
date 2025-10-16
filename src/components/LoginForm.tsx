@@ -24,6 +24,12 @@ export default function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps)
     try {
       const response = await authService.login(credentials);
       
+      console.log('🔐 Login successful - Response:', {
+        tokenLength: response.accessToken?.length,
+        tokenPreview: response.accessToken?.substring(0, 30),
+        username: response.username
+      });
+      
       // トークンとユーザー情報をローカルストレージに保存
       localStorage.setItem('token', response.accessToken);
       localStorage.setItem('user', JSON.stringify({
@@ -32,10 +38,19 @@ export default function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps)
         email: response.email,
         displayName: response.displayName,
       }));
+      
+      // 保存確認
+      const savedToken = localStorage.getItem('token');
+      console.log('💾 Token saved to localStorage:', {
+        saved: !!savedToken,
+        length: savedToken?.length,
+        matches: savedToken === response.accessToken
+      });
 
       onLogin(response);
     } catch (error: any) {
-      setError(error.response?.data || 'ログインに失敗しました');
+      console.error('❌ Login failed:', error);
+      setError(error.response?.data?.error || error.response?.data || 'ログインに失敗しました');
     } finally {
       setLoading(false);
     }
