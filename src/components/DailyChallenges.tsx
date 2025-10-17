@@ -66,6 +66,7 @@ export default function DailyChallenges({ onRequestShare, onNavigateToBadges }: 
       setLoading(true);
       setError(null);
       
+      console.log('Loading challenges and progress data...');
       const [challengesRes, progressRes] = await Promise.all([
         api.get('/challenges/today'),
         api.get('/challenges/progress')
@@ -73,13 +74,20 @@ export default function DailyChallenges({ onRequestShare, onNavigateToBadges }: 
 
       if (challengesRes.data.success) {
         setChallenges(challengesRes.data.data);
+        console.log('Challenges loaded:', challengesRes.data.data.length);
       }
 
       if (progressRes.data.success) {
         setProgressData(progressRes.data.data);
         setCompletionError(null);
+        console.log('Progress data loaded:', {
+          todayCompletedCount: progressRes.data.data.todayCompletedCount,
+          flowerLevel: progressRes.data.data.progress.flowerLevel,
+          totalPoints: progressRes.data.data.progress.totalPoints
+        });
       }
     } catch (error: any) {
+      console.error('Error loading data:', error);
       const status = error.response?.status;
       if (status === 404) {
         setError('APIエンドポイントが見つかりません。バックエンドを再起動してください。');
@@ -147,13 +155,53 @@ export default function DailyChallenges({ onRequestShare, onNavigateToBadges }: 
           setLastCompletion(null);
         }
 
-        // データを再読み込み
-        await loadData();
+        // 即時にUIを更新してユーザーに反映させる（オプティミスティック更新）
+        try {
+          console.log('Applying optimistic UI updates from completion response...');
+          // サーバーから返された進捗情報があればそれを使う
+          const newProgress = data.progress;
+
+          // まずは完了したチャレンジをローカルから取り除く
+          setChallenges((prev) => prev.filter((c) => c.id !== challengeId));
+
+          // 次に進捗情報を更新する（既存のdailyLimitは維持）
+          setProgressData((prev) => {
+            const prevDailyLimit = prev?.dailyLimit ?? 3;
+            const totalPoints = newProgress?.totalPoints ?? prev?.progress.totalPoints ?? 0;
+            const pointsToNextLevel = 100 - (totalPoints % 100);
+            const progressPercentage = totalPoints % 100;
+            const todayCount = (prev?.todayCompletedCount ?? 0) + 1;
+
+            return {
+              progress: newProgress ?? (prev as any).progress,
+              flowerEmoji: data.flowerEmoji ?? prev?.flowerEmoji ?? '',
+              todayCompletedCount: todayCount,
+              dailyLimit: prevDailyLimit,
+              pointsToNextLevel,
+              progressPercentage,
+            } as ProgressData;
+          });
+
+          // サーバーとの整合性を保つため、バックグラウンドで再読み込みを行う（失敗してもUIは保つ）
+          loadData().then(() => console.log('Background reload completed')).catch((reloadError) => {
+            console.error('Background reload failed:', reloadError);
+          });
+        } catch (optimisticError) {
+          console.error('Optimistic UI update failed:', optimisticError);
+          // フォールバックでフルリロードを試みる
+          try {
+            await loadData();
+          } catch (reloadError) {
+            console.error('Failed to reload data after optimistic update failure:', reloadError);
+            setError('チャレンジは達成されましたが、表示の更新に失敗しました。ページを更新してください。');
+          }
+        }
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'チャレンジの達成に失敗しました';
       setCompletionError(message);
       setLastCompletion(null);
+      console.error('Challenge completion error:', error);
     } finally {
       setCompletingId(null);
     }
