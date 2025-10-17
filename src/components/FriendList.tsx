@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { friendService, User, Friend, FriendWithId } from '@/services/api';
+import { friendService, userService, User, Friend, FriendWithId } from '@/services/api';
 
 interface FriendListProps {
   onSelectFriend: (friend: User, friendshipId: number) => void;
@@ -72,7 +72,7 @@ export default function FriendList({ onSelectFriend }: FriendListProps) {
     try {
       setSearchError(null);
       await friendService.sendFriendRequest(searchUsername);
-      setSearchSuccess(`${searchUsername} にフレンドリクエストを送信しました`);
+      setSearchSuccess(`${searchUsername}にフレンドリクエストを送信しました`);
       setSearchUsername('');
       setTimeout(() => setSearchSuccess(null), 3000);
       loadData();
