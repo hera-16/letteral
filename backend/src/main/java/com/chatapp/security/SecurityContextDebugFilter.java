@@ -28,8 +28,8 @@ public class SecurityContextDebugFilter extends OncePerRequestFilter {
         @NonNull FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
         
-        // Only log for /api/groups/** endpoints to reduce noise
-        boolean shouldLog = uri.startsWith("/api/groups");
+        // Only log for /api/groups/** and /api/friends/** endpoints to reduce noise
+        boolean shouldLog = uri.startsWith("/api/groups") || uri.startsWith("/api/friends");
         
         if (shouldLog) {
             Authentication before = SecurityContextHolder.getContext().getAuthentication();
