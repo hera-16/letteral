@@ -24,8 +24,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.chatapp.security.AuthEntryPointJwt;
 import com.chatapp.security.AuthTokenFilter;
-import com.chatapp.service.CustomUserDetailsService;
 import com.chatapp.security.SecurityContextDebugFilter;
+import com.chatapp.service.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
