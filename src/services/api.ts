@@ -253,6 +253,28 @@ export const authService = {
   },
 };
 
+export const userService = {
+  async getCurrentUser(): Promise<User> {
+    const response = await api.get('/users/me');
+    return response.data;
+  },
+
+  async searchUsers(query: string): Promise<User[]> {
+    const response = await api.get('/users/search', { params: { query } });
+    return response.data;
+  },
+
+  async getUserByUsername(username: string): Promise<User> {
+    const response = await api.get(`/users/username/${encodeURIComponent(username)}`);
+    return response.data;
+  },
+
+  async getAllUsers(): Promise<User[]> {
+    const response = await api.get('/users/all');
+    return response.data;
+  },
+};
+
 export const friendService = {
   async getFriends(): Promise<User[]> {
     const response = await api.get('/friends/list');
@@ -280,7 +302,7 @@ export const friendService = {
   },
 
   async sendFriendRequest(username: string): Promise<Friend> {
-    const response = await api.post(`/friends/request/${username}`);
+    const response = await api.post(`/friends/request/${encodeURIComponent(username)}`);
     return response.data;
   },
 
