@@ -25,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.chatapp.security.AuthEntryPointJwt;
 import com.chatapp.security.AuthTokenFilter;
 import com.chatapp.service.CustomUserDetailsService;
+import com.chatapp.security.SecurityContextDebugFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -78,6 +79,7 @@ public class WebSecurityConfig {
 
         http.authenticationProvider(authenticationProvider);
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(SecurityContextDebugFilter.INSTANCE, UsernamePasswordAuthenticationFilter.class);
 
         // H2 Console用の設定
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
