@@ -136,8 +136,8 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
   if (isLoading && !group) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
-          <p className="text-gray-700">読み込み中...</p>
+        <div className="rounded-lg p-8" style={{ backgroundColor: '#393E46', color: '#EEEEEE', border: '1px solid #00ADB5' }}>
+          <p style={{ color: '#EEEEEE' }}>読み込み中...</p>
         </div>
       </div>
     );
@@ -145,12 +145,13 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">グループ設定</h2>
+      <div className="rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#393E46', color: '#EEEEEE', border: '1px solid #00ADB5' }}>
+        <div className="sticky top-0 px-6 py-4 flex justify-between items-center" style={{ backgroundColor: '#393E46', borderBottom: '1px solid #00ADB5' }}>
+          <h2 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>グループ設定</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-2xl"
+            style={{ color: '#EEEEEE' }}
           >
             ×
           </button>
@@ -159,18 +160,18 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
         <div className="p-6 space-y-6">
           {/* エラー・成功メッセージ */}
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div style={{ backgroundColor: '#4b2222', border: '1px solid #ff6b6b', color: '#ffecec', padding: '12px', borderRadius: '8px' }}>
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            <div style={{ backgroundColor: '#093b34', border: '1px solid #00b389', color: '#dffcf0', padding: '12px', borderRadius: '8px' }}>
               {success}
             </div>
           )}
 
           {!isAdmin && (
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <div style={{ backgroundColor: '#3b3322', border: '1px solid #ffd36b', color: '#fff5dc', padding: '12px', borderRadius: '8px' }}>
               閲覧専用: 管理者のみが編集できます
             </div>
           )}
@@ -180,7 +181,7 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
             <h3 className="text-xl font-semibold text-gray-800">グループ情報</h3>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#EEEEEE' }}>
                 グループ名
               </label>
               <input
@@ -188,20 +189,22 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={!isAdmin || isLoading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                style={{ backgroundColor: '#222831', border: '1px solid #00ADB5', color: '#EEEEEE' }}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#EEEEEE' }}>
                 説明
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={!isAdmin || isLoading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                style={{ backgroundColor: '#222831', border: '1px solid #00ADB5', color: '#EEEEEE' }}
                 rows={3}
               />
             </div>
@@ -210,7 +213,8 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                className="w-full py-2 px-4 rounded-lg disabled:opacity-50"
+                style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
               >
                 {isLoading ? '更新中...' : 'グループ情報を更新'}
               </button>
@@ -230,12 +234,14 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
                   onChange={(e) => setNewMemberUsername(e.target.value)}
                   placeholder="ユーザー名を入力"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 rounded-lg"
+                  style={{ backgroundColor: '#222831', border: '1px solid #00ADB5', color: '#EEEEEE' }}
                 />
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600 disabled:opacity-50"
+                  className="py-2 px-6 rounded-lg disabled:opacity-50"
+                  style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
                 >
                   追加
                 </button>
@@ -243,16 +249,16 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
             )}
 
             {/* メンバーリスト */}
-            <div className="border border-gray-300 rounded-lg divide-y">
+            <div className="rounded-lg divide-y" style={{ border: '1px solid #00ADB5' }}>
               {members.map((member: any) => {
                 const isCreator = group?.creator?.id === member.id;
                 return (
                   <div key={member.id} className="p-4 flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-gray-800">
+                      <p className="font-medium" style={{ color: '#EEEEEE' }}>
                         {member.displayName || member.username || 'Unknown'}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm" style={{ color: '#00ADB5' }}>
                         {isCreator ? '管理者（作成者）' : 'メンバー'}
                       </p>
                     </div>
@@ -260,7 +266,8 @@ export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSetti
                       <button
                         onClick={() => handleRemoveMember(member.id)}
                         disabled={isLoading}
-                        className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                        className="disabled:opacity-50"
+                        style={{ color: '#ff6b6b' }}
                       >
                         削除
                       </button>
