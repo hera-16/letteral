@@ -28,7 +28,7 @@ import jakarta.validation.constraints.Size;
  * Represents a group that can be either invite-only or public topic-based.
  */
 @Entity
-@Table(name = "groups")
+@Table(name = "`groups`")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Group {
 
