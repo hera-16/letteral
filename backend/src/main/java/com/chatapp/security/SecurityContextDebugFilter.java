@@ -21,12 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public class SecurityContextDebugFilter extends OncePerRequestFilter {
 
-    public static final SecurityContextDebugFilter INSTANCE = new SecurityContextDebugFilter();
-
     private static final Logger log = LoggerFactory.getLogger(SecurityContextDebugFilter.class);
-
-    private SecurityContextDebugFilter() {
-    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,

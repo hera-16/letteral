@@ -44,6 +44,11 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public SecurityContextDebugFilter securityContextDebugFilter() {
+        return new SecurityContextDebugFilter();
+    }
+
+    @Bean
     public AuthenticationProvider authenticationProvider(
             PasswordEncoder passwordEncoder,
             CustomUserDetailsService userDetailsService) {
@@ -79,7 +84,7 @@ public class WebSecurityConfig {
 
         http.authenticationProvider(authenticationProvider);
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterAfter(SecurityContextDebugFilter.INSTANCE, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(securityContextDebugFilter(), UsernamePasswordAuthenticationFilter.class);
 
         // H2 Console用の設定
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
