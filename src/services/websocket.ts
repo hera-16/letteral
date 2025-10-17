@@ -25,7 +25,13 @@ class WebSocketService {
     // 新しい接続を開始
     this.connecting = true;
     this.connectionPromise = new Promise((resolve, reject) => {
-      const socket = new SockJS('http://localhost:8080/ws');
+      // WebSocket URLを環境変数から取得（HTTPSの場合はWSSを使用）
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+      const wsBaseUrl = apiUrl.replace('/api', '').replace('http://', 'http://').replace('https://', 'https://');
+      const wsUrl = `${wsBaseUrl}/ws`;
+      
+      console.log('Connecting to WebSocket:', wsUrl);
+      const socket = new SockJS(wsUrl);
       
       this.stompClient = new Client({
         webSocketFactory: () => socket,
