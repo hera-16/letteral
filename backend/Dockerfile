@@ -7,7 +7,8 @@ WORKDIR /app
 
 # Copy pom.xml and download dependencies (cached layer)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Retry Maven Central fetches to reduce transient 500 errors during dependency warmup
+RUN mvn -B -Dmaven.wagon.http.retryHandler.count=5 dependency:go-offline
 
 # Copy source code and build the application
 COPY src ./src
