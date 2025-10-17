@@ -26,23 +26,33 @@ public class SecurityContextDebugFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
         @NonNull FilterChain filterChain) throws ServletException, IOException {
-        Authentication before = SecurityContextHolder.getContext().getAuthentication();
-        if (before == null) {
-            log.debug("[SEC] Before chain - no authentication for URI {}", request.getRequestURI());
-        } else {
-            log.debug("[SEC] Before chain - auth type: {}, principal: {}, authenticated: {}",
-                    before.getClass().getSimpleName(), before.getPrincipal(), before.isAuthenticated());
+        String uri = request.getRequestURI();
+        
+        // Only log for /api/groups/** endpoints to reduce noise
+        boolean shouldLog = uri.startsWith("/api/groups");
+        
+        if (shouldLog) {
+            Authentication before = SecurityContextHolder.getContext().getAuthentication();
+            if (before == null) {
+                log.info("[SEC] Before chain - no authentication for URI {}", uri);
+            } else {
+                log.info("[SEC] Before chain - auth type: {}, principal: {}, authenticated: {}",
+                        before.getClass().getSimpleName(), before.getPrincipal(), before.isAuthenticated());
+            }
         }
+        
         filterChain.doFilter(request, response);
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            log.warn("[SEC] After chain - no authentication for URI {}", request.getRequestURI());
-        } else {
-            log.debug("[SEC] After chain - auth type: {}, principal: {}, authenticated: {}",
-                    authentication.getClass().getSimpleName(),
-                    authentication.getPrincipal(),
-                    authentication.isAuthenticated());
+        if (shouldLog) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null) {
+                log.warn("[SEC] After chain - no authentication for URI {}", uri);
+            } else {
+                log.info("[SEC] After chain - auth type: {}, principal: {}, authenticated: {}",
+                        authentication.getClass().getSimpleName(),
+                        authentication.getPrincipal(),
+                        authentication.isAuthenticated());
+            }
         }
     }
 }
