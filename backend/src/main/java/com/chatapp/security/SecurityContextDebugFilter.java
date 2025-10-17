@@ -36,23 +36,31 @@ public class SecurityContextDebugFilter extends OncePerRequestFilter {
             if (before == null) {
                 log.info("[SEC] Before chain - no authentication for URI {}", uri);
             } else {
-                log.info("[SEC] Before chain - auth type: {}, principal: {}, authenticated: {}",
-                        before.getClass().getSimpleName(), before.getPrincipal(), before.isAuthenticated());
+                log.info("[SEC] Before chain - URI: {}, auth type: {}, principal: {}, authenticated: {}",
+                        uri, before.getClass().getSimpleName(), before.getPrincipal(), before.isAuthenticated());
             }
         }
         
-        filterChain.doFilter(request, response);
-
-        if (shouldLog) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null) {
-                log.warn("[SEC] After chain - no authentication for URI {}", uri);
-            } else {
-                log.info("[SEC] After chain - auth type: {}, principal: {}, authenticated: {}",
-                        authentication.getClass().getSimpleName(),
-                        authentication.getPrincipal(),
-                        authentication.isAuthenticated());
+        try {
+            filterChain.doFilter(request, response);
+            
+            if (shouldLog) {
+                log.info("[SEC] Filter chain completed for URI: {}, response status: {}", uri, response.getStatus());
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication == null) {
+                    log.warn("[SEC] After chain - no authentication for URI {}", uri);
+                } else {
+                    log.info("[SEC] After chain - URI: {}, auth type: {}, principal: {}, authenticated: {}",
+                            uri, authentication.getClass().getSimpleName(),
+                            authentication.getPrincipal(),
+                            authentication.isAuthenticated());
+                }
             }
+        } catch (Exception e) {
+            if (shouldLog) {
+                log.error("[SEC] Exception in filter chain for URI: {}, error: {}", uri, e.getMessage(), e);
+            }
+            throw e;
         }
     }
 }
