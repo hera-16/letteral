@@ -2,7 +2,28 @@
   "permissions": {
     "allow": [
       "Bash(dir:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(./mvnw clean:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(cmd.exe /c mvnw.cmd clean compile)",
+      "Bash(mvn:*)",
+      "Bash(java -version:*)",
+      "Bash(powershell:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-21.0.9.10-hotspot\" ./mvnw compile:*)",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.9.10-hotspot && mvnw.cmd compile\")",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Microsoft\\jdk-17.0.16.8-hotspot && mvnw.cmd compile\")",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.16.8-hotspot && mvnw.cmd spring-boot:run\")",
+      "Bash(./mvnw spring-boot:run:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\ndocs: Letteralプロジェクトへの移行計画書と設計ドキュメントを追加\n\n- README.md: プロジェクト概要を企業向け匿名進捗プラットフォームに更新\n- MIGRATION_PLAN.md: チャレキャラからLetteralへの移行計画\n- API_DESIGN.md: API設計書\n- DATABASE_SCHEMA_DESIGN.md: データベーススキーマ設計\n- 企画書PDF: 競合比較を含む詳細な企画書\n- openapi.yaml: OpenAPI仕様書\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat(backend): Letteral新機能のためのデータベースマイグレーションを追加\n\n- V5: テナント（会社）テーブル作成\n- V6: 組織階層テーブル作成\n- V7: 進捗投稿テーブル作成\n- V8: OKRテーブル作成\n- V9: ユーザーテーブルへのテナント関連カラム追加\n- V10: グループテーブルへの組織関連カラム追加\n- V11: チャットメッセージテーブルへの進捗投稿関連カラム追加\n- V12: 既存データの移行スクリプト\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
