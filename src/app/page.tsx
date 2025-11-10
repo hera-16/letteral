@@ -10,10 +10,12 @@ import GroupSettings from '@/components/GroupSettings';
 import DailyChallenges from '@/components/DailyChallenges';
 import ChallengeShareTimeline from '@/components/ChallengeShareTimeline';
 import Badges from '@/components/Badges';
+import ProgressPostTimeline from '@/components/ProgressPostTimeline';
+import ProgressPostForm from '@/components/ProgressPostForm';
 import { authService, User, Group } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
-type ViewMode = 'friends' | 'groups' | 'challenges' | 'chat' | 'badges';
+type ViewMode = 'friends' | 'groups' | 'challenges' | 'chat' | 'badges' | 'progress';
 
 interface ChatTarget {
   type: 'friend' | 'group' | 'general';
@@ -32,6 +34,8 @@ export default function Home() {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [pendingShareChallengeId, setPendingShareChallengeId] = useState<number | null>(null);
   const timelineSectionRef = useRef<HTMLDivElement | null>(null);
+  const [showProgressForm, setShowProgressForm] = useState(false);
+  const [progressTimelineKey, setProgressTimelineKey] = useState(0);
 
   useEffect(() => {
     // 初回ロード時にローカルストレージから認証情報を確認
@@ -217,7 +221,17 @@ export default function Home() {
         ) : (
           <>
             {/* ナビゲーションタブ */}
-            <div className="flex gap-4 mb-6">
+            <div className="flex gap-4 mb-6 flex-wrap">
+              <button
+                onClick={() => setViewMode('progress')}
+                className="px-6 py-3 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: viewMode === 'progress' ? '#00ADB5' : '#393E46',
+                  color: '#EEEEEE'
+                }}
+              >
+                📈 進捗投稿
+              </button>
               <button
                 onClick={() => setViewMode('challenges')}
                 className="px-6 py-3 rounded-lg font-semibold transition-all"
@@ -262,10 +276,31 @@ export default function Home() {
 
             {/* コンテンツエリア */}
             <div className="grid grid-cols-1 gap-6">
+              {viewMode === 'progress' && (
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-6 items-start">
+                  <div>
+                    <ProgressPostTimeline
+                      key={progressTimelineKey}
+                      tenantId={1}
+                      organizationId={1}
+                    />
+                  </div>
+                  <div className="sticky top-6">
+                    <ProgressPostForm
+                      tenantId={1}
+                      organizationId={1}
+                      authorId={user.id}
+                      onPostCreated={() => {
+                        setProgressTimelineKey(prev => prev + 1);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               {viewMode === 'challenges' && (
                 <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6 items-start">
                   <div>
-                    <DailyChallenges 
+                    <DailyChallenges
                       onRequestShare={handleRequestShare}
                       onNavigateToBadges={() => setViewMode('badges')}
                     />
