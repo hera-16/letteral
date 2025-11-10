@@ -1,0 +1,2051 @@
+openapi: 3.0.3
+info:
+  title: Letteral API
+  description: |
+    企業向け匿名進捗共有プラットフォーム「Letteral」のバックエンドAPI仕様書
+
+    ## 主要機能
+    - マルチテナント対応（企業・組織単位の完全分離）
+    - 匿名プロファイル管理（組織ごとに異なる匿名ID）
+    - 進捗投稿・タイムライン
+    - OKR管理・進捗リンク
+    - 評価スナップショット・分析
+    - 監査ログ記録
+  version: 1.0.0
+  contact:
+    name: Letteral Support
+    email: support@letteral.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.letteral.com/v1
+    description: Production server
+  - url: https://api-staging.letteral.com/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Local development server
+
+tags:
+  - name: Tenants
+    description: テナント（企業）管理
+  - name: Organizations
+    description: 組織（部署）管理
+  - name: Members
+    description: メンバー管理
+  - name: Anonymous Profiles
+    description: 匿名プロファイル管理
+  - name: Posts
+    description: 進捗投稿管理
+  - name: Reactions
+    description: リアクション管理
+  - name: OKRs
+    description: OKR（Objectives and Key Results）管理
+  - name: Evaluations
+    description: 評価・スナップショット管理
+  - name: Analytics
+    description: 分析・統計データ
+  - name: Audit Logs
+    description: 監査ログ管理
+  - name: Policies
+    description: ポリシー設定管理
+
+security:
+  - BearerAuth: []
+  - TenantId: []
+
+paths:
+  # =============================================
+  # テナント管理API
+  # =============================================
+  /tenants:
+    post:
+      tags:
+        - Tenants
+      summary: テナント登録
+      description: 新しいテナント（企業）を登録します
+      operationId: createTenant
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantRequest'
+      responses:
+        '201':
+          description: テナント作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tenants/{tenantId}:
+    get:
+      tags:
+        - Tenants
+      summary: テナント情報取得
+      description: 指定したテナントの詳細情報を取得します
+      operationId: getTenant
+      parameters:
+        - $ref: '#/components/parameters/TenantIdPath'
+      responses:
+        '200':
+          description: テナント取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Tenants
+      summary: テナント設定更新
+      description: テナントの設定を更新します
+      operationId: updateTenant
+      parameters:
+        - $ref: '#/components/parameters/TenantIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =============================================
+  # 組織管理API
+  # =============================================
+  /organizations:
+    post:
+      tags:
+        - Organizations
+      summary: 組織作成
+      description: テナント内に新しい組織（部署）を作成します
+      operationId: createOrganization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+      responses:
+        '201':
+          description: 組織作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /organizations/tree:
+    get:
+      tags:
+        - Organizations
+      summary: 組織階層取得
+      description: テナント内の組織を階層構造で取得します
+      operationId: getOrganizationTree
+      parameters:
+        - name: rootId
+          in: query
+          description: ルート組織ID（指定しない場合は全階層）
+          schema:
+            type: string
+        - name: maxDepth
+          in: query
+          description: 最大階層深度
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+      responses:
+        '200':
+          description: 組織階層取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationTreeResponse'
+
+  /organizations/{orgId}/members:
+    get:
+      tags:
+        - Members
+      summary: メンバー一覧取得
+      description: 組織のメンバー一覧を取得します
+      operationId: getOrganizationMembers
+      parameters:
+        - $ref: '#/components/parameters/OrgIdPath'
+        - name: role
+          in: query
+          description: 役割フィルタ
+          schema:
+            $ref: '#/components/schemas/MemberRole'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: メンバー一覧取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberPageResponse'
+
+  /organizations/{orgId}/members/invite:
+    post:
+      tags:
+        - Members
+      summary: メンバー招待
+      description: 組織にメンバーを招待します
+      operationId: inviteMember
+      parameters:
+        - $ref: '#/components/parameters/OrgIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteMemberRequest'
+      responses:
+        '201':
+          description: 招待成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # =============================================
+  # 匿名プロファイル管理API
+  # =============================================
+  /anonymous-profiles/me:
+    get:
+      tags:
+        - Anonymous Profiles
+      summary: 匿名プロファイル取得
+      description: 現在のユーザーの全組織における匿名プロファイルを取得します
+      operationId: getMyAnonymousProfiles
+      parameters:
+        - name: organizationId
+          in: query
+          description: 特定組織のプロファイルのみ取得
+          schema:
+            type: string
+      responses:
+        '200':
+          description: プロファイル取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymousProfileListResponse'
+
+  /anonymous-profiles/{profileId}/activate:
+    post:
+      tags:
+        - Anonymous Profiles
+      summary: 匿名プロファイル切り替え
+      description: 特定組織での匿名プロファイルをアクティブ化します
+      operationId: activateAnonymousProfile
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 切り替え成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymousProfileResponse'
+
+  # =============================================
+  # 進捗投稿API
+  # =============================================
+  /posts:
+    get:
+      tags:
+        - Posts
+      summary: タイムライン取得
+      description: 投稿のタイムラインを取得します
+      operationId: getPosts
+      parameters:
+        - name: organizationId
+          in: query
+          description: 組織フィルタ
+          schema:
+            type: string
+        - name: postType
+          in: query
+          description: 投稿タイプフィルタ
+          schema:
+            $ref: '#/components/schemas/PostType'
+        - name: visibilityScope
+          in: query
+          description: 公開範囲フィルタ
+          schema:
+            $ref: '#/components/schemas/VisibilityScope'
+        - name: startDate
+          in: query
+          description: 開始日時（ISO 8601形式）
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 終了日時（ISO 8601形式）
+          schema:
+            type: string
+            format: date-time
+        - name: tags
+          in: query
+          description: タグフィルタ（カンマ区切り）
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: タイムライン取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPageResponse'
+
+    post:
+      tags:
+        - Posts
+      summary: 投稿作成
+      description: 新しい進捗投稿を作成します
+      operationId: createPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: 投稿作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /posts/{postId}:
+    get:
+      tags:
+        - Posts
+      summary: 投稿詳細取得
+      description: 指定した投稿の詳細情報を取得します
+      operationId: getPost
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+      responses:
+        '200':
+          description: 投稿取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Posts
+      summary: 投稿更新
+      description: 投稿を更新します
+      operationId: updatePost
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+
+    delete:
+      tags:
+        - Posts
+      summary: 投稿削除
+      description: 投稿を削除します
+      operationId: deletePost
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+      responses:
+        '204':
+          description: 削除成功
+
+  /posts/{postId}/reactions:
+    post:
+      tags:
+        - Reactions
+      summary: リアクション追加
+      description: 投稿にリアクションを追加します
+      operationId: addReaction
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddReactionRequest'
+      responses:
+        '201':
+          description: リアクション追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionResponse'
+
+  /posts/{postId}/reactions/{reactionId}:
+    delete:
+      tags:
+        - Reactions
+      summary: リアクション削除
+      description: リアクションを削除します
+      operationId: deleteReaction
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+        - name: reactionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 削除成功
+
+  # =============================================
+  # OKR管理API
+  # =============================================
+  /okrs/objectives:
+    get:
+      tags:
+        - OKRs
+      summary: Objective一覧取得
+      description: Objective一覧を取得します
+      operationId: getObjectives
+      parameters:
+        - name: organizationId
+          in: query
+          description: 組織フィルタ
+          schema:
+            type: string
+        - name: quarter
+          in: query
+          description: 四半期フィルタ（例：2024_Q1）
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: ステータスフィルタ
+          schema:
+            $ref: '#/components/schemas/OkrStatus'
+        - name: ownerId
+          in: query
+          description: 所有者フィルタ
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Objective一覧取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectivePageResponse'
+
+    post:
+      tags:
+        - OKRs
+      summary: Objective作成
+      description: 新しいObjectiveを作成します
+      operationId: createObjective
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateObjectiveRequest'
+      responses:
+        '201':
+          description: Objective作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectiveResponse'
+
+  /okrs/objectives/{objectiveId}/key-results:
+    post:
+      tags:
+        - OKRs
+      summary: Key Result作成
+      description: ObjectiveにKey Resultを追加します
+      operationId: createKeyResult
+      parameters:
+        - name: objectiveId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKeyResultRequest'
+      responses:
+        '201':
+          description: Key Result作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyResultResponse'
+
+  /okrs/key-results/{krId}/progress:
+    patch:
+      tags:
+        - OKRs
+      summary: Key Result進捗更新
+      description: Key Resultの進捗を更新します
+      operationId: updateKeyResultProgress
+      parameters:
+        - name: krId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateKeyResultProgressRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyResultResponse'
+
+  /okrs/objectives/{objectiveId}/link-post:
+    post:
+      tags:
+        - OKRs
+      summary: 投稿とOKRのリンク作成
+      description: 進捗投稿をObjectiveにリンクします
+      operationId: linkPostToObjective
+      parameters:
+        - name: objectiveId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkPostRequest'
+      responses:
+        '201':
+          description: リンク作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostOkrLinkResponse'
+
+  # =============================================
+  # 評価・分析API
+  # =============================================
+  /evaluations/snapshots:
+    post:
+      tags:
+        - Evaluations
+      summary: 評価スナップショット作成
+      description: ユーザーの評価を記録します
+      operationId: createEvaluationSnapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvaluationSnapshotRequest'
+      responses:
+        '201':
+          description: 評価記録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationSnapshotResponse'
+
+  /evaluations/users/{userId}/history:
+    get:
+      tags:
+        - Evaluations
+      summary: ユーザー評価履歴取得
+      description: 指定ユーザーの評価履歴を取得します
+      operationId: getUserEvaluationHistory
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: startPeriod
+          in: query
+          description: 開始期間
+          schema:
+            type: string
+        - name: endPeriod
+          in: query
+          description: 終了期間
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 評価履歴取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationHistoryResponse'
+
+  /analytics/organizations/{orgId}/stats:
+    get:
+      tags:
+        - Analytics
+      summary: 組織統計取得
+      description: 組織のアクティビティ統計を取得します
+      operationId: getOrganizationStats
+      parameters:
+        - $ref: '#/components/parameters/OrgIdPath'
+        - name: startDate
+          in: query
+          required: true
+          description: 集計開始日時（ISO 8601形式）
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          description: 集計終了日時（ISO 8601形式）
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: 統計取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationStatsResponse'
+
+  /analytics/okrs/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: OKR進捗ダッシュボード
+      description: OKRの進捗状況をダッシュボード形式で取得します
+      operationId: getOkrDashboard
+      parameters:
+        - name: organizationId
+          in: query
+          description: 組織フィルタ
+          schema:
+            type: string
+        - name: quarter
+          in: query
+          required: true
+          description: 四半期指定（例：2024_Q1）
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ダッシュボード取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkrDashboardResponse'
+
+  # =============================================
+  # 監査ログAPI
+  # =============================================
+  /audit-logs:
+    get:
+      tags:
+        - Audit Logs
+      summary: 監査ログ検索
+      description: 監査ログを検索・取得します
+      operationId: getAuditLogs
+      parameters:
+        - name: action
+          in: query
+          description: アクションフィルタ
+          schema:
+            type: string
+        - name: targetType
+          in: query
+          description: 対象タイプフィルタ
+          schema:
+            type: string
+        - name: targetId
+          in: query
+          description: 対象IDフィルタ
+          schema:
+            type: string
+        - name: userId
+          in: query
+          description: 実行ユーザーフィルタ
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: 開始日時（ISO 8601形式）
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 終了日時（ISO 8601形式）
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: 監査ログ取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPageResponse'
+
+    post:
+      tags:
+        - Audit Logs
+      summary: 監査ログ記録
+      description: システム操作の監査ログを記録します（主にシステム内部から自動呼び出し）
+      operationId: createAuditLog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuditLogRequest'
+      responses:
+        '201':
+          description: ログ記録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogResponse'
+
+  # =============================================
+  # ポリシー設定API
+  # =============================================
+  /policies:
+    get:
+      tags:
+        - Policies
+      summary: ポリシー設定取得
+      description: 組織のポリシー設定を取得します
+      operationId: getPolicies
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          description: 組織ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ポリシー取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyListResponse'
+
+  /policies/{policyId}:
+    patch:
+      tags:
+        - Policies
+      summary: ポリシー設定更新
+      description: ポリシー設定を更新します
+      operationId: updatePolicy
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePolicyRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT認証トークン
+    TenantId:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+      description: テナントID（マルチテナント分離用）
+
+  parameters:
+    TenantIdPath:
+      name: tenantId
+      in: path
+      required: true
+      description: テナントID
+      schema:
+        type: string
+
+    OrgIdPath:
+      name: orgId
+      in: path
+      required: true
+      description: 組織ID
+      schema:
+        type: string
+
+    PostIdPath:
+      name: postId
+      in: path
+      required: true
+      description: 投稿ID
+      schema:
+        type: string
+
+    Page:
+      name: page
+      in: query
+      description: ページ番号（0始まり）
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+
+    Size:
+      name: size
+      in: query
+      description: 1ページあたりの件数
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    Sort:
+      name: sort
+      in: query
+      description: ソート順（フィールド名,方向）
+      schema:
+        type: string
+        example: createdAt,desc
+
+  schemas:
+    # =============================================
+    # Enum定義
+    # =============================================
+    TenantPlan:
+      type: string
+      enum:
+        - FREE
+        - PROFESSIONAL
+        - ENTERPRISE
+      description: テナントプラン
+
+    TenantStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - SUSPENDED
+        - TRIAL
+        - EXPIRED
+      description: テナントステータス
+
+    MemberRole:
+      type: string
+      enum:
+        - SYSTEM_ADMIN
+        - TENANT_ADMIN
+        - ORG_ADMIN
+        - MEMBER
+      description: メンバー役割
+
+    PostType:
+      type: string
+      enum:
+        - DAILY_REPORT
+        - WEEKLY_SUMMARY
+        - CHALLENGE_UPDATE
+        - ACHIEVEMENT
+      description: 投稿タイプ
+
+    VisibilityScope:
+      type: string
+      enum:
+        - PRIVATE
+        - ORGANIZATION
+        - TENANT
+        - PUBLIC
+      description: 公開範囲
+
+    ReactionType:
+      type: string
+      enum:
+        - THUMBS_UP
+        - CELEBRATE
+        - SUPPORT
+        - INSIGHTFUL
+        - THANKS
+      description: リアクションタイプ
+
+    OkrStatus:
+      type: string
+      enum:
+        - NOT_STARTED
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+      description: OKRステータス
+
+    EvaluationType:
+      type: string
+      enum:
+        - QUARTERLY_REVIEW
+        - ANNUAL_REVIEW
+        - PEER_REVIEW
+        - SELF_ASSESSMENT
+      description: 評価タイプ
+
+    # =============================================
+    # テナント関連スキーマ
+    # =============================================
+    CreateTenantRequest:
+      type: object
+      required:
+        - name
+        - slug
+        - plan
+        - maxUsers
+        - adminEmail
+        - adminName
+      properties:
+        name:
+          type: string
+          description: テナント名（企業名）
+          example: 株式会社サンプル
+        slug:
+          type: string
+          description: スラッグ（URLフレンドリーな識別子）
+          pattern: '^[a-z0-9-]+$'
+          example: sample-corp
+        plan:
+          $ref: '#/components/schemas/TenantPlan'
+        maxUsers:
+          type: integer
+          description: 最大ユーザー数
+          minimum: 1
+          example: 500
+        adminEmail:
+          type: string
+          format: email
+          description: 管理者メールアドレス
+          example: admin@sample.com
+        adminName:
+          type: string
+          description: 管理者名
+          example: 山田太郎
+
+    UpdateTenantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 株式会社サンプル（新社名）
+        maxUsers:
+          type: integer
+          minimum: 1
+          example: 1000
+
+    TenantResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: テナントID
+          example: 01H8X3Z...
+        name:
+          type: string
+          example: 株式会社サンプル
+        slug:
+          type: string
+          example: sample-corp
+        plan:
+          $ref: '#/components/schemas/TenantPlan'
+        status:
+          $ref: '#/components/schemas/TenantStatus'
+        maxUsers:
+          type: integer
+          example: 500
+        currentUsers:
+          type: integer
+          example: 234
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-01-20T15:45:00Z'
+
+    # =============================================
+    # 組織関連スキーマ
+    # =============================================
+    CreateOrganizationRequest:
+      type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          description: 組織名
+          example: 開発部
+        slug:
+          type: string
+          description: スラッグ
+          pattern: '^[a-z0-9-]+$'
+          example: dev
+        parentId:
+          type: string
+          description: 親組織ID（ルート組織の場合はnull）
+          nullable: true
+        description:
+          type: string
+          description: 組織説明
+          example: プロダクト開発を担当する部署
+        anonymityEnabled:
+          type: boolean
+          description: 匿名機能の有効化
+          default: true
+
+    OrganizationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: org_456
+        tenantId:
+          type: string
+          example: 01H8X3Z...
+        name:
+          type: string
+          example: 開発部
+        slug:
+          type: string
+          example: dev
+        fullPath:
+          type: string
+          description: フルパス（階層構造を表す）
+          example: /dev
+        level:
+          type: integer
+          description: 階層レベル（0がルート）
+          example: 1
+        parentId:
+          type: string
+          nullable: true
+        description:
+          type: string
+          example: プロダクト開発を担当する部署
+        anonymityEnabled:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+
+    OrganizationTreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        level:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationTreeNode'
+
+    OrganizationTreeResponse:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationTreeNode'
+
+    # =============================================
+    # メンバー関連スキーマ
+    # =============================================
+    InviteMemberRequest:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: newuser@sample.com
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        isPrimary:
+          type: boolean
+          description: 主所属かどうか
+          default: true
+
+    MemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: member_789
+        userId:
+          type: string
+          example: user_456
+        organizationId:
+          type: string
+          example: org_456
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        isPrimary:
+          type: boolean
+          example: true
+        joinedAt:
+          type: string
+          format: date-time
+        invitationToken:
+          type: string
+          example: inv_xyz123
+        invitationExpiresAt:
+          type: string
+          format: date-time
+
+    MemberPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    # =============================================
+    # 匿名プロファイル関連スキーマ
+    # =============================================
+    AnonymousProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: anon_001
+        organizationId:
+          type: string
+          example: org_456
+        organizationName:
+          type: string
+          example: 開発部
+        anonymousId:
+          type: string
+          description: 匿名ID（ハッシュ化された識別子）
+          example: 匿名ユーザー#A7F3
+        anonymousName:
+          type: string
+          example: 匿名ユーザー#A7F3
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+
+    AnonymousProfileListResponse:
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnonymousProfileResponse'
+
+    # =============================================
+    # 投稿関連スキーマ
+    # =============================================
+    CreatePostRequest:
+      type: object
+      required:
+        - content
+        - postType
+        - visibilityScope
+        - targetOrganizationId
+      properties:
+        content:
+          type: string
+          description: 投稿内容
+          minLength: 1
+          maxLength: 10000
+          example: 今日はログイン機能の実装を完了しました。
+        postType:
+          $ref: '#/components/schemas/PostType'
+        visibilityScope:
+          $ref: '#/components/schemas/VisibilityScope'
+        targetOrganizationId:
+          type: string
+          description: 対象組織ID
+          example: org_456
+        isAnonymous:
+          type: boolean
+          description: 匿名投稿かどうか
+          default: true
+        tags:
+          type: array
+          items:
+            type: string
+          example: ['開発', '認証']
+        linkedOkrIds:
+          type: array
+          items:
+            type: string
+          description: リンクするOKR IDのリスト
+          example: ['okr_123']
+
+    UpdatePostRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        tags:
+          type: array
+          items:
+            type: string
+
+    AuthorInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ユーザーIDまたは匿名プロファイルID
+        displayName:
+          type: string
+          description: 表示名
+        isAnonymous:
+          type: boolean
+          description: 匿名かどうか
+
+    OrganizationInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    OkrLinkInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        progress:
+          type: number
+          format: double
+
+    PostResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: post_001
+        content:
+          type: string
+        postType:
+          $ref: '#/components/schemas/PostType'
+        visibilityScope:
+          $ref: '#/components/schemas/VisibilityScope'
+        isAnonymous:
+          type: boolean
+        author:
+          $ref: '#/components/schemas/AuthorInfo'
+        organization:
+          $ref: '#/components/schemas/OrganizationInfo'
+        tags:
+          type: array
+          items:
+            type: string
+        linkedOkrs:
+          type: array
+          items:
+            $ref: '#/components/schemas/OkrLinkInfo'
+        reactionCount:
+          type: integer
+          example: 0
+        commentCount:
+          type: integer
+          example: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ReactionSummary:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ReactionType'
+        count:
+          type: integer
+
+    CommentInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        author:
+          $ref: '#/components/schemas/AuthorInfo'
+        createdAt:
+          type: string
+          format: date-time
+
+    PostDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/PostResponse'
+        - type: object
+          properties:
+            reactions:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReactionSummary'
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommentInfo'
+
+    PostPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    # =============================================
+    # リアクション関連スキーマ
+    # =============================================
+    AddReactionRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/ReactionType'
+
+    ReactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: reaction_001
+        postId:
+          type: string
+          example: post_001
+        type:
+          $ref: '#/components/schemas/ReactionType'
+        user:
+          $ref: '#/components/schemas/AuthorInfo'
+        createdAt:
+          type: string
+          format: date-time
+
+    # =============================================
+    # OKR関連スキーマ
+    # =============================================
+    CreateObjectiveRequest:
+      type: object
+      required:
+        - title
+        - organizationId
+        - ownerId
+        - quarter
+      properties:
+        title:
+          type: string
+          description: Objectiveタイトル
+          example: 顧客満足度を向上させる
+        description:
+          type: string
+          example: NPS +10ポイントを目指す
+        organizationId:
+          type: string
+          example: org_456
+        ownerId:
+          type: string
+          description: 所有者ユーザーID
+          example: user_123
+        quarter:
+          type: string
+          description: 四半期（YYYY_QN形式）
+          pattern: '^\d{4}_Q[1-4]$'
+          example: '2024_Q1'
+        status:
+          $ref: '#/components/schemas/OkrStatus'
+        parentObjectiveId:
+          type: string
+          nullable: true
+          description: 親ObjectiveID（階層構造の場合）
+
+    ObjectiveResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: obj_001
+        title:
+          type: string
+        description:
+          type: string
+        organizationId:
+          type: string
+        owner:
+          $ref: '#/components/schemas/AuthorInfo'
+        quarter:
+          type: string
+          example: '2024_Q1'
+        status:
+          $ref: '#/components/schemas/OkrStatus'
+        progress:
+          type: number
+          format: double
+          description: 進捗率（0-100）
+          example: 42.5
+        keyResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyResultResponse'
+        createdAt:
+          type: string
+          format: date-time
+
+    ObjectivePageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectiveResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    CreateKeyResultRequest:
+      type: object
+      required:
+        - title
+        - startValue
+        - targetValue
+        - currentValue
+        - unit
+        - ownerId
+      properties:
+        title:
+          type: string
+          example: 問い合わせ対応時間を平均2時間以内にする
+        description:
+          type: string
+          example: 現状平均4時間から改善
+        startValue:
+          type: number
+          format: double
+          description: 開始値
+          example: 4.0
+        targetValue:
+          type: number
+          format: double
+          description: 目標値
+          example: 2.0
+        currentValue:
+          type: number
+          format: double
+          description: 現在値
+          example: 3.5
+        unit:
+          type: string
+          description: 単位
+          example: 時間
+        ownerId:
+          type: string
+          example: user_456
+
+    KeyResultResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: kr_001
+        objectiveId:
+          type: string
+          example: obj_001
+        title:
+          type: string
+        description:
+          type: string
+        startValue:
+          type: number
+          format: double
+        targetValue:
+          type: number
+          format: double
+        currentValue:
+          type: number
+          format: double
+        unit:
+          type: string
+        progress:
+          type: number
+          format: double
+          description: 進捗率（0-100）
+          example: 25.0
+        owner:
+          $ref: '#/components/schemas/AuthorInfo'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateKeyResultProgressRequest:
+      type: object
+      required:
+        - currentValue
+      properties:
+        currentValue:
+          type: number
+          format: double
+          example: 2.8
+        note:
+          type: string
+          description: 進捗メモ
+          example: 先週から0.7時間改善しました
+
+    LinkPostRequest:
+      type: object
+      required:
+        - postId
+      properties:
+        postId:
+          type: string
+          example: post_001
+
+    PostOkrLinkResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: link_001
+        objectiveId:
+          type: string
+          example: obj_001
+        postId:
+          type: string
+          example: post_001
+        linkedAt:
+          type: string
+          format: date-time
+
+    # =============================================
+    # 評価関連スキーマ
+    # =============================================
+    CreateEvaluationSnapshotRequest:
+      type: object
+      required:
+        - userId
+        - organizationId
+        - period
+        - evaluationType
+        - score
+        - evaluatorId
+      properties:
+        userId:
+          type: string
+          description: 評価対象ユーザーID
+          example: user_123
+        organizationId:
+          type: string
+          example: org_456
+        period:
+          type: string
+          description: 評価期間（YYYY_QN形式）
+          example: '2024_Q1'
+        evaluationType:
+          $ref: '#/components/schemas/EvaluationType'
+        score:
+          type: number
+          format: double
+          description: 評価スコア
+          minimum: 0
+          maximum: 5
+          example: 4.2
+        strengths:
+          type: string
+          description: 強み
+          example: チーム貢献度が高い
+        improvements:
+          type: string
+          description: 改善点
+          example: ドキュメント作成を強化
+        evaluatorId:
+          type: string
+          description: 評価者ユーザーID
+          example: user_789
+
+    EvaluationSnapshotResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eval_001
+        userId:
+          type: string
+        organizationId:
+          type: string
+        period:
+          type: string
+        evaluationType:
+          $ref: '#/components/schemas/EvaluationType'
+        score:
+          type: number
+          format: double
+        strengths:
+          type: string
+        improvements:
+          type: string
+        evaluator:
+          $ref: '#/components/schemas/AuthorInfo'
+        createdAt:
+          type: string
+          format: date-time
+
+    EvaluationHistoryResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+        evaluations:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationSnapshotResponse'
+
+    # =============================================
+    # 分析関連スキーマ
+    # =============================================
+    OrganizationMetrics:
+      type: object
+      properties:
+        totalPosts:
+          type: integer
+          example: 450
+        dailyReportPosts:
+          type: integer
+          example: 320
+        challengeUpdatePosts:
+          type: integer
+          example: 80
+        achievementPosts:
+          type: integer
+          example: 50
+        totalReactions:
+          type: integer
+          example: 1250
+        activeMembers:
+          type: integer
+          example: 45
+        averagePostsPerMember:
+          type: number
+          format: double
+          example: 10.0
+        okrCompletionRate:
+          type: number
+          format: double
+          description: OKR完了率（％）
+          example: 68.5
+
+    TopContributor:
+      type: object
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        postCount:
+          type: integer
+
+    OrganizationStatsResponse:
+      type: object
+      properties:
+        organizationId:
+          type: string
+          example: org_456
+        period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        metrics:
+          $ref: '#/components/schemas/OrganizationMetrics'
+        topContributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopContributor'
+
+    OkrDashboardSummary:
+      type: object
+      properties:
+        totalObjectives:
+          type: integer
+          example: 15
+        completedObjectives:
+          type: integer
+          example: 6
+        inProgressObjectives:
+          type: integer
+          example: 8
+        notStartedObjectives:
+          type: integer
+          example: 1
+        averageProgress:
+          type: number
+          format: double
+          example: 58.3
+
+    OkrDashboardResponse:
+      type: object
+      properties:
+        quarter:
+          type: string
+          example: '2024_Q1'
+        summary:
+          $ref: '#/components/schemas/OkrDashboardSummary'
+        objectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectiveResponse'
+
+    # =============================================
+    # 監査ログ関連スキーマ
+    # =============================================
+    CreateAuditLogRequest:
+      type: object
+      required:
+        - action
+        - targetType
+        - targetId
+      properties:
+        action:
+          type: string
+          description: アクション種別
+          example: USER_LOGIN
+        targetType:
+          type: string
+          description: 対象タイプ
+          example: USER
+        targetId:
+          type: string
+          description: 対象ID
+          example: user_123
+        changes:
+          type: object
+          description: 変更内容（JSON形式）
+          additionalProperties: true
+        ipAddress:
+          type: string
+          example: 192.168.1.100
+        userAgent:
+          type: string
+          example: Mozilla/5.0...
+
+    AuditLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: audit_001
+        tenantId:
+          type: string
+        userId:
+          type: string
+        action:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: string
+        changes:
+          type: object
+          additionalProperties: true
+        ipAddress:
+          type: string
+        userAgent:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    AuditLogPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    # =============================================
+    # ポリシー関連スキーマ
+    # =============================================
+    PolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: policy_001
+        organizationId:
+          type: string
+        policyType:
+          type: string
+          description: ポリシータイプ
+          example: ANONYMITY_ENFORCED
+        enabled:
+          type: boolean
+          example: true
+        config:
+          type: object
+          description: ポリシー設定（JSON形式）
+          additionalProperties: true
+
+    PolicyListResponse:
+      type: object
+      properties:
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyResponse'
+
+    UpdatePolicyRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        config:
+          type: object
+          additionalProperties: true
+
+    # =============================================
+    # 共通スキーマ
+    # =============================================
+    PageInfo:
+      type: object
+      description: ページネーション情報
+      properties:
+        number:
+          type: integer
+          description: 現在のページ番号（0始まり）
+          example: 0
+        size:
+          type: integer
+          description: 1ページあたりの件数
+          example: 20
+        totalElements:
+          type: integer
+          description: 総要素数
+          example: 150
+        totalPages:
+          type: integer
+          description: 総ページ数
+          example: 8
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: エラーコード
+              example: VALIDATION_FAILED
+            message:
+              type: string
+              description: エラーメッセージ
+              example: 入力値が不正です
+            details:
+              type: object
+              description: エラー詳細
+              additionalProperties: true
+            timestamp:
+              type: string
+              format: date-time
+              example: '2024-01-20T10:30:00Z'
+            path:
+              type: string
+              description: リクエストパス
+              example: /api/v1/posts
+
+  responses:
+    BadRequest:
+      description: リクエスト不正
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: VALIDATION_FAILED
+              message: 入力値が不正です
+              details:
+                content: 投稿内容は1文字以上10000文字以内で入力してください
+              timestamp: '2024-01-20T10:30:00Z'
+              path: /api/v1/posts
+
+    Unauthorized:
+      description: 認証エラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: AUTH_TOKEN_EXPIRED
+              message: 認証トークンの有効期限が切れています
+              timestamp: '2024-01-20T10:30:00Z'
+              path: /api/v1/posts
+
+    Forbidden:
+      description: 権限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: AUTH_INSUFFICIENT_PERMISSION
+              message: この操作を実行する権限がありません
+              details:
+                required: ORG_ADMIN
+                current: MEMBER
+              timestamp: '2024-01-20T10:30:00Z'
+              path: /api/v1/organizations/org_456/members/invite
+
+    NotFound:
+      description: リソース未存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: RESOURCE_NOT_FOUND
+              message: 指定されたリソースが見つかりません
+              timestamp: '2024-01-20T10:30:00Z'
+              path: /api/v1/posts/post_999
+
+    UnprocessableEntity:
+      description: 処理不可（ビジネスロジックエラー）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: TENANT_USER_LIMIT_EXCEEDED
+              message: テナントのユーザー数上限を超過しています
+              details:
+                maxUsers: 500
+                currentUsers: 500
+              timestamp: '2024-01-20T10:30:00Z'
+              path: /api/v1/organizations/org_456/members/invite
