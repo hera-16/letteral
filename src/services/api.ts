@@ -486,4 +486,118 @@ export const challengeShareService = {
   },
 };
 
+// 進捗投稿関連の型定義
+export type PostType = 'PROGRESS' | 'GOAL' | 'BLOCKER' | 'LEARNING' | 'QUESTION';
+export type Visibility = 'TENANT' | 'ORGANIZATION' | 'TEAM' | 'PRIVATE';
+
+export interface ProgressPost {
+  id?: number;
+  tenantId: number;
+  organizationId: number;
+  authorId: number;
+  isAnonymous: boolean;
+  postType: PostType;
+  title?: string;
+  content: string;
+  achievementRate?: number;
+  blockers?: string;
+  learnings?: string;
+  nextAction?: string;
+  visibility: Visibility;
+  targetOrganizationId?: number;
+  postDate: string;
+  tags?: string[];
+  attachments?: Array<{ type: string; url: string; name?: string }>;
+  reactionCount?: number;
+  commentCount?: number;
+  viewCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateProgressPostRequest {
+  tenantId: number;
+  organizationId: number;
+  authorId: number;
+  isAnonymous?: boolean;
+  postType?: PostType;
+  title?: string;
+  content: string;
+  achievementRate?: number;
+  blockers?: string;
+  learnings?: string;
+  nextAction?: string;
+  visibility?: Visibility;
+  postDate: string;
+  tags?: string[];
+}
+
+export interface PagedProgressPosts {
+  content: ProgressPost[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+  number: number;
+  size: number;
+}
+
+export const progressPostService = {
+  async createPost(data: CreateProgressPostRequest): Promise<ProgressPost> {
+    const response = await api.post('/progress-posts', data);
+    return response.data;
+  },
+
+  async getPost(postId: number): Promise<ProgressPost> {
+    const response = await api.get(`/progress-posts/${postId}`);
+    return response.data;
+  },
+
+  async getTenantTimeline(tenantId: number, page = 0, size = 10): Promise<PagedProgressPosts> {
+    const response = await api.get(`/progress-posts/tenant/${tenantId}/timeline`, {
+      params: { page, size },
+    });
+    return response.data;
+  },
+
+  async getOrganizationTimeline(organizationId: number, page = 0, size = 10): Promise<PagedProgressPosts> {
+    const response = await api.get(`/progress-posts/organization/${organizationId}/timeline`, {
+      params: { page, size },
+    });
+    return response.data;
+  },
+
+  async getPostsByAuthor(authorId: number, page = 0, size = 10): Promise<PagedProgressPosts> {
+    const response = await api.get(`/progress-posts/author/${authorId}`, {
+      params: { page, size },
+    });
+    return response.data;
+  },
+
+  async updatePost(postId: number, data: Partial<ProgressPost>): Promise<ProgressPost> {
+    const response = await api.put(`/progress-posts/${postId}`, data);
+    return response.data;
+  },
+
+  async deletePost(postId: number): Promise<void> {
+    await api.delete(`/progress-posts/${postId}`);
+  },
+
+  async incrementReaction(postId: number): Promise<void> {
+    await api.post(`/progress-posts/${postId}/reactions/increment`);
+  },
+
+  async decrementReaction(postId: number): Promise<void> {
+    await api.post(`/progress-posts/${postId}/reactions/decrement`);
+  },
+
+  async incrementView(postId: number): Promise<void> {
+    await api.post(`/progress-posts/${postId}/views/increment`);
+  },
+};
+
 export default api;
