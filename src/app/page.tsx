@@ -3,19 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
-import FriendList from '@/components/FriendList';
 import GroupList from '@/components/GroupList';
 import ChatRoom from '@/components/ChatRoom';
 import GroupSettings from '@/components/GroupSettings';
-import DailyChallenges from '@/components/DailyChallenges';
-import ChallengeShareTimeline from '@/components/ChallengeShareTimeline';
-import Badges from '@/components/Badges';
 import ProgressPostTimeline from '@/components/ProgressPostTimeline';
 import ProgressPostForm from '@/components/ProgressPostForm';
+import OrganizationManagement from '@/components/OrganizationManagement';
 import { authService, User, Group } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
-type ViewMode = 'friends' | 'groups' | 'challenges' | 'chat' | 'badges' | 'progress';
+type ViewMode = 'groups' | 'chat' | 'progress' | 'organization';
 
 interface ChatTarget {
   type: 'friend' | 'group' | 'general';
@@ -27,14 +24,11 @@ interface ChatTarget {
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
-  const [viewMode, setViewMode] = useState<ViewMode>('challenges');
+  const [viewMode, setViewMode] = useState<ViewMode>('progress');
   const [showSignupSuccess, setShowSignupSuccess] = useState(false);
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
-  const [pendingShareChallengeId, setPendingShareChallengeId] = useState<number | null>(null);
-  const timelineSectionRef = useRef<HTMLDivElement | null>(null);
-  const [showProgressForm, setShowProgressForm] = useState(false);
   const [progressTimelineKey, setProgressTimelineKey] = useState(0);
 
   useEffect(() => {
@@ -70,15 +64,6 @@ export default function Home() {
     }, 2000);
   };
 
-  const handleSelectFriend = (friend: User, friendshipId: number) => {
-    setChatTarget({
-      type: 'friend',
-      id: friendshipId,
-      name: friend.displayName || friend.username,
-      roomId: `friend-${friendshipId}`,
-    });
-    setViewMode('chat');
-  };
 
   const handleSelectGroup = (group: Group) => {
     setChatTarget({
@@ -92,15 +77,7 @@ export default function Home() {
 
   const handleBackFromChat = () => {
     setChatTarget(null);
-    setViewMode('challenges');
-  };
-
-  const handleRequestShare = (challengeId: number) => {
-    setViewMode('challenges');
-    setPendingShareChallengeId(challengeId);
-    setTimeout(() => {
-      timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
+    setViewMode('progress');
   };
 
   // 認証チェック中
@@ -233,34 +210,14 @@ export default function Home() {
                 📈 進捗投稿
               </button>
               <button
-                onClick={() => setViewMode('challenges')}
+                onClick={() => setViewMode('organization')}
                 className="px-6 py-3 rounded-lg font-semibold transition-all"
                 style={{
-                  backgroundColor: viewMode === 'challenges' ? '#00ADB5' : '#393E46',
+                  backgroundColor: viewMode === 'organization' ? '#00ADB5' : '#393E46',
                   color: '#EEEEEE'
                 }}
               >
-                🌸 デイリーチャレンジ
-              </button>
-              <button
-                onClick={() => setViewMode('badges')}
-                className="px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: viewMode === 'badges' ? '#00ADB5' : '#393E46',
-                  color: '#EEEEEE'
-                }}
-              >
-                🏆 獲得バッジ
-              </button>
-              <button
-                onClick={() => setViewMode('friends')}
-                className="px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: viewMode === 'friends' ? '#00ADB5' : '#393E46',
-                  color: '#EEEEEE'
-                }}
-              >
-                👥 フレンド
+                🏢 組織管理
               </button>
               <button
                 onClick={() => setViewMode('groups')}
@@ -297,28 +254,11 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {viewMode === 'challenges' && (
-                <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6 items-start">
-                  <div>
-                    <DailyChallenges
-                      onRequestShare={handleRequestShare}
-                      onNavigateToBadges={() => setViewMode('badges')}
-                    />
-                  </div>
-                  <div ref={timelineSectionRef} className="scroll-mt-24">
-                    <ChallengeShareTimeline
-                      pendingShareChallengeId={pendingShareChallengeId}
-                      onSharePosted={() => setPendingShareChallengeId(null)}
-                      onPendingShareConsumed={() => setPendingShareChallengeId(null)}
-                    />
-                  </div>
-                </div>
-              )}
-              {viewMode === 'badges' && (
-                <Badges onNavigateToChallenges={() => setViewMode('challenges')} />
-              )}
-              {viewMode === 'friends' && (
-                <FriendList onSelectFriend={handleSelectFriend} />
+              {viewMode === 'organization' && (
+                <OrganizationManagement
+                  currentOrganizationId={1}
+                  currentUserId={user.id}
+                />
               )}
               {viewMode === 'groups' && (
                 <GroupList onSelectGroup={handleSelectGroup} />

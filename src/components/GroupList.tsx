@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { groupService, friendService, Group } from '@/services/api';
+import { groupService, Group } from '@/services/api';
 
 interface GroupListProps {
   onSelectGroup: (group: Group) => void;
@@ -12,23 +12,10 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // フレンドリストを読み込む
-  const loadFriends = async () => {
-    try {
-      const data = await friendService.getFriends();
-      setFriends(data);
-    } catch (err) {
-      console.error('Failed to load friends:', err);
-    }
-  };
-
   // グループ作成用の状態
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [friends, setFriends] = useState<any[]>([]);
-  const [showAllFriends, setShowAllFriends] = useState(false);
 
   // 招待コード参加用の状態
   const [showJoinByCode, setShowJoinByCode] = useState(false);
@@ -75,28 +62,14 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const newGroup = await groupService.createInviteOnlyGroup({
+      await groupService.createInviteOnlyGroup({
         name: groupName,
         description: groupDescription,
       });
-      
-      // グループ作成後、選択されたメンバーを追加
-      if (selectedMembers.length > 0 && newGroup.id) {
-        for (const username of selectedMembers) {
-          try {
-            await groupService.addGroupMember(newGroup.id, username);
-          } catch (err: any) {
-            console.error(`Failed to add member ${username}:`, err);
-            // メンバー追加エラーは無視して続行
-          }
-        }
-      }
-      
+
       setShowCreateGroup(false);
       setGroupName('');
       setGroupDescription('');
-      setSelectedMembers([]);
-      setShowAllFriends(false);
       loadData();
     } catch (err: any) {
       alert(err.response?.data?.message || 'グループの作成に失敗しました');
@@ -116,13 +89,6 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
     }
   };
 
-  const toggleMemberSelection = (username: string) => {
-    setSelectedMembers(prev =>
-      prev.includes(username)
-        ? prev.filter(u => u !== username)
-        : [...prev, username]
-    );
-  };
 
   return (
     <div className="rounded-lg shadow p-4" style={{ backgroundColor: '#393E46' }}>
@@ -131,10 +97,7 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
       {/* アクションボタン */}
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => {
-            setShowCreateGroup(true);
-            loadFriends();
-          }}
+          onClick={() => setShowCreateGroup(true)}
           className="px-4 py-2 rounded-lg transition-opacity"
           style={{ backgroundColor: '#00ADB5', color: '#EEEEEE' }}
           onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
@@ -227,48 +190,6 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
                 />
               </div>
 
-              {/* フレンド選択 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2" style={{ color: '#EEEEEE' }}>メンバーを追加（任意）</label>
-                <div className="border rounded-lg p-3 max-h-48 overflow-y-auto" style={{ backgroundColor: '#222831', borderColor: '#00ADB5' }}>
-                  {friends.length === 0 ? (
-                    <p className="text-sm" style={{ color: '#EEEEEE' }}>フレンドがいません</p>
-                  ) : (
-                    <>
-                      {friends.slice(0, showAllFriends ? friends.length : 5).map((friend) => (
-                        <div key={friend.id} className="flex items-center mb-2">
-                          <input
-                            type="checkbox"
-                            id={`friend-${friend.id}`}
-                            checked={selectedMembers.includes(friend.username)}
-                            onChange={() => toggleMemberSelection(friend.username)}
-                            className="mr-2"
-                          />
-                          <label htmlFor={`friend-${friend.id}`} className="text-sm cursor-pointer" style={{ color: '#EEEEEE' }}>
-                            {friend.displayName || friend.username}
-                          </label>
-                        </div>
-                      ))}
-                      {friends.length > 5 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowAllFriends(!showAllFriends)}
-                          className="text-sm hover:underline mt-2"
-                          style={{ color: '#00ADB5' }}
-                        >
-                          {showAllFriends ? '閉じる' : `他 ${friends.length - 5} 人を表示`}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-                {selectedMembers.length > 0 && (
-                  <p className="text-xs mt-1" style={{ color: '#EEEEEE' }}>
-                    {selectedMembers.length} 人を選択中
-                  </p>
-                )}
-              </div>
-
               <div className="flex gap-2">
                 <button
                   type="submit"
@@ -285,8 +206,6 @@ export default function GroupList({ onSelectGroup }: GroupListProps) {
                     setShowCreateGroup(false);
                     setGroupName('');
                     setGroupDescription('');
-                    setSelectedMembers([]);
-                    setShowAllFriends(false);
                   }}
                   className="flex-1 px-4 py-2 rounded-lg transition-opacity"
                   style={{ backgroundColor: '#222831', color: '#EEEEEE' }}

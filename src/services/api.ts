@@ -101,105 +101,12 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
-// フレンド関連の型定義
-export interface Friend {
-  id: number;
-  requester: User;
-  addressee: User;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED';
-  requestedAt: string;
-  respondedAt?: string;
-}
-
-export interface FriendWithId {
-  friendshipId: number;
-  userId: number;
-  username: string;
-  displayName: string;
-  email: string;
-}
-
 export interface User {
   id: number;
   username: string;
   email: string;
   displayName?: string;
   createdAt: string;
-}
-
-export interface FriendStats {
-  totalFriends: number;
-  pendingRequests: number;
-}
-
-export interface ChallengeCompletionSummary {
-  id: number;
-  challenge: DailyChallengeSummary;
-  note?: string;
-  completedAt: string;
-  pointsEarned: number;
-}
-
-export interface DailyChallengeSummary {
-  id: number;
-  title: string;
-  description?: string;
-  challengeType: string;
-  difficultyLevel?: string;
-  points: number;
-}
-
-export type ChallengeShareReactionType = 'ENCOURAGE' | 'EMPATHY' | 'AWESOME';
-
-export interface ChallengeShareUserSummary {
-  id: number;
-  username: string;
-  displayName?: string;
-}
-
-export interface ChallengeShareChallengeSummary {
-  id: number;
-  title: string;
-  challengeType: string;
-  points: number;
-}
-
-export interface ChallengeShare {
-  id: number;
-  user: ChallengeShareUserSummary;
-  challenge: ChallengeShareChallengeSummary;
-  comment: string;
-  mood?: string;
-  sharedAt: string;
-  reactions: Partial<Record<ChallengeShareReactionType, number>>;
-  userReaction?: ChallengeShareReactionType | null;
-}
-
-export interface PagedChallengeShares {
-  shares: ChallengeShare[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-}
-
-// バッジ関連の型定義
-export interface Badge {
-  id: number;
-  name: string;
-  description: string;
-  badgeType: string;
-  icon: string;
-  requirementValue: number;
-  createdAt: string;
-}
-
-export interface UserBadge {
-  id: number;
-  badge: Badge;
-  earnedAt: string;
-  isNew: boolean;
 }
 
 // グループ関連の型定義
@@ -275,66 +182,6 @@ export const userService = {
   },
 };
 
-export const friendService = {
-  async getFriends(): Promise<User[]> {
-    const response = await api.get('/friends/list');
-    return response.data;
-  },
-
-  async getFriendsWithIds(): Promise<FriendWithId[]> {
-    const response = await api.get('/friends/list/detailed');
-    return response.data;
-  },
-
-  async getFriendStats(): Promise<FriendStats> {
-    const response = await api.get('/friends/stats');
-    return response.data;
-  },
-
-  async getPendingRequests(): Promise<Friend[]> {
-    const response = await api.get('/friends/requests/pending');
-    return response.data;
-  },
-
-  async getSentRequests(): Promise<Friend[]> {
-    const response = await api.get('/friends/requests/sent');
-    return response.data;
-  },
-
-  async sendFriendRequest(username: string): Promise<Friend> {
-    const response = await api.post(`/friends/request/${encodeURIComponent(username)}`);
-    return response.data;
-  },
-
-  async acceptFriendRequest(friendshipId: number): Promise<Friend> {
-    const response = await api.post(`/friends/accept/${friendshipId}`);
-    return response.data;
-  },
-
-  async rejectFriendRequest(friendshipId: number): Promise<Friend> {
-    const response = await api.post(`/friends/reject/${friendshipId}`);
-    return response.data;
-  },
-
-  async removeFriend(friendId: number): Promise<void> {
-    await api.delete(`/friends/${friendId}`);
-  },
-
-  async blockUser(userId: number): Promise<Friend> {
-    const response = await api.post(`/friends/block/${userId}`);
-    return response.data;
-  },
-
-  async resetAllFriendships(): Promise<string> {
-    const response = await api.delete('/friends/reset');
-    return response.data;
-  },
-
-  async getAllFriendshipsWithDetails(): Promise<any[]> {
-    const response = await api.get('/friends/debug/all');
-    return response.data;
-  },
-};
 
 export const groupService = {
   async createInviteOnlyGroup(data: CreateGroupRequest): Promise<Group> {
@@ -407,11 +254,6 @@ export const chatService = {
     const response = await api.get(`/chat/groups/${groupId}/messages`);
     return response.data;
   },
-
-  async getFriendMessages(friendshipId: number): Promise<ChatMessage[]> {
-    const response = await api.get(`/chat/friends/${friendshipId}/messages`);
-    return response.data;
-  },
 };
 
 export const anonymousService = {
@@ -425,66 +267,6 @@ export const anonymousService = {
   },
 };
 
-export const badgeService = {
-  async getUserBadges(): Promise<UserBadge[]> {
-    const response = await api.get('/challenges/badges');
-    return response.data.success ? response.data.data : [];
-  },
-
-  async getNewBadges(): Promise<UserBadge[]> {
-    const response = await api.get('/challenges/badges/new');
-    return response.data.success ? response.data.data : [];
-  },
-
-  async markBadgesAsRead(): Promise<void> {
-    await api.post('/challenges/badges/mark-read');
-  },
-};
-
-export const challengeServiceApi = {
-  async getHistory(): Promise<ChallengeCompletionSummary[]> {
-    const response = await api.get('/challenges/history');
-    return response.data.success ? response.data.data : [];
-  },
-};
-
-export const challengeShareService = {
-  async createShare(payload: { challengeId: number; comment: string; mood?: string }): Promise<ChallengeShare> {
-    const response = await api.post('/shares', payload);
-    return response.data.data;
-  },
-
-  async getTimeline(page = 0, size = 10): Promise<PagedChallengeShares> {
-    const response = await api.get('/shares', { params: { page, size } });
-    return response.data.success ? response.data.data : {
-      shares: [],
-      page,
-      size,
-      totalElements: 0,
-      totalPages: 0,
-      hasNext: false,
-    };
-  },
-
-  async addReaction(shareId: number, type: ChallengeShareReactionType): Promise<ChallengeShare> {
-    const response = await api.post(`/shares/${shareId}/reactions`, { type });
-    return response.data.data;
-  },
-
-  async removeReaction(shareId: number, type: ChallengeShareReactionType): Promise<ChallengeShare> {
-    const response = await api.delete(`/shares/${shareId}/reactions/${type}`);
-    return response.data.data;
-  },
-
-  async getUnreadCount(): Promise<number> {
-    const response = await api.get('/shares/unread-count');
-    return response.data.success ? response.data.data?.count ?? 0 : 0;
-  },
-
-  async markRead(): Promise<void> {
-    await api.post('/shares/mark-read');
-  },
-};
 
 // 進捗投稿関連の型定義
 export type PostType = 'PROGRESS' | 'GOAL' | 'BLOCKER' | 'LEARNING' | 'QUESTION';
@@ -597,6 +379,82 @@ export const progressPostService = {
 
   async incrementView(postId: number): Promise<void> {
     await api.post(`/progress-posts/${postId}/views/increment`);
+  },
+};
+
+// 組織管理関連の型定義
+export type OrganizationRole =
+  | 'ADMIN_ROOT'     // 最高権限（全テナント操作可）
+  | 'ADMIN_CORE'     // コア管理者（テナント内全組織操作可）
+  | 'ADMIN_LEAD'     // リード管理者（自組織と子組織操作可）
+  | 'ADMIN_SUPER'    // スーパー管理者（自組織操作可）
+  | 'MEMBER';        // 一般メンバー
+
+export interface Organization {
+  id: number;
+  name: string;
+  description?: string;
+  type: string;
+  parentId?: number;
+  level: number;
+  path: string;
+  createdAt: string;
+}
+
+export interface OrganizationMember {
+  id: number;
+  userId: number;
+  username: string;
+  displayName?: string;
+  role: OrganizationRole;
+  joinedAt: string;
+}
+
+export interface AddMemberRequest {
+  username: string;
+  role: OrganizationRole;
+}
+
+export interface UpdateRoleRequest {
+  role: OrganizationRole;
+}
+
+export interface CreateSubOrgRequest {
+  name: string;
+  description?: string;
+}
+
+export interface OrganizationPermissions {
+  isMember: boolean;
+  role: OrganizationRole | null;
+  canAddMember: boolean;
+  canRemoveMember: boolean;
+  canCreateSubOrganization: boolean;
+}
+
+export const organizationManagementService = {
+  async addMember(organizationId: number, data: AddMemberRequest): Promise<OrganizationMember> {
+    const response = await api.post(`/organization-management/${organizationId}/members`, data);
+    return response.data;
+  },
+
+  async removeMember(organizationId: number, userId: number): Promise<void> {
+    await api.delete(`/organization-management/${organizationId}/members/${userId}`);
+  },
+
+  async updateMemberRole(organizationId: number, userId: number, data: UpdateRoleRequest): Promise<OrganizationMember> {
+    const response = await api.put(`/organization-management/${organizationId}/members/${userId}/role`, data);
+    return response.data;
+  },
+
+  async createSubOrganization(parentOrganizationId: number, data: CreateSubOrgRequest): Promise<Organization> {
+    const response = await api.post(`/organization-management/${parentOrganizationId}/sub-organizations`, data);
+    return response.data;
+  },
+
+  async getPermissions(organizationId: number): Promise<OrganizationPermissions> {
+    const response = await api.get(`/organization-management/${organizationId}/permissions`);
+    return response.data;
   },
 };
 
