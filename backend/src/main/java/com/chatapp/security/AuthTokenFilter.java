@@ -31,11 +31,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String jwt = parseJwt(request);
             String requestURI = request.getRequestURI();
+
+            // Skip JWT validation for auth endpoints
+            if (requestURI.startsWith("/api/auth/")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String jwt = parseJwt(request);
             String headerAuth = request.getHeader("Authorization");
             request.setAttribute("jwtHeader", headerAuth);
-            
+
             if (jwt != null) {
                 logger.debug("🔐 JWT found for request: " + requestURI + " | Token length: " + jwt.length());
 

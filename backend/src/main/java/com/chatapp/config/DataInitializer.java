@@ -1,9 +1,5 @@
 package com.chatapp.config;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -12,11 +8,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.chatapp.model.Badge;
-import com.chatapp.model.DailyChallenge;
+import com.chatapp.model.Organization;
+import com.chatapp.model.OrganizationMember;
+import com.chatapp.model.Tenant;
 import com.chatapp.model.User;
-import com.chatapp.repository.BadgeRepository;
-import com.chatapp.repository.DailyChallengeRepository;
+import com.chatapp.model.enums.OrganizationRole;
+import com.chatapp.repository.OrganizationMemberRepository;
+import com.chatapp.repository.OrganizationRepository;
+import com.chatapp.repository.TenantRepository;
 import com.chatapp.repository.UserRepository;
 
 /**
@@ -29,276 +28,192 @@ public class DataInitializer implements ApplicationRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataInitializer.class);
 
-    private final DailyChallengeRepository dailyChallengeRepository;
-    private final BadgeRepository badgeRepository;
-        private final UserRepository userRepository;
-        private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
+    private final OrganizationRepository organizationRepository;
+    private final OrganizationMemberRepository organizationMemberRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(DailyChallengeRepository dailyChallengeRepository,
-                                                   BadgeRepository badgeRepository,
-                                                   UserRepository userRepository,
-                                                   PasswordEncoder passwordEncoder) {
-        this.dailyChallengeRepository = dailyChallengeRepository;
-        this.badgeRepository = badgeRepository;
-                this.userRepository = userRepository;
-                this.passwordEncoder = passwordEncoder;
+    public DataInitializer(UserRepository userRepository,
+                           TenantRepository tenantRepository,
+                           OrganizationRepository organizationRepository,
+                           OrganizationMemberRepository organizationMemberRepository,
+                           PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.tenantRepository = tenantRepository;
+        this.organizationRepository = organizationRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-                seedUsers();
-        seedDailyChallenges();
-        seedBadges();
+        // 既存データを完全削除
+        LOGGER.info("Deleting all existing data...");
+        organizationMemberRepository.deleteAll();
+        organizationRepository.deleteAll();
+        tenantRepository.deleteAll();
+        userRepository.deleteAll();
+        LOGGER.info("All existing data deleted");
+
+        // 新しいテストデータを作成
+        seedTestData();
     }
 
-        private void seedUsers() {
-                List<UserSeed> seeds = List.of(
-                                new UserSeed("alice", "alice@example.com", "Alice Wonderland", "password123"),
-                                new UserSeed("bob", "bob@example.com", "Bob Builder", "password123"),
-                                new UserSeed("charlie", "charlie@example.com", "Charlie Chaplin", "password123"),
-                                new UserSeed("diana", "diana@example.com", "Diana Prince", "password123"),
-                                new UserSeed("eve", "eve@example.com", "Eve Online", "password123")
-                );
+    /**
+     * テストデータを作成
+     * 社長1人、部長2人、課長4人（各部署に2人）、PM1人、一般ユーザー3人
+     */
+    private void seedTestData() {
+        LOGGER.info("Creating test data...");
 
-                int created = 0;
-                int updated = 0;
+        // 1. テナント作成
+        Tenant tenant = new Tenant("テストカンパニー株式会社", "test-company");
+        tenant.setContactEmail("contact@test-company.com");
+        tenant = tenantRepository.save(tenant);
+        LOGGER.info("Created tenant: {}", tenant.getName());
 
-                for (UserSeed seed : seeds) {
-                        User user = userRepository.findByUsername(seed.username()).orElse(null);
+        // 2. 組織階層作成
+        // 会社（ルート組織）
+        Organization company = new Organization(tenant, "テストカンパニー株式会社");
+        company.setOrganizationType("COMPANY");
+        company.setLevel(1);
+        company.setPath("/1");
+        company = organizationRepository.save(company);
+        LOGGER.info("Created company organization: {}", company.getName());
 
-                        if (user == null) {
-                                user = new User(seed.username(),
-                                                seed.email(),
-                                                passwordEncoder.encode(seed.rawPassword()),
-                                                seed.displayName());
-                                userRepository.save(user);
-                                created++;
-                                continue;
-                        }
+        // 第1営業部
+        Organization dept1 = new Organization(tenant, "第1営業部");
+        dept1.setOrganizationType("DEPARTMENT");
+        dept1.setParent(company);
+        dept1.setLevel(2);
+        dept1.setPath(company.getPath() + "/" + (company.getId() + 1));
+        dept1 = organizationRepository.save(dept1);
+        LOGGER.info("Created department: {}", dept1.getName());
 
-                        boolean changed = false;
+        // 第2営業部
+        Organization dept2 = new Organization(tenant, "第2営業部");
+        dept2.setOrganizationType("DEPARTMENT");
+        dept2.setParent(company);
+        dept2.setLevel(2);
+        dept2.setPath(company.getPath() + "/" + (company.getId() + 2));
+        dept2 = organizationRepository.save(dept2);
+        LOGGER.info("Created department: {}", dept2.getName());
 
-                        if (!seed.email().equalsIgnoreCase(user.getEmail())) {
-                                user.setEmail(seed.email());
-                                changed = true;
-                        }
+        // 第1営業部 - 第1課
+        Organization section1_1 = new Organization(tenant, "第1課");
+        section1_1.setOrganizationType("SECTION");
+        section1_1.setParent(dept1);
+        section1_1.setLevel(3);
+        section1_1.setPath(dept1.getPath() + "/" + (dept1.getId() + 1));
+        section1_1 = organizationRepository.save(section1_1);
+        LOGGER.info("Created section: {} (under {})", section1_1.getName(), dept1.getName());
 
-                        if (user.getDisplayName() == null || !user.getDisplayName().equals(seed.displayName())) {
-                                user.setDisplayName(seed.displayName());
-                                changed = true;
-                        }
+        // 第1営業部 - 第2課
+        Organization section1_2 = new Organization(tenant, "第2課");
+        section1_2.setOrganizationType("SECTION");
+        section1_2.setParent(dept1);
+        section1_2.setLevel(3);
+        section1_2.setPath(dept1.getPath() + "/" + (dept1.getId() + 2));
+        section1_2 = organizationRepository.save(section1_2);
+        LOGGER.info("Created section: {} (under {})", section1_2.getName(), dept1.getName());
 
-                        if (!passwordEncoder.matches(seed.rawPassword(), user.getPassword())) {
-                                user.setPassword(passwordEncoder.encode(seed.rawPassword()));
-                                changed = true;
-                        }
+        // 第2営業部 - 第1課
+        Organization section2_1 = new Organization(tenant, "第1課");
+        section2_1.setOrganizationType("SECTION");
+        section2_1.setParent(dept2);
+        section2_1.setLevel(3);
+        section2_1.setPath(dept2.getPath() + "/" + (dept2.getId() + 1));
+        section2_1 = organizationRepository.save(section2_1);
+        LOGGER.info("Created section: {} (under {})", section2_1.getName(), dept2.getName());
 
-                        if (changed) {
-                                userRepository.save(user);
-                                updated++;
-                        }
-                }
+        // 第2営業部 - 第2課
+        Organization section2_2 = new Organization(tenant, "第2課");
+        section2_2.setOrganizationType("SECTION");
+        section2_2.setParent(dept2);
+        section2_2.setLevel(3);
+        section2_2.setPath(dept2.getPath() + "/" + (dept2.getId() + 2));
+        section2_2 = organizationRepository.save(section2_2);
+        LOGGER.info("Created section: {} (under {})", section2_2.getName(), dept2.getName());
 
-                if (created > 0 || updated > 0) {
-                        LOGGER.info("Seeded users - created: {}, updated: {}", created, updated);
-                } else {
-                        LOGGER.info("Seeded users - no changes required");
-                }
-        }
+        // プロジェクトチーム（第1営業部 第1課 配下）
+        Organization projectTeam = new Organization(tenant, "新規事業プロジェクト");
+        projectTeam.setOrganizationType("TEAM");
+        projectTeam.setParent(section1_1);
+        projectTeam.setLevel(4);
+        projectTeam.setPath(section1_1.getPath() + "/" + (section1_1.getId() + 1));
+        projectTeam = organizationRepository.save(projectTeam);
+        LOGGER.info("Created team: {} (under {})", projectTeam.getName(), section1_1.getName());
 
-    private void seedDailyChallenges() {
-        List<ChallengeSeed> seeds = List.of(
-                new ChallengeSeed(
-                        "今日の良かったこと3つ",
-                        "今日あった良いことを3つ書き出してみましょう。小さなことでもOK！",
-                        10,
-                        DailyChallenge.ChallengeType.GRATITUDE,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "感謝の気持ちを伝える",
-                        "誰か1人に『ありがとう』と伝えてみましょう",
-                        15,
-                        DailyChallenge.ChallengeType.GRATITUDE,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                ),
-                new ChallengeSeed(
-                        "今週のベストモーメント",
-                        "今週で一番良かった瞬間を振り返ってみましょう",
-                        15,
-                        DailyChallenge.ChallengeType.GRATITUDE,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                ),
-                new ChallengeSeed(
-                        "誰かを褒める",
-                        "グループで誰かを褒めるメッセージを送ってみましょう",
-                        15,
-                        DailyChallenge.ChallengeType.KINDNESS,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "励ましメッセージを送る",
-                        "頑張っている人に励ましの言葉をかけてみましょう",
-                        15,
-                        DailyChallenge.ChallengeType.KINDNESS,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                ),
-                new ChallengeSeed(
-                        "共感コメント",
-                        "誰かの投稿に共感するコメントを残しましょう",
-                        10,
-                        DailyChallenge.ChallengeType.KINDNESS,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "深呼吸を5回",
-                        "ゆっくり深呼吸を5回して、リラックスしましょう",
-                        10,
-                        DailyChallenge.ChallengeType.SELF_CARE,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "好きな音楽を聴く",
-                        "好きな曲を1曲聴いて気分転換しましょう",
-                        10,
-                        DailyChallenge.ChallengeType.SELF_CARE,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "5分間休憩",
-                        "スマホを置いて、5分間目を閉じて休憩しましょう",
-                        10,
-                        DailyChallenge.ChallengeType.SELF_CARE,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "自分を褒める",
-                        "今日頑張った自分を1つ褒めてあげましょう",
-                        15,
-                        DailyChallenge.ChallengeType.SELF_CARE,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                ),
-                new ChallengeSeed(
-                        "3行日記",
-                        "今日の出来事を3行で書いてみましょう",
-                        10,
-                        DailyChallenge.ChallengeType.CREATIVITY,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "好きなものを描く",
-                        "簡単なイラストや落書きをしてみましょう",
-                        15,
-                        DailyChallenge.ChallengeType.CREATIVITY,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                ),
-                new ChallengeSeed(
-                        "今日の空の写真",
-                        "空を見上げて、写真を撮ってみましょう",
-                        10,
-                        DailyChallenge.ChallengeType.CREATIVITY,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "グループで挨拶",
-                        "グループチャットで『おはよう』や『おやすみ』を送ってみましょう",
-                        10,
-                        DailyChallenge.ChallengeType.CONNECTION,
-                        DailyChallenge.DifficultyLevel.EASY
-                ),
-                new ChallengeSeed(
-                        "質問を投げかける",
-                        "グループで質問を1つ投げかけて、会話のきっかけを作りましょう",
-                        15,
-                        DailyChallenge.ChallengeType.CONNECTION,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                ),
-                new ChallengeSeed(
-                        "誰かの話を聞く",
-                        "グループで誰かの話にしっかり耳を傾けてみましょう",
-                        15,
-                        DailyChallenge.ChallengeType.CONNECTION,
-                        DailyChallenge.DifficultyLevel.MEDIUM
-                )
-        );
+        // 3. ユーザー作成
+        // 社長
+        User ceo = createUser("ceo", "ceo@test-company.com", "山田太郎", "password");
+        LOGGER.info("Created user: {} (社長)", ceo.getDisplayName());
 
-        Set<String> activeTitles = new HashSet<>();
-        for (ChallengeSeed seed : seeds) {
-            DailyChallenge challenge = dailyChallengeRepository.findByTitle(seed.title())
-                    .orElseGet(DailyChallenge::new);
+        // 部長2人
+        User manager1 = createUser("manager1", "manager1@test-company.com", "佐藤一郎", "password");
+        User manager2 = createUser("manager2", "manager2@test-company.com", "鈴木二郎", "password");
+        LOGGER.info("Created users: {} (第1営業部長), {} (第2営業部長)",
+                    manager1.getDisplayName(), manager2.getDisplayName());
 
-            challenge.setTitle(seed.title());
-            challenge.setDescription(seed.description());
-            challenge.setPoints(seed.points());
-            challenge.setChallengeType(seed.type());
-            challenge.setDifficultyLevel(seed.difficulty());
-            challenge.setIsActive(true);
+        // 課長4人
+        User chief1_1 = createUser("chief1_1", "chief1_1@test-company.com", "田中三郎", "password");
+        User chief1_2 = createUser("chief1_2", "chief1_2@test-company.com", "高橋四郎", "password");
+        User chief2_1 = createUser("chief2_1", "chief2_1@test-company.com", "伊藤五郎", "password");
+        User chief2_2 = createUser("chief2_2", "chief2_2@test-company.com", "渡辺六郎", "password");
+        LOGGER.info("Created users: {} (第1営業部第1課長), {} (第1営業部第2課長), {} (第2営業部第1課長), {} (第2営業部第2課長)",
+                    chief1_1.getDisplayName(), chief1_2.getDisplayName(),
+                    chief2_1.getDisplayName(), chief2_2.getDisplayName());
 
-            dailyChallengeRepository.save(challenge);
-            activeTitles.add(seed.title());
-        }
+        // PM1人
+        User pm = createUser("pm001", "pm@test-company.com", "中村七郎", "password");
+        LOGGER.info("Created user: {} (プロジェクトマネージャー)", pm.getDisplayName());
 
-        // 定義から外れた既存チャレンジは非アクティブ化する
-        dailyChallengeRepository.findByIsActiveTrue().stream()
-                .filter(existing -> !activeTitles.contains(existing.getTitle()))
-                .forEach(existing -> {
-                    existing.setIsActive(false);
-                    dailyChallengeRepository.save(existing);
-                });
+        // 一般ユーザー3人
+        User member1 = createUser("member1", "member1@test-company.com", "小林八郎", "password");
+        User member2 = createUser("member2", "member2@test-company.com", "加藤九郎", "password");
+        User member3 = createUser("member3", "member3@test-company.com", "吉田十郎", "password");
+        LOGGER.info("Created users: {} (一般), {} (一般), {} (一般)",
+                    member1.getDisplayName(), member2.getDisplayName(), member3.getDisplayName());
 
-        LOGGER.info("Seeded {} daily challenges", seeds.size());
+        // 4. 組織メンバーシップ作成
+        // 社長 - 会社全体の管理者
+        createOrgMember(tenant, company, ceo, OrganizationRole.ADMIN_ROOT, true);
+
+        // 部長 - 各部の管理者
+        createOrgMember(tenant, dept1, manager1, OrganizationRole.ADMIN_CORE, true);
+        createOrgMember(tenant, dept2, manager2, OrganizationRole.ADMIN_CORE, true);
+
+        // 課長 - 各課の管理者
+        createOrgMember(tenant, section1_1, chief1_1, OrganizationRole.ADMIN_LEAD, true);
+        createOrgMember(tenant, section1_2, chief1_2, OrganizationRole.ADMIN_LEAD, true);
+        createOrgMember(tenant, section2_1, chief2_1, OrganizationRole.ADMIN_LEAD, true);
+        createOrgMember(tenant, section2_2, chief2_2, OrganizationRole.ADMIN_LEAD, true);
+
+        // PM - プロジェクトチームの管理者
+        createOrgMember(tenant, projectTeam, pm, OrganizationRole.ADMIN_SUPER, true);
+
+        // 一般ユーザー - プロジェクトチームのメンバー
+        createOrgMember(tenant, projectTeam, member1, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, projectTeam, member2, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, projectTeam, member3, OrganizationRole.MEMBER, false);
+
+        LOGGER.info("Test data creation completed successfully!");
     }
 
-    private void seedBadges() {
-        List<BadgeSeed> seeds = List.of(
-                new BadgeSeed("初めての一歩", "最初のチャレンジを達成しました！すごい！", "FIRST_STEP", "🌱", 1),
-                new BadgeSeed("3日連続", "3日連続でチャレンジ達成！継続は力なり！", "STREAK_3", "🔥", 3),
-                new BadgeSeed("1週間連続", "7日連続達成！素晴らしい習慣です！", "STREAK_7", "⭐", 7),
-                new BadgeSeed("10回達成", "合計10回のチャレンジ達成！成長していますね！", "TOTAL_10", "🎯", 10),
-                new BadgeSeed("30回達成", "合計30回達成！もう習慣になっていますね！", "TOTAL_30", "🏆", 30),
-                new BadgeSeed("50回達成", "合計50回達成！驚異的な継続力です！", "TOTAL_50", "👑", 50),
-                new BadgeSeed("感謝マスター", "感謝系チャレンジを10回達成！感謝の心が育っています！", "GRATITUDE_10", "💝", 10),
-                new BadgeSeed("優しさの達人", "優しさ系チャレンジを10回達成！あなたの優しさが世界を変えます！", "KINDNESS_10", "🤝", 10),
-                new BadgeSeed("セルフケア上手", "セルフケア系チャレンジを10回達成！自分を大切にしていますね！", "SELF_CARE_10", "🧘", 10),
-                new BadgeSeed("クリエイター", "創造性チャレンジを10回達成！あなたの創造力が光っています！", "CREATIVITY_10", "🎨", 10),
-                new BadgeSeed("コミュニケーター", "つながり系チャレンジを10回達成！素敵な関係を築いていますね！", "CONNECTION_10", "🌈", 10),
-                new BadgeSeed("花レベル3", "花レベル3到達！着実に成長していますね！", "LEVEL_3", "🌺", 3),
-                new BadgeSeed("花レベル5", "花レベル5到達！半分まで来ました！", "LEVEL_5", "🌻", 5),
-                new BadgeSeed("花レベル7", "花レベル7到達！もうすぐ最高レベルです！", "LEVEL_7", "🌹", 7),
-                new BadgeSeed("花レベル10", "花レベル10到達！最高の花が咲きました！", "LEVEL_10", "🏵️", 10)
-        );
-
-        for (BadgeSeed seed : seeds) {
-            Badge badge = badgeRepository.findByBadgeType(seed.badgeType())
-                    .orElseGet(Badge::new);
-
-            badge.setBadgeType(seed.badgeType());
-            badge.setName(seed.name());
-            badge.setDescription(seed.description());
-            badge.setIcon(seed.icon());
-            badge.setRequirementValue(seed.requirementValue());
-
-            badgeRepository.save(badge);
-        }
-
-        LOGGER.info("Seeded {} badges", seeds.size());
+    private User createUser(String username, String email, String displayName, String password) {
+        User user = new User(username, email, passwordEncoder.encode(password), displayName);
+        return userRepository.save(user);
     }
 
-    private record ChallengeSeed(String title,
-                                 String description,
-                                 int points,
-                                 DailyChallenge.ChallengeType type,
-                                 DailyChallenge.DifficultyLevel difficulty) { }
-
-    private record BadgeSeed(String name,
-                              String description,
-                              String badgeType,
-                              String icon,
-                              int requirementValue) { }
-
-    private record UserSeed(String username,
-                            String email,
-                            String displayName,
-                            String rawPassword) { }
+    private OrganizationMember createOrgMember(Tenant tenant, Organization org, User user,
+                                                OrganizationRole role, boolean isPrimary) {
+        OrganizationMember member = new OrganizationMember(tenant, org, user);
+        member.setRole(role);
+        member.setIsPrimary(isPrimary);
+        OrganizationMember saved = organizationMemberRepository.save(member);
+        LOGGER.info("Added {} to {} with role {}", user.getDisplayName(), org.getName(), role);
+        return saved;
+    }
 }

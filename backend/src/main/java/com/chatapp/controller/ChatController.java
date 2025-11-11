@@ -98,17 +98,7 @@ public class ChatController {
         List<ChatMessageDto> messages = chatService.getMessagesByRoomId(roomId, currentUsername);
         return ResponseEntity.ok(messages);
     }
-    
-    @GetMapping("/friends/{friendshipId}/messages")
-    @org.springframework.web.bind.annotation.ResponseBody
-    public ResponseEntity<List<ChatMessageDto>> getFriendMessages(
-            @PathVariable Long friendshipId,
-            Authentication authentication) {
-        String currentUsername = authentication.getName();
-        List<ChatMessageDto> messages = chatService.getFriendMessages(friendshipId, currentUsername);
-        return ResponseEntity.ok(messages);
-    }
-    
+
     @GetMapping("/groups/{groupId}/messages")
     @org.springframework.web.bind.annotation.ResponseBody
     public ResponseEntity<List<ChatMessageDto>> getGroupMessages(

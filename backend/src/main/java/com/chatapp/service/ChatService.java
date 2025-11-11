@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.dto.ChatMessageDto;
 import com.chatapp.model.ChatMessage;
-import com.chatapp.model.Friend;
 import com.chatapp.model.User;
 import com.chatapp.repository.ChatMessageRepository;
-import com.chatapp.repository.FriendRepository;
 import com.chatapp.repository.UserRepository;
 
 @Service
@@ -20,13 +18,10 @@ public class ChatService {
     
     @Autowired
     private ChatMessageRepository chatMessageRepository;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
-    @Autowired
-    private FriendRepository friendRepository;
-    
+
     @Autowired
     private GroupService groupService;
     
@@ -76,9 +71,6 @@ public class ChatService {
         if (roomId.startsWith("group-")) {
             long groupId = Long.parseLong(roomId.substring(6));
             return getGroupMessages(groupId, currentUser.getId());
-        } else if (roomId.startsWith("friend-")) {
-            long friendshipId = Long.parseLong(roomId.substring(7));
-            return getFriendMessages(friendshipId);
         } else if (roomId.startsWith("topic-")) {
             long topicId = Long.parseLong(roomId.substring(6));
             return getTopicMessages(topicId);
@@ -137,35 +129,7 @@ public class ChatService {
     public List<ChatMessageDto> getTopicMessages(Long topicId) {
         return getRecentMessages("topic-" + topicId);
     }
-    
-    /**
-     * Get recent messages for a friend chat.
-     * Room ID format: "friend-{friendshipId}"
-     */
-    public List<ChatMessageDto> getFriendMessages(Long friendshipId, String currentUsername) {
-        // フレンドシップの検証: currentUserがこのフレンドシップの一部であることを確認
-        Friend friend = friendRepository.findById(friendshipId)
-            .orElseThrow(() -> new RuntimeException("Friend relationship not found"));
-        
-        User currentUser = userRepository.findByUsername(currentUsername)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        if (!friend.getRequester().getId().equals(currentUser.getId()) && 
-            !friend.getAddressee().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("User is not part of this friendship");
-        }
-        
-        return getFriendMessages(friendshipId);
-    }
-    
-    /**
-     * Get recent messages for a friend chat.
-     * Room ID format: "friend-{friendshipId}"
-     */
-    public List<ChatMessageDto> getFriendMessages(Long friendshipId) {
-        return getRecentMessages("friend-" + friendshipId);
-    }
-    
+
     private ChatMessageDto convertToDto(ChatMessage message) {
         ChatMessageDto dto = new ChatMessageDto();
         dto.setId(message.getId());

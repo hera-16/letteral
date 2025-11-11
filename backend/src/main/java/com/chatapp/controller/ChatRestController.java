@@ -43,12 +43,6 @@ public class ChatRestController {
         return chatService.getTopicMessages(topicId);
     }
 
-    @GetMapping("/friends/{friendshipId}/messages")
-    public List<ChatMessageDto> getFriendMessages(
-            @PathVariable final Long friendshipId) {
-        return chatService.getFriendMessages(friendshipId);
-    }
-
     private Long resolveUserId(final Authentication authentication) {
         final Object principal = authentication.getPrincipal();
         if (principal instanceof UserPrincipal userPrincipal) {

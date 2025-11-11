@@ -27,6 +27,8 @@ public interface OrganizationMemberRepository extends JpaRepository<Organization
 
     Optional<OrganizationMember> findByOrganizationAndUser(Organization organization, User user);
 
+    Optional<OrganizationMember> findByUserIdAndOrganizationId(Long userId, Long organizationId);
+
     Boolean existsByOrganizationAndUser(Organization organization, User user);
 
     Optional<OrganizationMember> findByUserAndIsPrimary(User user, Boolean isPrimary);
