@@ -5,6 +5,7 @@ import com.chatapp.model.Organization;
 import com.chatapp.model.Tenant;
 import com.chatapp.model.User;
 import com.chatapp.repository.AnonymousProfileRepository;
+import com.chatapp.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,35 @@ public class AnonymousProfileService {
 
     private static final Logger log = LoggerFactory.getLogger(AnonymousProfileService.class);
     private final AnonymousProfileRepository anonymousProfileRepository;
+    private final UserRepository userRepository;
+    private final OrganizationService organizationService;
 
-    public AnonymousProfileService(AnonymousProfileRepository anonymousProfileRepository) {
+    public AnonymousProfileService(
+            AnonymousProfileRepository anonymousProfileRepository,
+            UserRepository userRepository,
+            OrganizationService organizationService) {
         this.anonymousProfileRepository = anonymousProfileRepository;
+        this.userRepository = userRepository;
+        this.organizationService = organizationService;
+    }
+
+    /**
+     * ユーザーID×組織IDで匿名プロファイル取得または作成
+     *
+     * @param userId ユーザーID
+     * @param organizationId 組織ID
+     * @return 匿名プロファイル
+     */
+    @Transactional
+    public AnonymousProfile getOrCreateProfileForUserInOrganization(Long userId, Long organizationId) {
+        log.debug("Getting or creating anonymous profile for userId {} in organizationId {}",
+                  userId, organizationId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+        Organization organization = organizationService.getOrganizationById(organizationId);
+
+        return getOrCreateAnonymousProfile(organization, user);
     }
 
     /**

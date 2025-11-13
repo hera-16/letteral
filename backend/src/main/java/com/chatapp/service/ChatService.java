@@ -24,10 +24,7 @@ public class ChatService {
 
     @Autowired
     private GroupService groupService;
-    
-    @Autowired
-    private AnonymousNameService anonymousNameService;
-    
+
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     public ChatMessageDto saveMessage(ChatMessageDto messageDto) {
@@ -106,10 +103,10 @@ public class ChatService {
         messages = messages.stream()
                 .sorted((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
                 .collect(Collectors.toList());
-        
-        // 匿名名を適用してDTOに変換
+
+        // DTOに変換（実名表示）
         return messages.stream()
-                .map(message -> convertToGroupDto(message, userId, groupId))
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
     
@@ -142,35 +139,4 @@ public class ChatService {
         return dto;
     }
     
-    /**
-     * グループメッセージを匿名名付きDTOに変換
-     */
-    private ChatMessageDto convertToGroupDto(ChatMessage message, Long viewerId, Long groupId) {
-        System.out.println("🔧 convertToGroupDto called - messageId: " + message.getId() + ", viewerId: " + viewerId + ", groupId: " + groupId);
-        
-        ChatMessageDto dto = new ChatMessageDto();
-        dto.setId(message.getId());
-        dto.setContent(message.getContent());
-        dto.setSenderUsername(message.getSender().getUsername());
-        
-        // 匿名名を取得（全員が同じ匿名名を見る2パラメータバージョン）
-        // viewerIdが送信者自身の場合は「あなた」を返す
-        Long senderId = message.getSender().getId();
-        String anonymousName;
-        if (viewerId.equals(senderId)) {
-            anonymousName = "あなた";
-            System.out.println("  → Self message, using: あなた");
-        } else {
-            anonymousName = anonymousNameService.getAnonymousName(senderId, groupId);
-            System.out.println("  → Other's message, anonymous name: " + anonymousName + " for senderId: " + senderId);
-        }
-        dto.setSenderDisplayName(anonymousName);
-        
-        dto.setRoomId(message.getRoomId());
-        dto.setMessageType(message.getMessageType().toString());
-        dto.setTimestamp(message.getCreatedAt().format(formatter));
-        
-        System.out.println("  → DTO created with senderDisplayName: " + dto.getSenderDisplayName());
-        return dto;
-    }
 }
