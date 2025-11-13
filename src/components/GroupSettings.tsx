@@ -1,14 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { groupService, authService, User } from '@/services/api';
+import { authService, User } from '@/services/api';
 
-interface GroupSettingsProps {
-  groupId: number;
-  onClose: () => void;
-  onUpdate?: () => void;
-}
-
+// 旧CharaChalle機能 - Letteralでは使用しない
 interface GroupDetails {
   id: number;
   name: string;
@@ -19,6 +14,31 @@ interface GroupDetails {
     username: string;
     displayName?: string;
   };
+}
+
+// ダミーサービス（旧機能のため実装なし）
+const groupService = {
+  async getGroup(groupId: number): Promise<GroupDetails> {
+    throw new Error('この機能は現在利用できません');
+  },
+  async getGroupMembers(groupId: number): Promise<any[]> {
+    return [];
+  },
+  async updateGroup(groupId: number, data: { name: string; description: string }): Promise<void> {
+    throw new Error('この機能は現在利用できません');
+  },
+  async addGroupMember(groupId: number, username: string): Promise<any[]> {
+    throw new Error('この機能は現在利用できません');
+  },
+  async removeGroupMember(groupId: number, userId: number): Promise<any[]> {
+    throw new Error('この機能は現在利用できません');
+  },
+};
+
+interface GroupSettingsProps {
+  groupId: number;
+  onClose: () => void;
+  onUpdate?: () => void;
 }
 
 export default function GroupSettings({ groupId, onClose, onUpdate }: GroupSettingsProps) {

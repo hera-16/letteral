@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
-import GroupList from '@/components/GroupList';
 import ChatRoom from '@/components/ChatRoom';
 import GroupSettings from '@/components/GroupSettings';
 import ProgressPostTimeline from '@/components/ProgressPostTimeline';
 import ProgressPostForm from '@/components/ProgressPostForm';
 import OrganizationManagement from '@/components/OrganizationManagement';
-import { authService, User, Group } from '@/services/api';
+import { authService } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
-type ViewMode = 'groups' | 'chat' | 'progress' | 'organization';
+type ViewMode = 'chat' | 'progress' | 'organization';
 
 interface ChatTarget {
   type: 'friend' | 'group' | 'general';
@@ -62,17 +61,6 @@ export default function Home() {
       setShowSignupSuccess(false);
       setAuthMode('login');
     }, 2000);
-  };
-
-
-  const handleSelectGroup = (group: Group) => {
-    setChatTarget({
-      type: 'group',
-      id: group.id,
-      name: group.name,
-      roomId: `group-${group.id}`,
-    });
-    setViewMode('chat');
   };
 
   const handleBackFromChat = () => {
@@ -175,7 +163,7 @@ export default function Home() {
               <h2 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>{chatTarget.name}</h2>
               <p className="text-sm" style={{ color: '#00ADB5' }}>
                 {chatTarget.type === 'friend' && 'フレンドチャット'}
-                {chatTarget.type === 'group' && '匿名グループチャット'}
+                {chatTarget.type === 'group' && 'グループチャット'}
               </p>
             </div>
             <ChatRoom
@@ -219,16 +207,6 @@ export default function Home() {
               >
                 🏢 組織管理
               </button>
-              <button
-                onClick={() => setViewMode('groups')}
-                className="px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: viewMode === 'groups' ? '#00ADB5' : '#393E46',
-                  color: '#EEEEEE'
-                }}
-              >
-                🏘️ 匿名グループ
-              </button>
             </div>
 
             {/* コンテンツエリア */}
@@ -259,9 +237,6 @@ export default function Home() {
                   currentOrganizationId={1}
                   currentUserId={user.id}
                 />
-              )}
-              {viewMode === 'groups' && (
-                <GroupList onSelectGroup={handleSelectGroup} />
               )}
             </div>
           </>
