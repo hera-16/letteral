@@ -4,6 +4,7 @@ import com.chatapp.model.Organization;
 import com.chatapp.model.OrganizationMember;
 import com.chatapp.model.User;
 import com.chatapp.model.enums.OrganizationRole;
+import com.chatapp.repository.OrganizationMemberRepository;
 import com.chatapp.repository.UserRepository;
 import com.chatapp.security.UserPrincipal;
 import com.chatapp.service.OrganizationPermissionService;
@@ -13,7 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +35,41 @@ public class OrganizationManagementController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private OrganizationMemberRepository memberRepository;
+
+    /**
+     * 組織のメンバー一覧を取得
+     */
+    @GetMapping("/{organizationId}/members")
+    public ResponseEntity<?> getMembers(
+            @PathVariable Long organizationId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        try {
+            User user = userRepository.findById(currentUser.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
+
+            // メンバーであることを確認
+            if (!permissionService.isMember(user, organizationId)) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("error", "この組織のメンバーではありません"));
+            }
+
+            Organization organization = organizationService.getOrganizationById(organizationId);
+            List<OrganizationMember> members = memberRepository.findByOrganization(organization);
+
+            List<Map<String, Object>> memberList = new ArrayList<>();
+            for (OrganizationMember member : members) {
+                memberList.add(createMemberResponse(member));
+            }
+
+            return ResponseEntity.ok(memberList);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     /**
      * 組織にメンバーを追加
