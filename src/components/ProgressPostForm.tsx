@@ -92,8 +92,9 @@ export default function ProgressPostForm({
   ];
 
   const visibilityOptions: { value: Visibility; label: string; icon: string }[] = [
-    { value: 'TENANT', label: '全社', icon: '🏢' },
-    { value: 'ORGANIZATION', label: '部門', icon: '🏛️' },
+    { value: 'COMPANY', label: '全社', icon: '🏢' },
+    { value: 'ORGANIZATION', label: '組織', icon: '🏛️' },
+    { value: 'DEPARTMENT', label: '部署', icon: '🏢' },
     { value: 'TEAM', label: 'チーム', icon: '👥' },
     { value: 'PRIVATE', label: '非公開', icon: '🔒' },
   ];
@@ -290,21 +291,6 @@ export default function ProgressPostForm({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* 匿名性 */}
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="isAnonymous"
-            checked={formData.isAnonymous}
-            onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
-            className="w-5 h-5"
-            style={{ accentColor: '#00ADB5' }}
-          />
-          <label htmlFor="isAnonymous" style={{ color: '#EEEEEE' }} className="cursor-pointer">
-            🎭 匿名で投稿する
-          </label>
         </div>
 
         {/* 送信ボタン */}

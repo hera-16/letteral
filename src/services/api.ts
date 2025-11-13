@@ -109,30 +109,6 @@ export interface User {
   createdAt: string;
 }
 
-// グループ関連の型定義
-export interface Group {
-  id: number;
-  name: string;
-  description?: string;
-  groupType: 'INVITE_ONLY';
-  inviteCode?: string;
-  maxMembers: number;
-  creator: User;
-  createdAt: string;
-}
-
-export interface GroupMember {
-  id: number;
-  user: User;
-  role: 'ADMIN' | 'MEMBER';
-  joinedAt: string;
-}
-
-export interface CreateGroupRequest {
-  name: string;
-  description?: string;
-  maxMembers?: number;
-}
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -183,94 +159,17 @@ export const userService = {
 };
 
 
-export const groupService = {
-  async createInviteOnlyGroup(data: CreateGroupRequest): Promise<Group> {
-    const response = await api.post('/groups/invite', data);
-    return response.data;
-  },
-
-  async getMyInviteOnlyGroups(): Promise<Group[]> {
-    const response = await api.get('/groups/invite/my');
-    return response.data;
-  },
-
-  async joinGroupByInviteCode(inviteCode: string): Promise<Group> {
-    const response = await api.post('/groups/invite/join', { inviteCode });
-    return response.data;
-  },
-
-  async getGroup(groupId: number): Promise<Group> {
-    const response = await api.get(`/groups/${groupId}`);
-    return response.data;
-  },
-
-  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
-    const response = await api.get(`/groups/${groupId}/members`);
-    return response.data;
-  },
-
-  async getGroupMemberCount(groupId: number): Promise<number> {
-    const response = await api.get(`/groups/${groupId}/members/count`);
-    return response.data;
-  },
-
-  async leaveGroup(groupId: number): Promise<void> {
-    await api.delete(`/groups/${groupId}/leave`);
-  },
-
-  async promoteToAdmin(groupId: number, memberId: number): Promise<GroupMember> {
-    const response = await api.put(`/groups/${groupId}/members/${memberId}/promote`);
-    return response.data;
-  },
-
-  async regenerateInviteCode(groupId: number): Promise<Group> {
-    const response = await api.put(`/groups/${groupId}/invite-code/regenerate`);
-    return response.data;
-  },
-
-  async updateGroup(groupId: number, data: { name: string; description: string }): Promise<Group> {
-    const response = await api.put(`/groups/${groupId}`, data);
-    return response.data;
-  },
-
-  async addGroupMember(groupId: number, username: string): Promise<User[]> {
-    const response = await api.post(`/groups/${groupId}/members`, { username });
-    return response.data;
-  },
-
-  async removeGroupMember(groupId: number, memberId: number): Promise<User[]> {
-    const response = await api.delete(`/groups/${groupId}/members/${memberId}`);
-    return response.data;
-  },
-};
-
 export const chatService = {
   async getMessages(roomId: string): Promise<ChatMessage[]> {
     const response = await api.get(`/chat/messages/${roomId}`);
     return response.data;
-  },
-
-  async getGroupMessages(groupId: number): Promise<ChatMessage[]> {
-    const response = await api.get(`/chat/groups/${groupId}/messages`);
-    return response.data;
-  },
-};
-
-export const anonymousService = {
-  async getAnonymousNames(groupId: number): Promise<Record<number, string>> {
-    const response = await api.get(`/anonymous/groups/${groupId}/names`);
-    return response.data;
-  },
-
-  async resetAnonymousNames(groupId: number): Promise<void> {
-    await api.delete(`/anonymous/groups/${groupId}/names`);
   },
 };
 
 
 // 進捗投稿関連の型定義
 export type PostType = 'PROGRESS' | 'GOAL' | 'BLOCKER' | 'LEARNING' | 'QUESTION';
-export type Visibility = 'TENANT' | 'ORGANIZATION' | 'TEAM' | 'PRIVATE';
+export type Visibility = 'PRIVATE' | 'TEAM' | 'DEPARTMENT' | 'ORGANIZATION' | 'COMPANY';
 
 export interface ProgressPost {
   id?: number;
@@ -433,6 +332,11 @@ export interface OrganizationPermissions {
 }
 
 export const organizationManagementService = {
+  async getMembers(organizationId: number): Promise<OrganizationMember[]> {
+    const response = await api.get(`/organization-management/${organizationId}/members`);
+    return response.data;
+  },
+
   async addMember(organizationId: number, data: AddMemberRequest): Promise<OrganizationMember> {
     const response = await api.post(`/organization-management/${organizationId}/members`, data);
     return response.data;

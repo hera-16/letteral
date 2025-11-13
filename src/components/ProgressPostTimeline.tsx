@@ -140,7 +140,7 @@ export default function ProgressPostTimeline({ tenantId, organizationId }: Progr
             <div className="flex items-center gap-3">
               <span className="text-lg">{getPostTypeLabel(post.postType)}</span>
               <span style={{ color: '#EEEEEE' }} className="font-semibold">
-                {post.isAnonymous ? '匿名ユーザー' : 'ユーザー'}
+                匿名ユーザー
               </span>
               <span style={{ color: '#00ADB5' }} className="text-xs px-2 py-1 rounded">
                 {getVisibilityLabel(post.visibility)}
