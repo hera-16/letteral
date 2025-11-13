@@ -49,12 +49,19 @@ public class DataInitializer implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        // 既存データを完全削除
+        // 既存データを完全削除（外部キー制約を考慮した順序）
         LOGGER.info("Deleting all existing data...");
+
+        // 既存のテナントをチェック
+        if (tenantRepository.findBySlug("test-company").isPresent()) {
+            LOGGER.info("Test data already exists. Skipping initialization.");
+            return;
+        }
+
         organizationMemberRepository.deleteAll();
         organizationRepository.deleteAll();
-        tenantRepository.deleteAll();
         userRepository.deleteAll();
+        tenantRepository.deleteAll();
         LOGGER.info("All existing data deleted");
 
         // 新しいテストデータを作成
@@ -178,26 +185,36 @@ public class DataInitializer implements ApplicationRunner {
                     member1.getDisplayName(), member2.getDisplayName(), member3.getDisplayName());
 
         // 4. 組織メンバーシップ作成
-        // 社長 - 会社全体の管理者
+        // 社長 - 会社全体の管理者（プライマリ組織）
         createOrgMember(tenant, company, ceo, OrganizationRole.ADMIN_ROOT, true);
 
-        // 部長 - 各部の管理者
+        // 部長 - 各部の管理者（プライマリ組織）+ 会社にも所属
+        createOrgMember(tenant, company, manager1, OrganizationRole.ADMIN_CORE, false);
         createOrgMember(tenant, dept1, manager1, OrganizationRole.ADMIN_CORE, true);
+        createOrgMember(tenant, company, manager2, OrganizationRole.ADMIN_CORE, false);
         createOrgMember(tenant, dept2, manager2, OrganizationRole.ADMIN_CORE, true);
 
-        // 課長 - 各課の管理者
+        // 課長 - 各課の管理者（プライマリ組織）+ 会社にも所属
+        createOrgMember(tenant, company, chief1_1, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section1_1, chief1_1, OrganizationRole.ADMIN_LEAD, true);
+        createOrgMember(tenant, company, chief1_2, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section1_2, chief1_2, OrganizationRole.ADMIN_LEAD, true);
+        createOrgMember(tenant, company, chief2_1, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section2_1, chief2_1, OrganizationRole.ADMIN_LEAD, true);
+        createOrgMember(tenant, company, chief2_2, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section2_2, chief2_2, OrganizationRole.ADMIN_LEAD, true);
 
-        // PM - プロジェクトチームの管理者
+        // PM - プロジェクトチームの管理者（プライマリ組織）+ 会社にも所属
+        createOrgMember(tenant, company, pm, OrganizationRole.ADMIN_SUPER, false);
         createOrgMember(tenant, projectTeam, pm, OrganizationRole.ADMIN_SUPER, true);
 
-        // 一般ユーザー - プロジェクトチームのメンバー
-        createOrgMember(tenant, projectTeam, member1, OrganizationRole.MEMBER, false);
-        createOrgMember(tenant, projectTeam, member2, OrganizationRole.MEMBER, false);
-        createOrgMember(tenant, projectTeam, member3, OrganizationRole.MEMBER, false);
+        // 一般ユーザー - プロジェクトチームのメンバー（プライマリ組織）+ 会社にも所属
+        createOrgMember(tenant, company, member1, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, projectTeam, member1, OrganizationRole.MEMBER, true);
+        createOrgMember(tenant, company, member2, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, projectTeam, member2, OrganizationRole.MEMBER, true);
+        createOrgMember(tenant, company, member3, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, projectTeam, member3, OrganizationRole.MEMBER, true);
 
         LOGGER.info("Test data creation completed successfully!");
     }
