@@ -18,6 +18,7 @@ const OrganizationManagement: React.FC<OrganizationManagementProps> = ({
   currentUserId,
 }) => {
   const [permissions, setPermissions] = useState<OrganizationPermissions | null>(null);
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,17 +33,21 @@ const OrganizationManagement: React.FC<OrganizationManagementProps> = ({
   const [subOrgDescription, setSubOrgDescription] = useState('');
 
   useEffect(() => {
-    loadPermissions();
+    loadData();
   }, [currentOrganizationId]);
 
-  const loadPermissions = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const perms = await organizationManagementService.getPermissions(currentOrganizationId);
+      const [perms, memberList] = await Promise.all([
+        organizationManagementService.getPermissions(currentOrganizationId),
+        organizationManagementService.getMembers(currentOrganizationId)
+      ]);
       setPermissions(perms);
+      setMembers(memberList);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.error || '権限情報の取得に失敗しました');
+      setError(err.response?.data?.error || 'データの取得に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -50,17 +55,27 @@ const OrganizationManagement: React.FC<OrganizationManagementProps> = ({
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleAddMember called', { usernameToAdd, roleToAdd, currentOrganizationId });
+
+    if (!usernameToAdd.trim()) {
+      alert('ユーザー名を入力してください');
+      return;
+    }
+
     try {
+      console.log('Calling addMember API...');
       await organizationManagementService.addMember(currentOrganizationId, {
         username: usernameToAdd,
         role: roleToAdd,
       });
+      console.log('API call successful');
       setUsernameToAdd('');
       setRoleToAdd('MEMBER');
       setShowAddMemberForm(false);
       alert('メンバーを追加しました');
-      loadPermissions();
+      loadData();
     } catch (err: any) {
+      console.error('Error adding member:', err);
       alert(err.response?.data?.error || 'メンバーの追加に失敗しました');
     }
   };
@@ -76,7 +91,7 @@ const OrganizationManagement: React.FC<OrganizationManagementProps> = ({
       setSubOrgDescription('');
       setShowCreateSubOrgForm(false);
       alert('子組織を作成しました');
-      loadPermissions();
+      loadData();
     } catch (err: any) {
       alert(err.response?.data?.error || '子組織の作成に失敗しました');
     }
@@ -156,6 +171,32 @@ const OrganizationManagement: React.FC<OrganizationManagementProps> = ({
                   追加
                 </button>
               </form>
+            )}
+
+            {/* メンバー一覧 */}
+            {members.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold mb-2">現在のメンバー ({members.length}人)</h4>
+                <div className="space-y-2">
+                  {members.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-3 bg-white border rounded">
+                      <div>
+                        <p className="font-medium">{member.displayName || member.username}</p>
+                        <p className="text-xs text-gray-500">@{member.username}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
+                          {member.role === 'ADMIN_ROOT' && '最高権限'}
+                          {member.role === 'ADMIN_CORE' && 'コア管理者'}
+                          {member.role === 'ADMIN_LEAD' && 'リード管理者'}
+                          {member.role === 'ADMIN_SUPER' && 'スーパー管理者'}
+                          {member.role === 'MEMBER' && '一般メンバー'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )}
