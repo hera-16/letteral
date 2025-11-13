@@ -37,10 +37,7 @@ public class ProgressPost {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    private AnonymousProfile author;
-
-    @Column(name = "is_anonymous", nullable = false)
-    private Boolean isAnonymous = true;
+    private User author;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type", nullable = false, length = 20)
@@ -106,7 +103,7 @@ public class ProgressPost {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public ProgressPost(Tenant tenant, Organization organization, AnonymousProfile author, String content, LocalDate postDate) {
+    public ProgressPost(Tenant tenant, Organization organization, User author, String content, LocalDate postDate) {
         this();
         this.tenant = tenant;
         this.organization = organization;
@@ -145,20 +142,12 @@ public class ProgressPost {
         this.organization = organization;
     }
 
-    public AnonymousProfile getAuthor() {
+    public User getAuthor() {
         return author;
     }
 
-    public void setAuthor(AnonymousProfile author) {
+    public void setAuthor(User author) {
         this.author = author;
-    }
-
-    public Boolean getIsAnonymous() {
-        return isAnonymous;
-    }
-
-    public void setIsAnonymous(Boolean isAnonymous) {
-        this.isAnonymous = isAnonymous;
     }
 
     public PostType getPostType() {

@@ -1,15 +1,17 @@
 package com.chatapp.controller;
 
+import com.chatapp.dto.CreateProgressPostRequest;
 import com.chatapp.model.ProgressPost;
 import com.chatapp.model.Organization;
 import com.chatapp.model.Tenant;
-import com.chatapp.model.AnonymousProfile;
+import com.chatapp.model.User;
 import com.chatapp.model.enums.PostType;
 import com.chatapp.model.enums.Visibility;
 import com.chatapp.service.ProgressPostService;
 import com.chatapp.service.OrganizationService;
 import com.chatapp.service.TenantService;
-import com.chatapp.service.AnonymousProfileService;
+import com.chatapp.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -33,27 +35,33 @@ public class ProgressPostController {
     private final ProgressPostService progressPostService;
     private final OrganizationService organizationService;
     private final TenantService tenantService;
-    private final AnonymousProfileService anonymousProfileService;
+    private final UserRepository userRepository;
 
     public ProgressPostController(
             ProgressPostService progressPostService,
             OrganizationService organizationService,
             TenantService tenantService,
-            AnonymousProfileService anonymousProfileService) {
+            UserRepository userRepository) {
         this.progressPostService = progressPostService;
         this.organizationService = organizationService;
         this.tenantService = tenantService;
-        this.anonymousProfileService = anonymousProfileService;
+        this.userRepository = userRepository;
     }
 
     /**
      * 進捗投稿を作成
      */
     @PostMapping
-    public ResponseEntity<ProgressPost> createPost(@RequestBody ProgressPost post) {
-        log.info("Creating progress post");
-        ProgressPost created = progressPostService.createPost(post);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<ProgressPost> createPost(@Valid @RequestBody CreateProgressPostRequest request) {
+        log.info("Creating progress post - tenantId: {}, orgId: {}, authorId: {}",
+                request.getTenantId(), request.getOrganizationId(), request.getAuthorId());
+        try {
+            ProgressPost created = progressPostService.createPost(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            log.error("Error creating progress post", e);
+            throw e;
+        }
     }
 
     /**
@@ -100,7 +108,8 @@ public class ProgressPostController {
             @PathVariable Long authorId,
             Pageable pageable) {
         log.info("Fetching posts by author: {}", authorId);
-        AnonymousProfile author = anonymousProfileService.getProfileById(authorId);
+        User author = userRepository.findById(authorId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + authorId));
         Page<ProgressPost> posts = progressPostService.getPostsByAuthor(author, pageable);
         return ResponseEntity.ok(posts);
     }
@@ -230,7 +239,8 @@ public class ProgressPostController {
     @GetMapping("/author/{authorId}/count")
     public ResponseEntity<Long> countPostsByAuthor(@PathVariable Long authorId) {
         log.info("Counting posts by author: {}", authorId);
-        AnonymousProfile author = anonymousProfileService.getProfileById(authorId);
+        User author = userRepository.findById(authorId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + authorId));
         long count = progressPostService.countPostsByAuthor(author);
         return ResponseEntity.ok(count);
     }

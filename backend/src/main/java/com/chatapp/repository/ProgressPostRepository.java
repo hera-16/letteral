@@ -1,9 +1,9 @@
 package com.chatapp.repository;
 
-import com.chatapp.model.AnonymousProfile;
 import com.chatapp.model.Organization;
 import com.chatapp.model.ProgressPost;
 import com.chatapp.model.Tenant;
+import com.chatapp.model.User;
 import com.chatapp.model.enums.PostType;
 import com.chatapp.model.enums.Visibility;
 import org.springframework.data.domain.Page;
@@ -27,7 +27,7 @@ public interface ProgressPostRepository extends JpaRepository<ProgressPost, Long
 
     Page<ProgressPost> findByOrganizationOrderByCreatedAtDesc(Organization organization, Pageable pageable);
 
-    Page<ProgressPost> findByAuthorOrderByCreatedAtDesc(AnonymousProfile author, Pageable pageable);
+    Page<ProgressPost> findByAuthorOrderByCreatedAtDesc(User author, Pageable pageable);
 
     List<ProgressPost> findByTenantAndPostDateBetweenOrderByPostDateDesc(Tenant tenant, LocalDate startDate, LocalDate endDate);
 
@@ -44,7 +44,7 @@ public interface ProgressPostRepository extends JpaRepository<ProgressPost, Long
     @Query("SELECT p FROM ProgressPost p WHERE p.tenant = :tenant AND p.postDate >= :startDate AND p.postDate <= :endDate AND p.postType = :postType ORDER BY p.postDate DESC")
     List<ProgressPost> findByTenantAndDateRangeAndPostType(@Param("tenant") Tenant tenant, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("postType") PostType postType);
 
-    Long countByAuthor(AnonymousProfile author);
+    Long countByAuthor(User author);
 
     Long countByOrganizationAndPostDateBetween(Organization organization, LocalDate startDate, LocalDate endDate);
 }

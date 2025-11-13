@@ -1,12 +1,14 @@
 package com.chatapp.service;
 
-import com.chatapp.model.AnonymousProfile;
+import com.chatapp.dto.CreateProgressPostRequest;
 import com.chatapp.model.Organization;
 import com.chatapp.model.ProgressPost;
 import com.chatapp.model.Tenant;
+import com.chatapp.model.User;
 import com.chatapp.model.enums.PostType;
 import com.chatapp.model.enums.Visibility;
 import com.chatapp.repository.ProgressPostRepository;
+import com.chatapp.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -29,13 +31,84 @@ public class ProgressPostService {
 
     private static final Logger log = LoggerFactory.getLogger(ProgressPostService.class);
     private final ProgressPostRepository progressPostRepository;
+    private final TenantService tenantService;
+    private final OrganizationService organizationService;
+    private final UserRepository userRepository;
 
-    public ProgressPostService(ProgressPostRepository progressPostRepository) {
+    public ProgressPostService(
+            ProgressPostRepository progressPostRepository,
+            TenantService tenantService,
+            OrganizationService organizationService,
+            UserRepository userRepository) {
         this.progressPostRepository = progressPostRepository;
+        this.tenantService = tenantService;
+        this.organizationService = organizationService;
+        this.userRepository = userRepository;
     }
 
     /**
-     * 進捗投稿作成
+     * 進捗投稿作成（DTOから）
+     *
+     * @param request 作成リクエスト
+     * @return 作成された投稿
+     */
+    @Transactional
+    public ProgressPost createPost(CreateProgressPostRequest request) {
+        log.info("Creating new progress post from request - tenantId: {}, orgId: {}, authorId: {}",
+                request.getTenantId(), request.getOrganizationId(), request.getAuthorId());
+
+        // IDから実エンティティを取得
+        Tenant tenant = tenantService.getTenantById(request.getTenantId());
+        Organization organization = organizationService.getOrganizationById(request.getOrganizationId());
+
+        // authorIdからユーザーを取得
+        User author = userRepository.findById(request.getAuthorId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + request.getAuthorId()));
+
+        // 投稿エンティティを作成
+        ProgressPost post = new ProgressPost();
+        post.setTenant(tenant);
+        post.setOrganization(organization);
+        post.setAuthor(author);
+        post.setPostType(request.getPostType() != null ? request.getPostType() : PostType.PROGRESS);
+        post.setTitle(request.getTitle());
+        post.setContent(request.getContent());
+        post.setAchievementRate(request.getAchievementRate());
+        post.setBlockers(request.getBlockers());
+        post.setLearnings(request.getLearnings());
+        post.setNextAction(request.getNextAction());
+        post.setVisibility(request.getVisibility() != null ? request.getVisibility() : Visibility.ORGANIZATION);
+        post.setTags(request.getTags());
+
+        // 投稿日をパース
+        if (request.getPostDate() != null) {
+            post.setPostDate(LocalDate.parse(request.getPostDate()));
+        } else {
+            post.setPostDate(LocalDate.now());
+        }
+
+        // ターゲット組織
+        if (request.getTargetOrganizationId() != null) {
+            Organization targetOrg = organizationService.getOrganizationById(request.getTargetOrganizationId());
+            post.setTargetOrganization(targetOrg);
+        }
+
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
+
+        // カウンターの初期化
+        post.setReactionCount(0);
+        post.setCommentCount(0);
+        post.setViewCount(0);
+
+        ProgressPost savedPost = progressPostRepository.save(post);
+        log.info("Progress post created successfully with ID: {}", savedPost.getId());
+
+        return savedPost;
+    }
+
+    /**
+     * 進捗投稿作成（エンティティから）
      *
      * @param post 作成する投稿
      * @return 作成された投稿
@@ -123,11 +196,11 @@ public class ProgressPostService {
     /**
      * 著者の投稿一覧取得
      *
-     * @param author 著者（匿名プロファイル）
+     * @param author 著者
      * @param pageable ページネーション情報
      * @return 投稿ページ
      */
-    public Page<ProgressPost> getPostsByAuthor(AnonymousProfile author, Pageable pageable) {
+    public Page<ProgressPost> getPostsByAuthor(User author, Pageable pageable) {
         log.debug("Fetching posts by author: {}", author.getId());
         return progressPostRepository.findByAuthorOrderByCreatedAtDesc(author, pageable);
     }
@@ -323,7 +396,7 @@ public class ProgressPostService {
      * @param author 著者
      * @return 投稿数
      */
-    public long countPostsByAuthor(AnonymousProfile author) {
+    public long countPostsByAuthor(User author) {
         return progressPostRepository.countByAuthor(author);
     }
 
