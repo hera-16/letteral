@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chatapp.model.User;
 import com.chatapp.repository.UserRepository;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
 import com.chatapp.security.UserPrincipal;
 
 /**
@@ -32,8 +34,10 @@ public class UserController {
 
     /**
      * Get current authenticated user info.
+     * 全ロール：自分の情報を閲覧可能
      */
     @GetMapping("/me")
+    @RequirePermission(Permission.USER_VIEW)
     public ResponseEntity<UserDto> getCurrentUser(final Authentication authentication) {
         final Long userId = resolveUserId(authentication);
         final User user = userRepository.findById(userId)
@@ -44,31 +48,35 @@ public class UserController {
     /**
      * Search users by username (for friend requests).
      * Returns users whose username contains the search query.
+     * 全ロール：ユーザー検索可能
      */
     @GetMapping("/search")
+    @RequirePermission(Permission.USER_VIEW)
     public ResponseEntity<List<UserDto>> searchUsers(
             @RequestParam final String query,
             final Authentication authentication) {
         final Long currentUserId = resolveUserId(authentication);
-        
+
         // Search users by username containing the query (case-insensitive)
         final List<User> users = userRepository.findAll().stream()
                 .filter(user -> !user.getId().equals(currentUserId)) // Exclude current user
                 .filter(user -> user.getUsername().toLowerCase().contains(query.toLowerCase()))
                 .limit(20) // Limit results
                 .collect(Collectors.toList());
-        
+
         final List<UserDto> userDtos = users.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(userDtos);
     }
 
     /**
      * Get user by username.
+     * 全ロール：ユーザー情報閲覧可能
      */
     @GetMapping("/username/{username}")
+    @RequirePermission(Permission.USER_VIEW)
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable final String username) {
         final User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
@@ -77,8 +85,10 @@ public class UserController {
 
     /**
      * Get all users (for development/testing - consider removing in production).
+     * テナント管理者以上：全ユーザー情報閲覧可能
      */
     @GetMapping("/all")
+    @RequirePermission(Permission.USER_VIEW_ALL)
     public ResponseEntity<List<UserDto>> getAllUsers() {
         final List<UserDto> users = userRepository.findAll().stream()
                 .map(this::toDto)

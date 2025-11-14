@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chatapp.dto.ChatMessageDto;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
 import com.chatapp.security.UserPrincipal;
 import com.chatapp.service.ChatService;
 
@@ -24,12 +26,22 @@ public class ChatRestController {
         this.chatService = chatService;
     }
 
+    /**
+     * ルームのメッセージを取得
+     * 全ロール：チャット閲覧可能
+     */
     @GetMapping("/messages/{roomId}")
+    @RequirePermission(Permission.CHAT_VIEW)
     public List<ChatMessageDto> getMessages(@PathVariable final String roomId) {
         return chatService.getRecentMessages(roomId);
     }
 
+    /**
+     * グループのメッセージを取得
+     * 全ロール：チャット閲覧可能
+     */
     @GetMapping("/groups/{groupId}/messages")
+    @RequirePermission(Permission.CHAT_VIEW)
     public List<ChatMessageDto> getGroupMessages(
             @PathVariable final Long groupId,
             final Authentication authentication) {
@@ -37,7 +49,12 @@ public class ChatRestController {
         return chatService.getGroupMessages(groupId, userId);
     }
 
+    /**
+     * トピックのメッセージを取得
+     * 全ロール：チャット閲覧可能
+     */
     @GetMapping("/topics/{topicId}/messages")
+    @RequirePermission(Permission.CHAT_VIEW)
     public List<ChatMessageDto> getTopicMessages(
             @PathVariable final Long topicId) {
         return chatService.getTopicMessages(topicId);

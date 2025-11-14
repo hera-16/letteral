@@ -7,6 +7,8 @@ import com.chatapp.model.Tenant;
 import com.chatapp.model.User;
 import com.chatapp.model.enums.PostType;
 import com.chatapp.model.enums.Visibility;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
 import com.chatapp.service.ProgressPostService;
 import com.chatapp.service.OrganizationService;
 import com.chatapp.service.TenantService;
@@ -50,8 +52,10 @@ public class ProgressPostController {
 
     /**
      * 進捗投稿を作成
+     * 権限: POST_CREATE
      */
     @PostMapping
+    @RequirePermission(Permission.POST_CREATE)
     public ResponseEntity<ProgressPost> createPost(@Valid @RequestBody CreateProgressPostRequest request) {
         log.info("Creating progress post - tenantId: {}, orgId: {}, authorId: {}",
                 request.getTenantId(), request.getOrganizationId(), request.getAuthorId());
@@ -173,8 +177,10 @@ public class ProgressPostController {
 
     /**
      * 進捗投稿を更新
+     * 権限: POST_UPDATE（自分の投稿）または POST_MODERATE（モデレーター）
      */
     @PutMapping("/{postId}")
+    @RequirePermission(value = {Permission.POST_UPDATE, Permission.POST_MODERATE}, requireAll = false)
     public ResponseEntity<ProgressPost> updatePost(
             @PathVariable Long postId,
             @RequestBody ProgressPost updateData) {
@@ -225,8 +231,10 @@ public class ProgressPostController {
 
     /**
      * 進捗投稿を削除
+     * 権限: POST_DELETE（自分の投稿）または POST_MODERATE（モデレーター）
      */
     @DeleteMapping("/{postId}")
+    @RequirePermission(value = {Permission.POST_DELETE, Permission.POST_MODERATE}, requireAll = false)
     public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
         log.info("Deleting progress post: {}", postId);
         progressPostService.deletePost(postId);

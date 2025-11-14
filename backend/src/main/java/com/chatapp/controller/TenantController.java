@@ -2,6 +2,10 @@ package com.chatapp.controller;
 
 import com.chatapp.model.Tenant;
 import com.chatapp.model.enums.TenantStatus;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
+import com.chatapp.security.RequireRole;
+import com.chatapp.security.UserRole;
 import com.chatapp.service.TenantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +33,10 @@ public class TenantController {
 
     /**
      * テナント新規作成
+     * スーパー管理者のみ実行可能
      */
     @PostMapping
+    @RequireRole(UserRole.SUPER_ADMIN)
     public ResponseEntity<Tenant> createTenant(@RequestBody Tenant tenant) {
         log.info("Creating new tenant: {}", tenant.getName());
         Tenant created = tenantService.createTenant(tenant);
@@ -39,8 +45,10 @@ public class TenantController {
 
     /**
      * テナントIDで取得
+     * 全ロール閲覧可能
      */
     @GetMapping("/{tenantId}")
+    @RequirePermission(Permission.TENANT_VIEW)
     public ResponseEntity<Tenant> getTenant(@PathVariable Long tenantId) {
         log.info("Fetching tenant: {}", tenantId);
         Tenant tenant = tenantService.getTenantById(tenantId);
@@ -49,8 +57,10 @@ public class TenantController {
 
     /**
      * スラッグによるテナント取得
+     * 全ロール閲覧可能
      */
     @GetMapping("/slug/{slug}")
+    @RequirePermission(Permission.TENANT_VIEW)
     public ResponseEntity<Tenant> getTenantBySlug(@PathVariable String slug) {
         log.info("Fetching tenant by slug: {}", slug);
         Optional<Tenant> tenant = tenantService.getTenantBySlug(slug);
@@ -60,8 +70,10 @@ public class TenantController {
 
     /**
      * アクティブなテナント一覧取得
+     * スーパー管理者のみ実行可能
      */
     @GetMapping("/active")
+    @RequireRole(UserRole.SUPER_ADMIN)
     public ResponseEntity<List<Tenant>> getActiveTenants() {
         log.info("Fetching all active tenants");
         List<Tenant> tenants = tenantService.getActiveTenants();
@@ -70,8 +82,10 @@ public class TenantController {
 
     /**
      * 特定ステータスのテナント一覧取得
+     * スーパー管理者のみ実行可能
      */
     @GetMapping("/status/{status}")
+    @RequireRole(UserRole.SUPER_ADMIN)
     public ResponseEntity<List<Tenant>> getTenantsByStatus(@PathVariable TenantStatus status) {
         log.info("Fetching tenants by status: {}", status);
         List<Tenant> tenants = tenantService.getTenantsByStatus(status);
@@ -80,8 +94,10 @@ public class TenantController {
 
     /**
      * テナント情報更新
+     * テナント管理者以上が実行可能
      */
     @PutMapping("/{tenantId}")
+    @RequirePermission(Permission.TENANT_UPDATE)
     public ResponseEntity<Tenant> updateTenant(
             @PathVariable Long tenantId,
             @RequestBody Tenant updateData) {
@@ -92,8 +108,10 @@ public class TenantController {
 
     /**
      * テナントステータス更新
+     * スーパー管理者のみ実行可能
      */
     @PutMapping("/{tenantId}/status")
+    @RequireRole(UserRole.SUPER_ADMIN)
     public ResponseEntity<Tenant> updateTenantStatus(
             @PathVariable Long tenantId,
             @RequestParam TenantStatus status) {
@@ -104,8 +122,10 @@ public class TenantController {
 
     /**
      * テナントのユーザー数制限チェック
+     * テナント管理者以上が実行可能
      */
     @GetMapping("/{tenantId}/can-add-users")
+    @RequirePermission(Permission.TENANT_MANAGE_SETTINGS)
     public ResponseEntity<Boolean> canAddUsers(
             @PathVariable Long tenantId,
             @RequestParam int additionalUsers) {
@@ -116,8 +136,10 @@ public class TenantController {
 
     /**
      * テナント削除（論理削除）
+     * スーパー管理者のみ実行可能
      */
     @DeleteMapping("/{tenantId}")
+    @RequireRole(UserRole.SUPER_ADMIN)
     public ResponseEntity<Void> deleteTenant(@PathVariable Long tenantId) {
         log.info("Deleting tenant: {}", tenantId);
         tenantService.deleteTenant(tenantId);
@@ -126,8 +148,10 @@ public class TenantController {
 
     /**
      * テナントの存在確認
+     * 全ロール閲覧可能
      */
     @GetMapping("/{tenantId}/exists")
+    @RequirePermission(Permission.TENANT_VIEW)
     public ResponseEntity<Boolean> existsById(@PathVariable Long tenantId) {
         log.info("Checking if tenant exists: {}", tenantId);
         boolean exists = tenantService.existsById(tenantId);

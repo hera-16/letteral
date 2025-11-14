@@ -2,6 +2,8 @@ package com.chatapp.controller;
 
 import com.chatapp.model.Organization;
 import com.chatapp.model.Tenant;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
 import com.chatapp.service.OrganizationService;
 import com.chatapp.service.TenantService;
 import org.slf4j.Logger;
@@ -33,8 +35,10 @@ public class OrganizationController {
 
     /**
      * 組織新規作成
+     * 権限: ORG_CREATE
      */
     @PostMapping
+    @RequirePermission(Permission.ORG_CREATE)
     public ResponseEntity<Organization> createOrganization(@RequestBody Organization organization) {
         log.info("Creating new organization: {}", organization.getName());
         Organization created = organizationService.createOrganization(organization);
@@ -135,8 +139,10 @@ public class OrganizationController {
 
     /**
      * 組織情報更新
+     * 権限: ORG_UPDATE
      */
     @PutMapping("/{organizationId}")
+    @RequirePermission(Permission.ORG_UPDATE)
     public ResponseEntity<Organization> updateOrganization(
             @PathVariable Long organizationId,
             @RequestBody Organization updateData) {
@@ -159,8 +165,10 @@ public class OrganizationController {
 
     /**
      * 組織削除（論理削除）
+     * 権限: ORG_DELETE
      */
     @DeleteMapping("/{organizationId}")
+    @RequirePermission(Permission.ORG_DELETE)
     public ResponseEntity<Void> deleteOrganization(@PathVariable Long organizationId) {
         log.info("Deleting organization: {}", organizationId);
         organizationService.deleteOrganization(organizationId);

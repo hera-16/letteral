@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chatapp.model.Group;
 import com.chatapp.model.User;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
 import com.chatapp.security.UserPrincipal;
 import com.chatapp.service.GroupService;
 
@@ -37,8 +39,10 @@ public class GroupController {
 
     /**
      * Create a new invite-only group.
+     * 全ロール：グループ作成可能
      */
     @PostMapping("/invite")
+    @RequirePermission(Permission.GROUP_CREATE)
     public ResponseEntity<Group> createInviteOnlyGroup(
             @RequestBody final CreateGroupRequest request,
             final Authentication authentication) {
@@ -54,8 +58,10 @@ public class GroupController {
 
     /**
      * Get all invite-only groups the user is a member of.
+     * 全ロール：自分が参加しているグループ一覧を取得可能
      */
     @GetMapping("/invite/my")
+    @RequirePermission(Permission.GROUP_VIEW)
     public ResponseEntity<List<Group>> getMyInviteOnlyGroups(
             final Authentication authentication) {
         final Long userId = resolveUserId(authentication);
@@ -65,8 +71,10 @@ public class GroupController {
 
     /**
      * Join a group using invite code.
+     * 全ロール：招待コードでグループ参加可能
      */
     @PostMapping("/invite/join")
+    @RequirePermission(Permission.GROUP_VIEW)
     public ResponseEntity<Group> joinByInviteCode(
             @RequestBody final JoinByCodeRequest request,
             final Authentication authentication) {
@@ -78,8 +86,10 @@ public class GroupController {
 
     /**
      * Get group details by ID.
+     * 全ロール：グループ詳細閲覧可能
      */
     @GetMapping("/{groupId}")
+    @RequirePermission(Permission.GROUP_VIEW)
     public ResponseEntity<Group> getGroupDetails(
             @PathVariable final Long groupId) {
         final Group group = groupService.getGroupById(groupId);
@@ -88,8 +98,10 @@ public class GroupController {
 
     /**
      * Get members of a group.
+     * 全ロール：グループメンバー一覧閲覧可能
      */
     @GetMapping("/{groupId}/members")
+    @RequirePermission(Permission.GROUP_VIEW)
     public ResponseEntity<List<User>> getGroupMembers(
             @PathVariable final Long groupId) {
         final List<User> members = groupService.getGroupMembers(groupId);
@@ -98,8 +110,10 @@ public class GroupController {
 
     /**
      * Get member count for a group.
+     * 全ロール：グループメンバー数閲覧可能
      */
     @GetMapping("/{groupId}/members/count")
+    @RequirePermission(Permission.GROUP_VIEW)
     public ResponseEntity<Map<String, Long>> getGroupMemberCount(
             @PathVariable final Long groupId) {
         final long count = groupService.getGroupMemberCount(groupId);
@@ -108,8 +122,10 @@ public class GroupController {
 
     /**
      * Leave a group.
+     * 全ロール：グループ退出可能
      */
     @DeleteMapping("/{groupId}/leave")
+    @RequirePermission(Permission.GROUP_VIEW)
     public ResponseEntity<Void> leaveGroup(
             @PathVariable final Long groupId,
             final Authentication authentication) {
@@ -120,8 +136,10 @@ public class GroupController {
 
     /**
      * Promote a member to admin.
+     * グループ管理権限が必要
      */
     @PutMapping("/{groupId}/members/{memberId}/promote")
+    @RequirePermission(Permission.GROUP_MANAGE_MEMBERS)
     public ResponseEntity<Void> promoteToAdmin(
             @PathVariable final Long groupId,
             @PathVariable final Long memberId,
@@ -133,8 +151,10 @@ public class GroupController {
 
     /**
      * Regenerate invite code.
+     * グループ更新権限が必要
      */
     @PutMapping("/{groupId}/invite-code/regenerate")
+    @RequirePermission(Permission.GROUP_UPDATE)
     public ResponseEntity<Map<String, String>> regenerateInviteCode(
             @PathVariable final Long groupId,
             final Authentication authentication) {
@@ -146,8 +166,10 @@ public class GroupController {
 
     /**
      * Update group details (name and description).
+     * グループ更新権限が必要
      */
     @PutMapping("/{groupId}")
+    @RequirePermission(Permission.GROUP_UPDATE)
     public ResponseEntity<Group> updateGroup(
             @PathVariable final Long groupId,
             @RequestBody final UpdateGroupRequest request,
@@ -160,8 +182,10 @@ public class GroupController {
 
     /**
      * Add a member to a group.
+     * グループメンバー管理権限が必要
      */
     @PostMapping("/{groupId}/members")
+    @RequirePermission(Permission.GROUP_MANAGE_MEMBERS)
     public ResponseEntity<List<User>> addMember(
             @PathVariable final Long groupId,
             @RequestBody final AddMemberRequest request,
@@ -174,8 +198,10 @@ public class GroupController {
 
     /**
      * Remove a member from a group.
+     * グループメンバー管理権限が必要
      */
     @DeleteMapping("/{groupId}/members/{memberId}")
+    @RequirePermission(Permission.GROUP_MANAGE_MEMBERS)
     public ResponseEntity<List<User>> removeMember(
             @PathVariable final Long groupId,
             @PathVariable final Long memberId,

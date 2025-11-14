@@ -5,6 +5,8 @@ import com.chatapp.model.Organization;
 import com.chatapp.model.Tenant;
 import com.chatapp.model.User;
 import com.chatapp.model.enums.OkrStatus;
+import com.chatapp.security.Permission;
+import com.chatapp.security.RequirePermission;
 import com.chatapp.service.OkrObjectiveService;
 import com.chatapp.service.OrganizationService;
 import com.chatapp.service.TenantService;
@@ -45,8 +47,10 @@ public class OkrObjectiveController {
 
     /**
      * Objective作成
+     * 権限: OKR_CREATE
      */
     @PostMapping
+    @RequirePermission(Permission.OKR_CREATE)
     public ResponseEntity<OkrObjective> createObjective(@RequestBody OkrObjective objective) {
         log.info("Creating OKR objective: {}", objective.getTitle());
         OkrObjective created = okrObjectiveService.createObjective(objective);
@@ -170,8 +174,10 @@ public class OkrObjectiveController {
 
     /**
      * Objective更新
+     * 権限: OKR_UPDATE
      */
     @PutMapping("/{objectiveId}")
+    @RequirePermission(Permission.OKR_UPDATE)
     public ResponseEntity<OkrObjective> updateObjective(
             @PathVariable Long objectiveId,
             @RequestBody OkrObjective updateData) {
@@ -206,8 +212,10 @@ public class OkrObjectiveController {
 
     /**
      * Objective削除
+     * 権限: OKR_DELETE
      */
     @DeleteMapping("/{objectiveId}")
+    @RequirePermission(Permission.OKR_DELETE)
     public ResponseEntity<Void> deleteObjective(@PathVariable Long objectiveId) {
         log.info("Deleting OKR objective: {}", objectiveId);
         okrObjectiveService.deleteObjective(objectiveId);
