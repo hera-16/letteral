@@ -75,7 +75,10 @@
       "Bash(del \"c:\\Users\\User\\OneDrive\\hera-16\\チャレキャラ\\src\\app\\dashboard.tsx\")",
       "Bash(cmd.exe /c del \"c:\\Users\\User\\OneDrive\\hera-16\\チャレキャラ\\src\\app\\dashboard.tsx\")",
       "Bash(cmd.exe /c \"rmdir /s /q .next 2>nul & npm run build\")",
-      "Bash(cmd.exe /c:*)"
+      "Bash(cmd.exe /c:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot\" ./mvnw.cmd clean compile:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot\" ../mvnw.cmd spring-boot:run:*)",
+      "Bash(\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot/bin/java\" -version)"
     ],
     "deny": [],
     "ask": []

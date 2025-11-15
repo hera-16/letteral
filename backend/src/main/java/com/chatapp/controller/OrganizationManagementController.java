@@ -1,7 +1,9 @@
 package com.chatapp.controller;
 
+import com.chatapp.annotation.RequireRole;
 import com.chatapp.model.Organization;
 import com.chatapp.model.OrganizationMember;
+import com.chatapp.model.RoleName;
 import com.chatapp.model.User;
 import com.chatapp.model.enums.OrganizationRole;
 import com.chatapp.repository.OrganizationMemberRepository;
@@ -76,6 +78,7 @@ public class OrganizationManagementController {
      * ADMIN_SUPER以上の権限が必要
      */
     @PostMapping("/{organizationId}/members")
+    @RequireRole(RoleName.MANAGER)
     public ResponseEntity<?> addMember(
             @PathVariable Long organizationId,
             @RequestBody AddMemberRequest request,

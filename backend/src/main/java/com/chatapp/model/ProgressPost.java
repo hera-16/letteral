@@ -36,6 +36,23 @@ public class ProgressPost {
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "box_type_id")
+    private BoxType boxType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_post_id")
+    private ProgressPost parentPost;
+
+    @Column(name = "is_reply", nullable = false)
+    private Boolean isReply = false;
+
+    @Column(name = "reply_depth", nullable = false)
+    private Integer replyDepth = 0;
+
+    @Column(name = "reply_count", nullable = false)
+    private Integer replyCount = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
@@ -284,5 +301,66 @@ public class ProgressPost {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public BoxType getBoxType() {
+        return boxType;
+    }
+
+    public void setBoxType(BoxType boxType) {
+        this.boxType = boxType;
+    }
+
+    public ProgressPost getParentPost() {
+        return parentPost;
+    }
+
+    public void setParentPost(ProgressPost parentPost) {
+        this.parentPost = parentPost;
+    }
+
+    public Boolean getIsReply() {
+        return isReply;
+    }
+
+    public void setIsReply(Boolean isReply) {
+        this.isReply = isReply;
+    }
+
+    public Integer getReplyDepth() {
+        return replyDepth;
+    }
+
+    public void setReplyDepth(Integer replyDepth) {
+        this.replyDepth = replyDepth;
+    }
+
+    public Integer getReplyCount() {
+        return replyCount;
+    }
+
+    public void setReplyCount(Integer replyCount) {
+        this.replyCount = replyCount;
+    }
+
+    /**
+     * 返信を追加
+     */
+    public void incrementReplyCount() {
+        this.replyCount++;
+    }
+
+    /**
+     * 返信かどうかをチェック
+     */
+    public boolean isReplyPost() {
+        return Boolean.TRUE.equals(this.isReply);
+    }
+
+    /**
+     * ルート投稿かどうかをチェック
+     */
+    public boolean isRootPost() {
+        return !isReplyPost();
     }
 }
