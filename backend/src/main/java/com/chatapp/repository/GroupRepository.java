@@ -55,4 +55,7 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
      */
     @Query("SELECT g FROM Group g JOIN g.members m WHERE m.user.id = :userId AND g.groupType = 'INVITE_ONLY' ORDER BY g.createdAt DESC")
     List<Group> findInviteOnlyGroupsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(g) FROM Group g WHERE g.tenantId = :tenantId")
+    Long countByTenantId(@Param("tenantId") Long tenantId);
 }

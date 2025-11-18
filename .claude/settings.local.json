@@ -78,7 +78,11 @@
       "Bash(cmd.exe /c:*)",
       "Bash(JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot\" ./mvnw.cmd clean compile:*)",
       "Bash(JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot\" ../mvnw.cmd spring-boot:run:*)",
-      "Bash(\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot/bin/java\" -version)"
+      "Bash(\"/c/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot/bin/java\" -version)",
+      "Bash(next build)",
+      "Bash(npx next build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

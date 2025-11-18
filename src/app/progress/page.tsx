@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Download } from 'lucide-react';
 import ProgressPostCard from '@/components/progress/ProgressPostCard';
 import ProgressPostFilters from '@/components/progress/ProgressPostFilters';
 import { progressPostService } from '@/services/progressPostService';
+import { useToast } from '@/components/ui/Toast';
+import { LoadingSpinner, CardSkeleton } from '@/components/ui/LoadingSpinner';
 
 interface ProgressPost {
   id: number;
@@ -47,6 +50,7 @@ interface PageInfo {
 
 export default function ProgressPage() {
   const router = useRouter();
+  const toast = useToast();
   const [posts, setPosts] = useState<ProgressPost[]>([]);
   const [pageInfo, setPageInfo] = useState<PageInfo>({
     number: 0,
@@ -55,6 +59,7 @@ export default function ProgressPage() {
     totalPages: 0
   });
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // フィルター状態
@@ -83,7 +88,9 @@ export default function ProgressPage() {
       setPageInfo(response.page);
     } catch (err: any) {
       console.error('進捗投稿の取得に失敗しました', err);
-      setError('進捗投稿の取得に失敗しました');
+      const errorMessage = '進捗投稿の取得に失敗しました';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -101,6 +108,48 @@ export default function ProgressPage() {
     router.push('/progress/new');
   };
 
+  const handleExport = async (format: 'csv' | 'excel') => {
+    try {
+      setExporting(true);
+      toast.info(`${format.toUpperCase()}形式でエクスポート中...`);
+
+      const params = new URLSearchParams();
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.organizationId) params.append('organizationId', filters.organizationId.toString());
+      if (filters.postType) params.append('postType', filters.postType);
+
+      const response = await fetch(`/api/export/progress/${format}?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `progress-posts-${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success('エクスポートが完了しました');
+      } else {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.message || 'エクスポートに失敗しました';
+        console.error('Export failed:', response.statusText);
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error('Failed to export:', error);
+      toast.error('エクスポート中にエラーが発生しました');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
@@ -113,12 +162,48 @@ export default function ProgressPage() {
                 チームの日々の進捗・目標・課題を共有
               </p>
             </div>
-            <button
-              onClick={handleCreatePost}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              新規投稿
-            </button>
+            <div className="flex gap-2">
+              <div className="relative group">
+                <button
+                  disabled={exporting}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {exporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      処理中...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      エクスポート
+                    </>
+                  )}
+                </button>
+                {!exporting && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg hidden group-hover:block z-10">
+                    <button
+                      onClick={() => handleExport('csv')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      CSV形式
+                    </button>
+                    <button
+                      onClick={() => handleExport('excel')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Excel形式
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={handleCreatePost}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                新規投稿
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -137,9 +222,10 @@ export default function ProgressPage() {
           <div className="lg:col-span-3">
             {/* ローディング */}
             {loading && (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="mt-4 text-gray-600">読み込み中...</p>
+              <div className="space-y-4">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
               </div>
             )}
 

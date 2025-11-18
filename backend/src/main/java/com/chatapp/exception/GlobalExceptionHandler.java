@@ -6,8 +6,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Global exception handler to map application exceptions to appropriate HTTP status codes.
@@ -103,6 +109,46 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle validation errors from @Valid annotation
+     * Returns 400 Bad Request with field-specific error messages.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
+        logger.warn("ValidationException: {} validation errors", ex.getBindingResult().getErrorCount());
+
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "入力内容に誤りがあります",
+            errors
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Handle type mismatch errors (e.g., passing string where number expected)
+     * Returns 400 Bad Request.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        logger.warn("TypeMismatchException: {}", ex.getMessage());
+        String message = String.format("パラメータ '%s' の型が正しくありません。期待される型: %s",
+            ex.getName(),
+            ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "不明");
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            message
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
      * Handle generic RuntimeException.
      * Returns 500 Internal Server Error.
      */
@@ -111,7 +157,21 @@ public class GlobalExceptionHandler {
         logger.error("RuntimeException: {}", ex.getMessage(), ex);
         ErrorResponse error = new ErrorResponse(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            "An unexpected error occurred: " + ex.getMessage()
+            "予期しないエラーが発生しました。システム管理者にお問い合わせください。"
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    /**
+     * Handle all other exceptions not caught by specific handlers.
+     * Returns 500 Internal Server Error.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+        logger.error("Unhandled Exception: {}", ex.getMessage(), ex);
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "システムエラーが発生しました"
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
@@ -140,6 +200,39 @@ public class GlobalExceptionHandler {
 
         public long getTimestamp() {
             return timestamp;
+        }
+    }
+
+    /**
+     * Validation error response DTO with field-specific errors.
+     */
+    public static class ValidationErrorResponse {
+        private final int status;
+        private final String message;
+        private final long timestamp;
+        private final Map<String, String> errors;
+
+        public ValidationErrorResponse(int status, String message, Map<String, String> errors) {
+            this.status = status;
+            this.message = message;
+            this.timestamp = System.currentTimeMillis();
+            this.errors = errors;
+        }
+
+        public int getStatus() {
+            return status;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public Map<String, String> getErrors() {
+            return errors;
         }
     }
 }

@@ -50,7 +50,7 @@ export default function ProgressPostForm({
   const handleRemoveTag = (tag: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(t => t !== tag)
+      tags: prev.tags.filter((t: string) => t !== tag)
     }));
   };
 
@@ -239,7 +239,7 @@ export default function ProgressPostForm({
         </div>
         {formData.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {formData.tags.map((tag, index) => (
+            {formData.tags.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
