@@ -3,7 +3,6 @@ package com.chatapp.interceptor;
 import com.chatapp.annotation.RequireBoxAccess;
 import com.chatapp.model.BoxPermission;
 import com.chatapp.model.User;
-import com.chatapp.model.UserRole;
 import com.chatapp.repository.BoxPermissionRepository;
 import com.chatapp.repository.UserRepository;
 import com.chatapp.repository.UserRoleRepository;
@@ -73,7 +72,8 @@ public class BoxAccessInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        UserRole userRole = userRoles.get(0);
+        // Get the first user role (future: handle multiple roles)
+        // UserRole userRole = userRoles.get(0);
         String requiredPermission = requireBoxAccess.permission();
 
         // ボックスタイプIDを取得
@@ -101,7 +101,7 @@ public class BoxAccessInterceptor implements HandlerInterceptor {
 
         if (boxTypeIdStr != null) {
             try {
-                boxTypeId = Long.parseLong(boxTypeIdStr);
+                boxTypeId = Long.valueOf(boxTypeIdStr);
             } catch (NumberFormatException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "無効なボックスタイプIDです");
                 return false;
@@ -110,7 +110,7 @@ public class BoxAccessInterceptor implements HandlerInterceptor {
 
         if (orgIdStr != null) {
             try {
-                organizationId = Long.parseLong(orgIdStr);
+                organizationId = Long.valueOf(orgIdStr);
             } catch (NumberFormatException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "無効な組織IDです");
                 return false;

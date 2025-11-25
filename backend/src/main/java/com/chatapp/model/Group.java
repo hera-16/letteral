@@ -28,13 +28,16 @@ import jakarta.validation.constraints.Size;
  * Represents a group that can be either invite-only or public topic-based.
  */
 @Entity
-@Table(name = "`groups`")
+@Table(name = "groups_table")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Group {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
 
     @NotBlank
     @Size(min = 1, max = 100)
@@ -108,6 +111,14 @@ public class Group {
 
     public void setId(final Long id) {
         this.id = id;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(final Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getName() {

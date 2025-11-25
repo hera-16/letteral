@@ -7,11 +7,14 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "chat_messages")
 public class ChatMessage {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
+
     @NotBlank
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -56,11 +59,19 @@ public class ChatMessage {
     public Long getId() {
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
+    }
+
     public String getContent() {
         return content;
     }

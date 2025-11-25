@@ -38,10 +38,10 @@ public class AdminDashboardService {
         // ユーザー統計
         Map<String, Object> userStats = new HashMap<>();
         Long totalUsers = userRepository.countByTenantId(tenantId);
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         // アクティブユーザー数（簡易版: 30日以内にログインしたユーザー）
+        // TODO: 実際のアクティブユーザー計算（thirtyDaysAgoを使用してlastLoginAtでフィルタ）
         userStats.put("total", totalUsers);
-        userStats.put("active", totalUsers); // TODO: 実際のアクティブユーザー計算
+        userStats.put("active", totalUsers);
         stats.put("users", userStats);
 
         // 進捗投稿統計

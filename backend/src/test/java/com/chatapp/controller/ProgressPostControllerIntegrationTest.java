@@ -2,6 +2,8 @@ package com.chatapp.controller;
 
 import com.chatapp.dto.ProgressPostDTO;
 import com.chatapp.model.*;
+import com.chatapp.model.enums.TenantStatus;
+import com.chatapp.model.enums.Visibility;
 import com.chatapp.repository.*;
 import com.chatapp.security.JwtTokenProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -52,6 +55,9 @@ public class ProgressPostControllerIntegrationTest {
     private RoleRepository roleRepository;
 
     @Autowired
+    private OrganizationRepository organizationRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -59,6 +65,7 @@ public class ProgressPostControllerIntegrationTest {
 
     private User testUser;
     private Tenant testTenant;
+    private Organization testOrganization;
     private Group testGroup;
     private String authToken;
 
@@ -67,23 +74,31 @@ public class ProgressPostControllerIntegrationTest {
         // Clean up
         progressPostRepository.deleteAll();
         userRepository.deleteAll();
+        organizationRepository.deleteAll();
         groupRepository.deleteAll();
         tenantRepository.deleteAll();
 
         // Create test tenant
         testTenant = new Tenant();
         testTenant.setName("Test Company");
-        testTenant.setSubdomain("testcompany");
-        testTenant.setActive(true);
+        testTenant.setSlug("testcompany");
+        testTenant.setStatus(TenantStatus.ACTIVE);
         testTenant.setCreatedAt(LocalDateTime.now());
         testTenant = tenantRepository.save(testTenant);
+
+        // Create test organization
+        testOrganization = new Organization();
+        testOrganization.setName("Test Organization");
+        testOrganization.setTenant(testTenant);
+        testOrganization.setLevel(1);
+        testOrganization.setCreatedAt(LocalDateTime.now());
+        testOrganization = organizationRepository.save(testOrganization);
 
         // Create test group
         testGroup = new Group();
         testGroup.setName("Test Group");
-        testGroup.setTenantId(testTenant.getId());
+        testGroup.setGroupType(Group.GroupType.PUBLIC_TOPIC);
         testGroup.setCreatedAt(LocalDateTime.now());
-        testGroup = groupRepository.save(testGroup);
 
         // Create test user
         testUser = new User();
@@ -91,7 +106,8 @@ public class ProgressPostControllerIntegrationTest {
         testUser.setEmail("test@example.com");
         testUser.setPassword(passwordEncoder.encode("password"));
         testUser.setTenantId(testTenant.getId());
-        testUser.setActive(true);
+        testUser.setPrimaryOrganizationId(testOrganization.getId());
+        testUser.setIsActive(true);
         testUser.setCreatedAt(LocalDateTime.now());
 
         // Get or create USER role
@@ -108,6 +124,10 @@ public class ProgressPostControllerIntegrationTest {
         testUser.setRoles(roles);
 
         testUser = userRepository.save(testUser);
+
+        // Now save group with creator
+        testGroup.setCreator(testUser);
+        testGroup = groupRepository.save(testGroup);
 
         // Generate auth token
         authToken = "Bearer " + jwtTokenProvider.generateToken(testUser.getUsername());
@@ -135,20 +155,22 @@ public class ProgressPostControllerIntegrationTest {
     public void testGetProgressPostsByUser() throws Exception {
         // Create test progress posts
         ProgressPost post1 = new ProgressPost();
-        post1.setUserId(testUser.getId());
-        post1.setTenantId(testTenant.getId());
+        post1.setTenant(testTenant);
+        post1.setOrganization(testOrganization);
+        post1.setAuthor(testUser);
         post1.setContent("Post 1");
-        post1.setCategory("achievement");
-        post1.setVisibility("public");
+        post1.setPostDate(LocalDate.now());
+        post1.setVisibility(Visibility.ORGANIZATION);
         post1.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post1);
 
         ProgressPost post2 = new ProgressPost();
-        post2.setUserId(testUser.getId());
-        post2.setTenantId(testTenant.getId());
+        post2.setTenant(testTenant);
+        post2.setOrganization(testOrganization);
+        post2.setAuthor(testUser);
         post2.setContent("Post 2");
-        post2.setCategory("challenge");
-        post2.setVisibility("public");
+        post2.setPostDate(LocalDate.now());
+        post2.setVisibility(Visibility.ORGANIZATION);
         post2.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post2);
 
@@ -163,11 +185,12 @@ public class ProgressPostControllerIntegrationTest {
     public void testGetProgressPostsByTenant() throws Exception {
         // Create progress post
         ProgressPost post = new ProgressPost();
-        post.setUserId(testUser.getId());
-        post.setTenantId(testTenant.getId());
+        post.setTenant(testTenant);
+        post.setOrganization(testOrganization);
+        post.setAuthor(testUser);
         post.setContent("Tenant post");
-        post.setCategory("achievement");
-        post.setVisibility("public");
+        post.setPostDate(LocalDate.now());
+        post.setVisibility(Visibility.COMPANY);
         post.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post);
 

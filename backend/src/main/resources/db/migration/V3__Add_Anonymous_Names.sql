@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS group_member_aliases (
     last_rotation_date DATE NOT NULL,
     UNIQUE KEY unique_alias (target_user_id, group_id),
     FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+    FOREIGN KEY (group_id) REFERENCES groups_table(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- インデックスを追加してクエリを高速化

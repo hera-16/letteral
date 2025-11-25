@@ -18,6 +18,7 @@
 - [主要機能](#主要機能)
 - [技術スタック](#技術スタック)
 - [クイックスタート](#クイックスタート)
+- [AWSデプロイ](#awsデプロイ)
 - [ドキュメント](#ドキュメント)
 - [ロードマップ](#ロードマップ)
 
@@ -164,6 +165,58 @@ SPRING_DATASOURCE_PASSWORD=your-password
 
 ---
 
+## AWSデプロイ
+
+### 🚀 クイックデプロイ（5ステップ）
+
+LetteralをAWSにデプロイして本番環境を構築できます。
+
+```bash
+# 1. 設定ファイルの準備
+.\deploy-to-aws.ps1 -Environment prod -Step setup
+
+# 2. 設定を編集
+# .aws-deploy-config-prod.env を編集
+
+# 3. RDSデータベースを作成（AWSコンソール）
+
+# 4. デプロイ実行
+.\deploy-to-aws.ps1 -Environment prod -Step all
+
+# 5. 動作確認
+curl http://YOUR_ALB_DNS/actuator/health
+```
+
+### 📚 デプロイガイド
+
+| ガイド | 対象 | 内容 |
+|--------|------|------|
+| [AWS初心者向けガイド](docs/AWS_BEGINNER_GUIDE.md) | AWS初心者 | アカウント作成から画像付き詳細手順 |
+| [クイックスタート](docs/AWS_QUICKSTART.md) | 経験者 | 最短5ステップでデプロイ |
+| [AWSデプロイガイド](docs/AWS_DEPLOYMENT.md) | 技術者 | Terraform、ECS、RDSの詳細設定 |
+| [インフラ設計書](docs/AWS_INFRASTRUCTURE_DESIGN.md) | アーキテクト | システム構成、コスト見積もり |
+
+### 💰 コスト概算
+
+| 構成 | 月額（目安） | 用途 |
+|------|-------------|------|
+| 開発環境 | $55-70 | テスト・開発 |
+| 小規模本番 | $200-300 | 〜500ユーザー |
+| 中規模本番 | $500-1,000 | 〜5,000ユーザー |
+
+💡 AWS無料枠を活用すれば、最初の12ヶ月間は一部無料で使えます！
+
+### 🛠️ デプロイスクリプト
+
+プロジェクトには自動デプロイスクリプトが含まれています：
+
+- **Windows**: `deploy-to-aws.ps1`
+- **Mac/Linux**: `deploy-to-aws.sh`
+
+詳細は [クイックスタートガイド](docs/AWS_QUICKSTART.md) を参照してください。
+
+---
+
 ## プロジェクト構造
 
 ```
@@ -261,12 +314,36 @@ letteral/
 
 ## ドキュメント
 
+### 📚 ユーザー向けドキュメント
+
 | ドキュメント | 説明 |
 |------------|------|
-| [API_REFERENCE.md](docs/API_REFERENCE.md) | API仕様書 |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | デプロイ手順 |
-| [FEATURE_REQUIREMENTS.md](docs/FEATURE_REQUIREMENTS.md) | 機能要件 |
+| [USER_MANUAL.md](docs/USER_MANUAL.md) | ユーザーマニュアル（進捗投稿・OKR管理など） |
+| [openapi.yaml](docs/openapi.yaml) | OpenAPI 3.0 REST API仕様書 |
+
+### 🏗️ 開発者向けドキュメント
+
+| ドキュメント | 説明 |
+|------------|------|
+| [API_REFERENCE.md](docs/API_REFERENCE.md) | API仕様書（レガシー） |
+| [FEATURE_REQUIREMENTS.md](docs/FEATURE_REQUIREMENTS.md) | 機能要件定義 |
 | [PRODUCTION_SETUP.md](backend/PRODUCTION_SETUP.md) | 本番環境設定 |
+
+### ☁️ AWS / インフラドキュメント
+
+| ドキュメント | 説明 |
+|------------|------|
+| [AWS_INFRASTRUCTURE_DESIGN.md](docs/AWS_INFRASTRUCTURE_DESIGN.md) | AWSインフラ設計書 |
+| [AWS_DEPLOYMENT.md](docs/AWS_DEPLOYMENT.md) | AWSデプロイガイド |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | デプロイ手順（汎用） |
+
+### 📋 プロジェクト進捗
+
+| ドキュメント | 説明 |
+|------------|------|
+| [PHASE5_SUMMARY.md](docs/PHASE5_SUMMARY.md) | Phase 5: Letteral新機能実装完了 |
+| [PHASE6_SUMMARY.md](docs/PHASE6_SUMMARY.md) | Phase 6: AWS本番インフラ構築完了 |
+| [PHASE7_SUMMARY.md](docs/PHASE7_SUMMARY.md) | Phase 7: テスト・ドキュメント・運用最適化完了 ✅ |
 
 ---
 

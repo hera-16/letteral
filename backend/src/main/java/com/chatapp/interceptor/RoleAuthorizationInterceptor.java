@@ -3,7 +3,6 @@ package com.chatapp.interceptor;
 import com.chatapp.annotation.RequireRole;
 import com.chatapp.model.RoleName;
 import com.chatapp.model.User;
-import com.chatapp.model.UserRole;
 import com.chatapp.repository.UserRepository;
 import com.chatapp.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;

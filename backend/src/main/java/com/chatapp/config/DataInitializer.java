@@ -155,32 +155,32 @@ public class DataInitializer implements ApplicationRunner {
 
         // 3. ユーザー作成
         // 社長
-        User ceo = createUser("ceo", "ceo@test-company.com", "山田太郎", "password");
+        User ceo = createUser(tenant, "ceo", "ceo@test-company.com", "山田太郎", "password");
         LOGGER.info("Created user: {} (社長)", ceo.getDisplayName());
 
         // 部長2人
-        User manager1 = createUser("manager1", "manager1@test-company.com", "佐藤一郎", "password");
-        User manager2 = createUser("manager2", "manager2@test-company.com", "鈴木二郎", "password");
+        User manager1 = createUser(tenant, "manager1", "manager1@test-company.com", "佐藤一郎", "password");
+        User manager2 = createUser(tenant, "manager2", "manager2@test-company.com", "鈴木二郎", "password");
         LOGGER.info("Created users: {} (第1営業部長), {} (第2営業部長)",
                     manager1.getDisplayName(), manager2.getDisplayName());
 
         // 課長4人
-        User chief1_1 = createUser("chief1_1", "chief1_1@test-company.com", "田中三郎", "password");
-        User chief1_2 = createUser("chief1_2", "chief1_2@test-company.com", "高橋四郎", "password");
-        User chief2_1 = createUser("chief2_1", "chief2_1@test-company.com", "伊藤五郎", "password");
-        User chief2_2 = createUser("chief2_2", "chief2_2@test-company.com", "渡辺六郎", "password");
+        User chief1_1 = createUser(tenant, "chief1_1", "chief1_1@test-company.com", "田中三郎", "password");
+        User chief1_2 = createUser(tenant, "chief1_2", "chief1_2@test-company.com", "高橋四郎", "password");
+        User chief2_1 = createUser(tenant, "chief2_1", "chief2_1@test-company.com", "伊藤五郎", "password");
+        User chief2_2 = createUser(tenant, "chief2_2", "chief2_2@test-company.com", "渡辺六郎", "password");
         LOGGER.info("Created users: {} (第1営業部第1課長), {} (第1営業部第2課長), {} (第2営業部第1課長), {} (第2営業部第2課長)",
                     chief1_1.getDisplayName(), chief1_2.getDisplayName(),
                     chief2_1.getDisplayName(), chief2_2.getDisplayName());
 
         // PM1人
-        User pm = createUser("pm001", "pm@test-company.com", "中村七郎", "password");
+        User pm = createUser(tenant, "pm001", "pm@test-company.com", "中村七郎", "password");
         LOGGER.info("Created user: {} (プロジェクトマネージャー)", pm.getDisplayName());
 
         // 一般ユーザー3人
-        User member1 = createUser("member1", "member1@test-company.com", "小林八郎", "password");
-        User member2 = createUser("member2", "member2@test-company.com", "加藤九郎", "password");
-        User member3 = createUser("member3", "member3@test-company.com", "吉田十郎", "password");
+        User member1 = createUser(tenant, "member1", "member1@test-company.com", "小林八郎", "password");
+        User member2 = createUser(tenant, "member2", "member2@test-company.com", "加藤九郎", "password");
+        User member3 = createUser(tenant, "member3", "member3@test-company.com", "吉田十郎", "password");
         LOGGER.info("Created users: {} (一般), {} (一般), {} (一般)",
                     member1.getDisplayName(), member2.getDisplayName(), member3.getDisplayName());
 
@@ -219,8 +219,9 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Test data creation completed successfully!");
     }
 
-    private User createUser(String username, String email, String displayName, String password) {
+    private User createUser(Tenant tenant, String username, String email, String displayName, String password) {
         User user = new User(username, email, passwordEncoder.encode(password), displayName);
+        user.setTenantId(tenant.getId());
         return userRepository.save(user);
     }
 

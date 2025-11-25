@@ -69,3 +69,7 @@ Thumbs.db
 # Installers (already removed)
 *.exe
 *.msi
+
+# Windows invalid filenames
+nul
+app-startup.log

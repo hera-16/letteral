@@ -6,8 +6,13 @@
 -- 1. friendsテーブルにtenant_idを追加
 -- =====================================================
 ALTER TABLE friends
-ADD COLUMN tenant_id BIGINT AFTER id COMMENT '所属テナント',
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER responded_at COMMENT '更新日時';
+ADD COLUMN tenant_id BIGINT AFTER id,
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER responded_at;
+
+-- カラムにコメントを追加
+ALTER TABLE friends
+MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント',
+MODIFY COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時';
 
 ALTER TABLE friends
 ADD CONSTRAINT fk_friends_tenant
@@ -30,7 +35,11 @@ MODIFY COLUMN tenant_id BIGINT NOT NULL COMMENT '所属テナント';
 -- 2. group_membersテーブルにtenant_idを追加
 -- =====================================================
 ALTER TABLE group_members
-ADD COLUMN tenant_id BIGINT AFTER id COMMENT '所属テナント';
+ADD COLUMN tenant_id BIGINT AFTER id;
+
+-- カラムにコメントを追加
+ALTER TABLE group_members
+MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント';
 
 ALTER TABLE group_members
 ADD CONSTRAINT fk_group_members_tenant
@@ -51,9 +60,15 @@ MODIFY COLUMN tenant_id BIGINT NOT NULL COMMENT '所属テナント';
 -- 3. topicsテーブルにtenant_idを追加
 -- =====================================================
 ALTER TABLE topics
-ADD COLUMN tenant_id BIGINT AFTER id COMMENT '所属テナント',
-ADD COLUMN organization_id BIGINT AFTER tenant_id COMMENT '所属組織',
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at COMMENT '更新日時';
+ADD COLUMN tenant_id BIGINT AFTER id,
+ADD COLUMN organization_id BIGINT AFTER tenant_id,
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
+
+-- カラムにコメントを追加
+ALTER TABLE topics
+MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント',
+MODIFY COLUMN organization_id BIGINT COMMENT '所属組織',
+MODIFY COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時';
 
 ALTER TABLE topics
 ADD CONSTRAINT fk_topics_tenant
@@ -193,7 +208,7 @@ SELECT * FROM v_data_consistency_check;
 
 -- マイグレーション完了メッセージ
 SELECT
-    'Migration V10 completed successfully!' AS status,
+    'Migration V12 completed successfully!' AS status,
     (SELECT COUNT(*) FROM tenants) AS total_tenants,
     (SELECT COUNT(*) FROM organizations) AS total_organizations,
     (SELECT COUNT(*) FROM users) AS total_users,

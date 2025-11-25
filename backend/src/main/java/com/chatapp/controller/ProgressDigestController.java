@@ -1,7 +1,6 @@
 package com.chatapp.controller;
 
 import com.chatapp.model.ProgressDigest;
-import com.chatapp.model.Tenant;
 import com.chatapp.model.User;
 import com.chatapp.service.ProgressDigestService;
 import org.springframework.data.domain.Page;

@@ -4,20 +4,37 @@
 
 -- chat_messagesテーブルにカラムを追加
 ALTER TABLE chat_messages
-ADD COLUMN tenant_id BIGINT AFTER id COMMENT '所属テナント',
-ADD COLUMN is_anonymous BOOLEAN NOT NULL DEFAULT FALSE AFTER sender_id COMMENT '匿名送信',
-ADD COLUMN anonymous_sender_id BIGINT AFTER is_anonymous COMMENT '匿名送信者ID',
-ADD COLUMN parent_message_id BIGINT AFTER room_id COMMENT '親メッセージ（スレッド化）',
-ADD COLUMN post_template VARCHAR(20) AFTER message_type COMMENT '投稿テンプレート',
-ADD COLUMN okr_tags JSON AFTER content COMMENT 'OKRタグ',
-ADD COLUMN attachments JSON AFTER okr_tags COMMENT '添付ファイル',
-ADD COLUMN metadata JSON AFTER attachments COMMENT 'メタデータ',
-ADD COLUMN reaction_count INT NOT NULL DEFAULT 0 AFTER created_at COMMENT 'リアクション数',
-ADD COLUMN is_edited BOOLEAN NOT NULL DEFAULT FALSE AFTER reaction_count COMMENT '編集済み',
-ADD COLUMN edited_at TIMESTAMP NULL AFTER is_edited COMMENT '編集日時',
-ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE AFTER edited_at COMMENT '削除済み',
-ADD COLUMN deleted_at TIMESTAMP NULL AFTER is_deleted COMMENT '削除日時',
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER deleted_at COMMENT '更新日時';
+ADD COLUMN tenant_id BIGINT AFTER id,
+ADD COLUMN is_anonymous BOOLEAN NOT NULL DEFAULT FALSE AFTER sender_id,
+ADD COLUMN anonymous_sender_id BIGINT AFTER is_anonymous,
+ADD COLUMN parent_message_id BIGINT AFTER room_id,
+ADD COLUMN post_template VARCHAR(20) AFTER message_type,
+ADD COLUMN okr_tags JSON AFTER content,
+ADD COLUMN attachments JSON AFTER okr_tags,
+ADD COLUMN metadata JSON AFTER attachments,
+ADD COLUMN reaction_count INT NOT NULL DEFAULT 0 AFTER created_at,
+ADD COLUMN is_edited BOOLEAN NOT NULL DEFAULT FALSE AFTER reaction_count,
+ADD COLUMN edited_at TIMESTAMP NULL AFTER is_edited,
+ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE AFTER edited_at,
+ADD COLUMN deleted_at TIMESTAMP NULL AFTER is_deleted,
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER deleted_at;
+
+-- カラムにコメントを追加
+ALTER TABLE chat_messages
+MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント',
+MODIFY COLUMN is_anonymous BOOLEAN NOT NULL DEFAULT FALSE COMMENT '匿名送信',
+MODIFY COLUMN anonymous_sender_id BIGINT COMMENT '匿名送信者ID',
+MODIFY COLUMN parent_message_id BIGINT COMMENT '親メッセージ（スレッド化）',
+MODIFY COLUMN post_template VARCHAR(20) COMMENT '投稿テンプレート',
+MODIFY COLUMN okr_tags JSON COMMENT 'OKRタグ',
+MODIFY COLUMN attachments JSON COMMENT '添付ファイル',
+MODIFY COLUMN metadata JSON COMMENT 'メタデータ',
+MODIFY COLUMN reaction_count INT NOT NULL DEFAULT 0 COMMENT 'リアクション数',
+MODIFY COLUMN is_edited BOOLEAN NOT NULL DEFAULT FALSE COMMENT '編集済み',
+MODIFY COLUMN edited_at TIMESTAMP NULL COMMENT '編集日時',
+MODIFY COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '削除済み',
+MODIFY COLUMN deleted_at TIMESTAMP NULL COMMENT '削除日時',
+MODIFY COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時';
 
 -- 外部キー制約を追加
 ALTER TABLE chat_messages

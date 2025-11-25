@@ -2,6 +2,8 @@ package com.chatapp.controller;
 
 import com.chatapp.dto.ReportRequestDTO;
 import com.chatapp.model.*;
+import com.chatapp.model.enums.TenantStatus;
+import com.chatapp.model.enums.Visibility;
 import com.chatapp.repository.*;
 import com.chatapp.security.JwtTokenProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +51,9 @@ public class ReportControllerIntegrationTest {
     private RoleRepository roleRepository;
 
     @Autowired
+    private OrganizationRepository organizationRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -56,6 +61,7 @@ public class ReportControllerIntegrationTest {
 
     private User adminUser;
     private Tenant testTenant;
+    private Organization testOrganization;
     private String adminToken;
 
     @BeforeEach
@@ -63,15 +69,24 @@ public class ReportControllerIntegrationTest {
         // Clean up
         progressPostRepository.deleteAll();
         userRepository.deleteAll();
+        organizationRepository.deleteAll();
         tenantRepository.deleteAll();
 
         // Create test tenant
         testTenant = new Tenant();
         testTenant.setName("Test Company");
-        testTenant.setSubdomain("testcompany");
-        testTenant.setActive(true);
+        testTenant.setSlug("testcompany");
+        testTenant.setStatus(TenantStatus.ACTIVE);
         testTenant.setCreatedAt(LocalDateTime.now());
         testTenant = tenantRepository.save(testTenant);
+
+        // Create test organization
+        testOrganization = new Organization();
+        testOrganization.setName("Test Organization");
+        testOrganization.setTenant(testTenant);
+        testOrganization.setLevel(1);
+        testOrganization.setCreatedAt(LocalDateTime.now());
+        testOrganization = organizationRepository.save(testOrganization);
 
         // Create admin user
         adminUser = new User();
@@ -79,7 +94,8 @@ public class ReportControllerIntegrationTest {
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("password"));
         adminUser.setTenantId(testTenant.getId());
-        adminUser.setActive(true);
+        adminUser.setPrimaryOrganizationId(testOrganization.getId());
+        adminUser.setIsActive(true);
         adminUser.setCreatedAt(LocalDateTime.now());
 
         // Get or create ADMIN role
@@ -107,11 +123,12 @@ public class ReportControllerIntegrationTest {
     private void createTestProgressPosts() {
         for (int i = 0; i < 5; i++) {
             ProgressPost post = new ProgressPost();
-            post.setUserId(adminUser.getId());
-            post.setTenantId(testTenant.getId());
+            post.setTenant(testTenant);
+            post.setOrganization(testOrganization);
+            post.setAuthor(adminUser);
             post.setContent("Test post " + i);
-            post.setCategory(i % 2 == 0 ? "achievement" : "challenge");
-            post.setVisibility("public");
+            post.setPostDate(LocalDate.now().minusDays(i));
+            post.setVisibility(Visibility.COMPANY);
             post.setCreatedAt(LocalDateTime.now().minusDays(i));
             progressPostRepository.save(post);
         }

@@ -19,9 +19,12 @@ public class UserRoleService {
     @Autowired
     private RoleHierarchyRepository roleHierarchyRepository;
 
+    // Note: These repositories are kept for future use when we need to fetch user/tenant details
+    @SuppressWarnings("unused")
     @Autowired
     private UserRepository userRepository;
 
+    @SuppressWarnings("unused")
     @Autowired
     private TenantRepository tenantRepository;
 

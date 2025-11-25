@@ -133,10 +133,10 @@ VALUES
 -- 6. 進捗投稿にBox種別カラムを追加
 -- =====================================================
 ALTER TABLE progress_posts
-ADD COLUMN box_type_id BIGINT AFTER organization_id COMMENT 'Box種別',
-ADD COLUMN parent_post_id BIGINT AFTER box_type_id COMMENT '親投稿（返信の場合）',
-ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE AFTER parent_post_id COMMENT '返信かどうか',
-ADD COLUMN reply_depth INT NOT NULL DEFAULT 0 AFTER is_reply COMMENT '返信の深さ（0=親投稿）';
+ADD COLUMN box_type_id BIGINT COMMENT 'Box種別' AFTER organization_id,
+ADD COLUMN parent_post_id BIGINT COMMENT '親投稿（返信の場合）' AFTER box_type_id,
+ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE COMMENT '返信かどうか' AFTER parent_post_id,
+ADD COLUMN reply_depth INT NOT NULL DEFAULT 0 COMMENT '返信の深さ（0=親投稿）' AFTER is_reply;
 
 ALTER TABLE progress_posts
 ADD CONSTRAINT fk_posts_box_type
@@ -293,7 +293,7 @@ AND NOT EXISTS (
 -- 11. 返信数カウント用のカラムを追加
 -- =====================================================
 ALTER TABLE progress_posts
-ADD COLUMN reply_count INT NOT NULL DEFAULT 0 AFTER comment_count COMMENT '返信数';
+ADD COLUMN reply_count INT NOT NULL DEFAULT 0 COMMENT '返信数' AFTER comment_count;
 
 -- =====================================================
 -- 12. 返信数カウント更新用トリガー

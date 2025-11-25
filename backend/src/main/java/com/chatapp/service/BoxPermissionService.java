@@ -24,6 +24,8 @@ public class BoxPermissionService {
     @Autowired
     private UserRoleService userRoleService;
 
+    // Note: This repository is kept for future use when implementing role hierarchy checks
+    @SuppressWarnings("unused")
     @Autowired
     private RoleHierarchyRepository roleHierarchyRepository;
 

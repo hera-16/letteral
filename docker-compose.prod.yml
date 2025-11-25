@@ -1,0 +1,209 @@
+# ==========================================
+# Docker Compose Configuration for Production
+# Letteral Platform - AWS準拠構成
+# ==========================================
+# 注意: 本番環境ではAWS ECS/RDS/ElastiCacheを使用することを推奨します
+# このファイルはステージング環境またはローカル本番テスト用です
+
+name: letteral-prod
+
+services:
+  # ------------------------------------------
+  # Backend - Spring Boot Application
+  # ------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: letteral-backend-prod
+    env_file:
+      - ./backend/.env.production
+    environment:
+      # Override with production values
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/letteral_prod?useSSL=true&requireSSL=false&serverTimezone=Asia/Tokyo&characterEncoding=utf8mb4
+      SPRING_DATASOURCE_USERNAME: letteral_admin
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-strong-production-password}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://letteral.example.com}
+
+      # Redis Configuration
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+
+      # AWS Configuration (use IAM role in production)
+      AWS_REGION: ${AWS_REGION:-ap-northeast-1}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-letteral-uploads-prod}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - letteral-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ------------------------------------------
+  # MySQL Database (RDS相当)
+  # ------------------------------------------
+  mysql:
+    image: mysql:8.0.33
+    container_name: letteral-mysql-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root-strong-password}
+      MYSQL_DATABASE: letteral_prod
+      MYSQL_USER: letteral_admin
+      MYSQL_PASSWORD: ${DB_PASSWORD:-strong-production-password}
+      # MySQL 8.0 Production Settings
+      MYSQL_INITDB_SKIP_TZINFO: 1
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      # Performance tuning
+      - --max_connections=200
+      - --innodb_buffer_pool_size=1G
+      - --innodb_log_file_size=256M
+      - --innodb_flush_log_at_trx_commit=2
+      - --innodb_flush_method=O_DIRECT
+      # Security
+      - --require_secure_transport=OFF  # Enable in production with SSL
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+      - ./backend/src/main/resources/db/migration:/docker-entrypoint-initdb.d:ro
+    networks:
+      - letteral-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ------------------------------------------
+  # Redis Cache (ElastiCache相当)
+  # ------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: letteral-redis-prod
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis-strong-password} --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - letteral-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ------------------------------------------
+  # Nginx Reverse Proxy (ALB相当)
+  # ------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: letteral-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - backend
+    networks:
+      - letteral-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ------------------------------------------
+# Volumes
+# ------------------------------------------
+volumes:
+  mysql_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+  nginx_cache:
+    driver: local
+
+# ------------------------------------------
+# Networks
+# ------------------------------------------
+networks:
+  letteral-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -138,9 +138,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         logger.warn("TypeMismatchException: {}", ex.getMessage());
+        Class<?> requiredType = ex.getRequiredType();
+        String typeName;
+        if (requiredType != null) {
+            typeName = requiredType.getSimpleName();
+        } else {
+            typeName = "不明";
+        }
         String message = String.format("パラメータ '%s' の型が正しくありません。期待される型: %s",
             ex.getName(),
-            ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "不明");
+            typeName);
         ErrorResponse error = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
             message

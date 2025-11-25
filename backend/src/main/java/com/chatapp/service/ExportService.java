@@ -175,7 +175,8 @@ public class ExportService {
                 row.createCell(0).setCellValue(post.getCreatedAt().format(formatter));
                 row.createCell(1).setCellValue(post.getTitle() != null ? post.getTitle() : "");
                 row.createCell(2).setCellValue(post.getContent());
-                row.createCell(3).setCellValue(post.getAchievementRate() != null ? post.getAchievementRate() : 0);
+                Integer achievementRate = post.getAchievementRate();
+                row.createCell(3).setCellValue(achievementRate != null ? achievementRate.doubleValue() : 0.0);
                 row.createCell(4).setCellValue(post.getBlockers() != null ? post.getBlockers() : "");
                 row.createCell(5).setCellValue(post.getLearnings() != null ? post.getLearnings() : "");
                 row.createCell(6).setCellValue(post.getNextAction() != null ? post.getNextAction() : "");
@@ -334,7 +335,7 @@ public class ExportService {
                 row.createCell(0).setCellValue(user.getId());
                 row.createCell(1).setCellValue(user.getUsername());
                 row.createCell(2).setCellValue(user.getEmail() != null ? user.getEmail() : "");
-                row.createCell(3).setCellValue(user.getRole() != null ? user.getRole().toString() : "");
+                row.createCell(3).setCellValue(user.getRole() != null ? String.valueOf(user.getRole()) : "");
                 row.createCell(4).setCellValue(user.getCreatedAt() != null ? user.getCreatedAt().format(formatter) : "");
             }
 

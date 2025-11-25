@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS okr_update_history (
     field_name VARCHAR(50) NOT NULL COMMENT '更新フィールド',
     old_value TEXT COMMENT '旧値',
     new_value TEXT COMMENT '新値',
-    updated_by BIGINT NOT NULL COMMENT '更新者',
+    updated_by BIGINT NULL COMMENT '更新者',
     update_note TEXT COMMENT '更新メモ',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

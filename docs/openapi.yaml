@@ -1,0 +1,1268 @@
+openapi: 3.0.3
+info:
+  title: Letteral API
+  description: |
+    Letteralプラットフォームの REST API 仕様書
+
+    ## 概要
+    Letteralは企業向け匿名進捗共有プラットフォームです。
+    社員が匿名で日々の進捗・課題・成果を共有し、組織の透明性を高めます。
+
+    ## 認証
+    すべてのAPIエンドポイント（/auth/loginを除く）は JWT Bearer トークンによる認証が必要です。
+
+    ```
+    Authorization: Bearer <JWT_TOKEN>
+    ```
+
+    ## エラーレスポンス
+    すべてのエラーは以下の形式で返されます：
+
+    ```json
+    {
+      "error": "エラーメッセージ",
+      "details": "詳細情報（オプション）",
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+    ```
+
+  version: 1.0.0
+  contact:
+    name: Letteral Support
+    email: support@letteral.example.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.letteral.example.com/api
+    description: 本番環境
+  - url: https://staging-api.letteral.example.com/api
+    description: ステージング環境
+  - url: http://localhost:8080/api
+    description: ローカル開発環境
+
+tags:
+  - name: 認証
+    description: ログイン・ログアウト・トークン管理
+  - name: テナント
+    description: テナント（企業）管理
+  - name: 組織
+    description: 組織階層管理
+  - name: ユーザー
+    description: ユーザー管理
+  - name: 進捗投稿
+    description: 進捗投稿の作成・閲覧・管理
+  - name: OKR
+    description: OKR（目標）管理
+  - name: レポート
+    description: レポート・分析機能
+  - name: グループ
+    description: チャットグループ管理
+  - name: チャット
+    description: WebSocketチャット機能
+
+paths:
+  # ========================================
+  # 認証
+  # ========================================
+  /auth/login:
+    post:
+      tags:
+        - 認証
+      summary: ログイン
+      description: ユーザー名とパスワードでログインし、JWTトークンを取得します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT認証トークン
+                  tokenType:
+                    type: string
+                    example: "Bearer"
+                  expiresIn:
+                    type: integer
+                    description: トークンの有効期限（秒）
+                    example: 86400
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: 認証失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - 認証
+      summary: ログアウト
+      description: 現在のセッションからログアウトします
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ログアウト成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ========================================
+  # テナント
+  # ========================================
+  /tenants:
+    get:
+      tags:
+        - テナント
+      summary: テナント一覧取得
+      description: すべてのテナントを取得します（管理者のみ）
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tenant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - テナント
+      summary: テナント作成
+      description: 新しいテナントを作成します（管理者のみ）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantInput'
+      responses:
+        '200':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tenants/{tenantId}:
+    get:
+      tags:
+        - テナント
+      summary: テナント詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - テナント
+      summary: テナント更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - テナント
+      summary: テナント無効化
+      description: テナントを無効化します（物理削除はしません）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 無効化成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ========================================
+  # 組織
+  # ========================================
+  /organizations:
+    post:
+      tags:
+        - 組織
+      summary: 組織作成
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
+      responses:
+        '200':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+
+  /organizations/tenant/{tenantId}:
+    get:
+      tags:
+        - 組織
+      summary: テナント配下の組織一覧
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+
+  /organizations/{organizationId}:
+    get:
+      tags:
+        - 組織
+      summary: 組織詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+
+    put:
+      tags:
+        - 組織
+      summary: 組織更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+
+    delete:
+      tags:
+        - 組織
+      summary: 組織削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 削除成功
+
+  /organizations/{organizationId}/children:
+    get:
+      tags:
+        - 組織
+      summary: 子組織一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+
+  # ========================================
+  # ユーザー
+  # ========================================
+  /users:
+    get:
+      tags:
+        - ユーザー
+      summary: ユーザー一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      tags:
+        - ユーザー
+      summary: ユーザー作成
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    get:
+      tags:
+        - ユーザー
+      summary: ユーザー詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    put:
+      tags:
+        - ユーザー
+      summary: ユーザー更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ========================================
+  # 進捗投稿
+  # ========================================
+  /progress:
+    post:
+      tags:
+        - 進捗投稿
+      summary: 進捗投稿作成
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgressPostInput'
+      responses:
+        '200':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressPost'
+
+  /progress/user/{userId}:
+    get:
+      tags:
+        - 進捗投稿
+      summary: ユーザーの進捗投稿一覧
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProgressPost'
+
+  /progress/tenant/{tenantId}:
+    get:
+      tags:
+        - 進捗投稿
+      summary: テナントの進捗投稿一覧（タイムライン）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [achievement, challenge, learning, other]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProgressPost'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  number:
+                    type: integer
+                  size:
+                    type: integer
+
+  /progress/{postId}:
+    get:
+      tags:
+        - 進捗投稿
+      summary: 進捗投稿詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressPost'
+
+    put:
+      tags:
+        - 進捗投稿
+      summary: 進捗投稿更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgressPostInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressPost'
+
+    delete:
+      tags:
+        - 進捗投稿
+      summary: 進捗投稿削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 削除成功
+
+  # ========================================
+  # OKR
+  # ========================================
+  /okr/objectives:
+    get:
+      tags:
+        - OKR
+      summary: OKR目標一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: quarter
+          in: query
+          description: "四半期 (例: 2025-Q1)"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OkrObjective'
+
+    post:
+      tags:
+        - OKR
+      summary: OKR目標作成
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OkrObjectiveInput'
+      responses:
+        '200':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkrObjective'
+
+  /okr/objectives/{objectiveId}:
+    get:
+      tags:
+        - OKR
+      summary: OKR目標詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: objectiveId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkrObjective'
+
+    put:
+      tags:
+        - OKR
+      summary: OKR目標更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: objectiveId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OkrObjectiveInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkrObjective'
+
+  # ========================================
+  # レポート
+  # ========================================
+  /reports/summary:
+    get:
+      tags:
+        - レポート
+      summary: サマリーレポート取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSummary'
+
+  /reports/export:
+    get:
+      tags:
+        - レポート
+      summary: レポートエクスポート
+      description: CSV, Excel, PDF形式でレポートをエクスポート
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [csv, excel, pdf]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+# ========================================
+# コンポーネント定義
+# ========================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ========================================
+    # テナント
+    # ========================================
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          description: 企業名
+        slug:
+          type: string
+          description: URL識別子
+        planType:
+          type: string
+          enum: [FREE, PRO, ENTERPRISE]
+        maxUsers:
+          type: integer
+        maxStorageGb:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, CLOSED]
+        contactEmail:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TenantInput:
+      type: object
+      required:
+        - name
+        - slug
+        - planType
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        slug:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          minLength: 1
+          maxLength: 100
+        planType:
+          type: string
+          enum: [FREE, PRO, ENTERPRISE]
+        maxUsers:
+          type: integer
+          minimum: 1
+        maxStorageGb:
+          type: integer
+          minimum: 1
+        contactEmail:
+          type: string
+          format: email
+
+    # ========================================
+    # 組織
+    # ========================================
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        organizationType:
+          type: string
+          description: "組織タイプ（本部、部、課、チームなど）"
+        description:
+          type: string
+        level:
+          type: integer
+          description: "階層レベル（0=ルート）"
+        path:
+          type: string
+          description: "階層パス"
+        displayOrder:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    OrganizationInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        parentId:
+          type: integer
+          format: int64
+        organizationType:
+          type: string
+        description:
+          type: string
+
+    # ========================================
+    # ユーザー
+    # ========================================
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        employeeId:
+          type: string
+        department:
+          type: string
+        position:
+          type: string
+        role:
+          type: string
+          enum: [USER, MANAGER, ADMIN, SUPER_ADMIN]
+        isActive:
+          type: boolean
+        tenantId:
+          type: integer
+          format: int64
+        primaryOrganizationId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - tenantId
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        displayName:
+          type: string
+        employeeId:
+          type: string
+        department:
+          type: string
+        position:
+          type: string
+        role:
+          type: string
+          enum: [USER, MANAGER, ADMIN]
+        tenantId:
+          type: integer
+          format: int64
+        primaryOrganizationId:
+          type: integer
+          format: int64
+
+    # ========================================
+    # 進捗投稿
+    # ========================================
+    ProgressPost:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        tenantId:
+          type: integer
+          format: int64
+        content:
+          type: string
+          description: "進捗内容"
+        category:
+          type: string
+          enum: [achievement, challenge, learning, other]
+        visibility:
+          type: string
+          enum: [public, organization, private]
+        tags:
+          type: array
+          items:
+            type: string
+        linkedOkrId:
+          type: integer
+          format: int64
+        reactionCount:
+          type: integer
+        commentCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ProgressPostInput:
+      type: object
+      required:
+        - content
+        - category
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        category:
+          type: string
+          enum: [achievement, challenge, learning, other]
+        visibility:
+          type: string
+          enum: [public, organization, private]
+          default: public
+        tags:
+          type: array
+          items:
+            type: string
+        linkedOkrId:
+          type: integer
+          format: int64
+
+    # ========================================
+    # OKR
+    # ========================================
+    OkrObjective:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        tenantId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        quarter:
+          type: string
+          description: "四半期 (例: 2025-Q1)"
+        progress:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, COMPLETED, CANCELLED]
+        keyResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyResult'
+        createdAt:
+          type: string
+          format: date-time
+
+    OkrObjectiveInput:
+      type: object
+      required:
+        - title
+        - quarter
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        quarter:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, COMPLETED, CANCELLED]
+
+    KeyResult:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        targetValue:
+          type: number
+        currentValue:
+          type: number
+        unit:
+          type: string
+        progress:
+          type: number
+
+    # ========================================
+    # レポート
+    # ========================================
+    ReportSummary:
+      type: object
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+        period:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+        totalPosts:
+          type: integer
+        activeUsers:
+          type: integer
+        categoryBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        topTags:
+          type: array
+          items:
+            type: object
+            properties:
+              tag:
+                type: string
+              count:
+                type: integer
+        engagementRate:
+          type: number
+          format: double
+
+    # ========================================
+    # エラー
+    # ========================================
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: リクエストが不正です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: 認証が必要です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: 権限がありません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: リソースが見つかりません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
