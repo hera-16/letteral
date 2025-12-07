@@ -35,9 +35,6 @@ interface ProgressPost {
     name: string;
     displayName: string;
   };
-  reactionCount: number;
-  commentCount: number;
-  viewCount: number;
   createdAt: string;
 }
 
@@ -61,6 +58,7 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   // フィルター状態
   const [filters, setFilters] = useState({
@@ -72,6 +70,19 @@ export default function ProgressPage() {
     page: 0,
     size: 20
   });
+
+  useEffect(() => {
+    // ログインユーザーIDを取得
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUserId(user.id);
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     fetchPosts();
@@ -256,6 +267,7 @@ export default function ProgressPage() {
                         key={post.id}
                         post={post}
                         onUpdate={fetchPosts}
+                        currentUserId={currentUserId ?? undefined}
                       />
                     ))}
                   </div>

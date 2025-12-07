@@ -89,6 +89,8 @@ export interface AuthResponse {
   username: string;
   email: string;
   displayName?: string;
+  tenantId?: number;
+  primaryOrganizationId?: number;
 }
 
 export interface ChatMessage {
@@ -106,7 +108,9 @@ export interface User {
   username: string;
   email: string;
   displayName?: string;
-  createdAt: string;
+  tenantId?: number;
+  primaryOrganizationId?: number;
+  createdAt?: string;
 }
 
 
@@ -169,14 +173,27 @@ export const chatService = {
 
 // 進捗投稿関連の型定義
 export type PostType = 'PROGRESS' | 'GOAL' | 'BLOCKER' | 'LEARNING' | 'QUESTION';
-export type Visibility = 'PRIVATE' | 'TEAM' | 'DEPARTMENT' | 'ORGANIZATION' | 'COMPANY';
+
+export interface OrganizationInfo {
+  id: number;
+  name: string;
+  organizationType?: string;
+  level?: number;
+  role?: string;
+}
 
 export interface ProgressPost {
   id?: number;
   tenantId: number;
   organizationId: number;
+  organizationName?: string;
   authorId: number;
-  isAnonymous: boolean;
+  authorUsername?: string;
+  authorDisplayName?: string;
+  anonymousNumber?: number;
+  formattedAnonymousNumber?: string;
+  authorOrganizations?: OrganizationInfo[];
+  isAnonymous?: boolean;
   postType: PostType;
   title?: string;
   content: string;
@@ -184,23 +201,19 @@ export interface ProgressPost {
   blockers?: string;
   learnings?: string;
   nextAction?: string;
-  visibility: Visibility;
   targetOrganizationId?: number;
   postDate: string;
   tags?: string[];
   attachments?: Array<{ type: string; url: string; name?: string }>;
-  reactionCount?: number;
-  commentCount?: number;
-  viewCount?: number;
   createdAt?: string;
   updatedAt?: string;
+  visibility?: string;
 }
 
 export interface CreateProgressPostRequest {
   tenantId: number;
   organizationId: number;
   authorId: number;
-  isAnonymous?: boolean;
   postType?: PostType;
   title?: string;
   content: string;
@@ -208,7 +221,6 @@ export interface CreateProgressPostRequest {
   blockers?: string;
   learnings?: string;
   nextAction?: string;
-  visibility?: Visibility;
   postDate: string;
   tags?: string[];
 }
@@ -268,16 +280,33 @@ export const progressPostService = {
     await api.delete(`/progress-posts/${postId}`);
   },
 
-  async incrementReaction(postId: number): Promise<void> {
-    await api.post(`/progress-posts/${postId}/reactions/increment`);
-  },
-
-  async decrementReaction(postId: number): Promise<void> {
-    await api.post(`/progress-posts/${postId}/reactions/decrement`);
-  },
-
   async incrementView(postId: number): Promise<void> {
     await api.post(`/progress-posts/${postId}/views/increment`);
+  },
+
+  // 組織階層による投稿フィルタリング
+  async getOrganizationHierarchicalPosts(
+    organizationId: number,
+    userId: number,
+    page = 0,
+    size = 10
+  ): Promise<PagedProgressPosts> {
+    const response = await api.get(`/progress-posts/organization/${organizationId}/hierarchical`, {
+      params: { userId, page, size },
+    });
+    return response.data;
+  },
+
+  async getViewablePostsForUser(
+    userId: number,
+    tenantId: number,
+    page = 0,
+    size = 10
+  ): Promise<PagedProgressPosts> {
+    const response = await api.get(`/progress-posts/user/${userId}/viewable`, {
+      params: { tenantId, page, size },
+    });
+    return response.data;
   },
 };
 
@@ -331,9 +360,22 @@ export interface OrganizationPermissions {
   canCreateSubOrganization: boolean;
 }
 
+export interface OrganizationTreeNode {
+  id: number;
+  name: string;
+  description?: string;
+  organizationType?: string;
+  level: number;
+  path: string;
+  memberCount: number;
+  children: OrganizationTreeNode[];
+}
+
 export const organizationManagementService = {
-  async getMembers(organizationId: number): Promise<OrganizationMember[]> {
-    const response = await api.get(`/organization-management/${organizationId}/members`);
+  async getMembers(organizationId: number, sortBy: string = 'joinedAt', order: string = 'desc'): Promise<OrganizationMember[]> {
+    const response = await api.get(`/organization-management/${organizationId}/members`, {
+      params: { sortBy, order }
+    });
     return response.data;
   },
 
@@ -358,6 +400,132 @@ export const organizationManagementService = {
 
   async getPermissions(organizationId: number): Promise<OrganizationPermissions> {
     const response = await api.get(`/organization-management/${organizationId}/permissions`);
+    return response.data;
+  },
+};
+
+export const organizationService = {
+  async getOrganizationTree(tenantId: number): Promise<OrganizationTreeNode[]> {
+    const response = await api.get(`/organizations/tenant/${tenantId}/tree`);
+    return response.data;
+  },
+
+  async getOrganizationSubTree(organizationId: number): Promise<OrganizationTreeNode> {
+    const response = await api.get(`/organizations/${organizationId}/tree`);
+    return response.data;
+  },
+
+  async getOrganizationsByTenant(tenantId: number): Promise<Organization[]> {
+    const response = await api.get(`/organizations/tenant/${tenantId}`);
+    return response.data;
+  },
+
+  async getUserAccessibleOrganizations(userId: number): Promise<Organization[]> {
+    const response = await api.get(`/organizations/user/${userId}/accessible`);
+    return response.data;
+  },
+};
+
+// 投稿リクエスト関連の型定義
+export interface PostRequest {
+  id: number;
+  organizationId: number;
+  organizationName: string;
+  targetUserId: number;
+  targetUsername: string;
+  targetDisplayName?: string;
+  requesterId: number;
+  requesterUsername: string;
+  requesterDisplayName?: string;
+  dueDate: string;
+  message?: string;
+  status: 'PENDING' | 'FULFILLED' | 'CANCELLED' | 'OVERDUE';
+  fulfilledPostId?: number;
+  createdAt: string;
+  updatedAt: string;
+  fulfilledAt?: string;
+}
+
+export interface CreatePostRequestDto {
+  organizationId: number;
+  targetUserId: number;
+  dueDate: string;
+  message?: string;
+}
+
+export const postRequestService = {
+  async createPostRequest(data: CreatePostRequestDto): Promise<PostRequest> {
+    const response = await api.post('/post-requests', data);
+    return response.data;
+  },
+
+  async getMyPendingRequests(): Promise<PostRequest[]> {
+    const response = await api.get('/post-requests/my-pending');
+    return response.data;
+  },
+
+  async getMyAllRequests(): Promise<PostRequest[]> {
+    const response = await api.get('/post-requests/my-requests');
+    return response.data;
+  },
+
+  async getOrganizationRequests(organizationId: number): Promise<PostRequest[]> {
+    const response = await api.get(`/post-requests/organization/${organizationId}`);
+    return response.data;
+  },
+
+  async getMyCreatedRequests(): Promise<PostRequest[]> {
+    const response = await api.get('/post-requests/my-created');
+    return response.data;
+  },
+
+  async fulfillRequest(requestId: number, postId: number): Promise<PostRequest> {
+    const response = await api.post(`/post-requests/${requestId}/fulfill`, { postId });
+    return response.data;
+  },
+
+  async cancelRequest(requestId: number): Promise<PostRequest> {
+    const response = await api.post(`/post-requests/${requestId}/cancel`);
+    return response.data;
+  },
+
+  async getOverdueRequests(): Promise<PostRequest[]> {
+    const response = await api.get('/post-requests/overdue');
+    return response.data;
+  },
+};
+
+// 投稿返信関連の型定義
+export interface PostReply {
+  id: number;
+  postId: number;
+  authorId: number;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePostReplyRequest {
+  postId: number;
+  content: string;
+}
+
+// 投稿返信サービス
+export const postReplyService = {
+  async createReply(data: CreatePostReplyRequest): Promise<PostReply> {
+    console.log('Creating reply with data:', JSON.stringify(data));
+    const response = await api.post('/replies', data);
+    return response.data;
+  },
+
+  async getRepliesByPostId(postId: number): Promise<PostReply[]> {
+    const response = await api.get(`/replies/post/${postId}`);
+    return response.data;
+  },
+
+  async getReplyCount(postId: number): Promise<number> {
+    const response = await api.get(`/replies/post/${postId}/count`);
     return response.data;
   },
 };

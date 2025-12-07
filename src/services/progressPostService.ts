@@ -44,7 +44,6 @@ export interface ProgressPost {
     name: string;
     displayName: string;
   };
-  reactionCount: number;
   commentCount: number;
   viewCount: number;
   createdAt: string;
@@ -160,30 +159,6 @@ class ProgressPostService {
     });
   }
 
-  /**
-   * リアクション追加
-   */
-  async addReaction(postId: number, reactionType: string): Promise<void> {
-    await axios.post(
-      `${API_BASE_URL}/posts/${postId}/reactions`,
-      { type: reactionType },
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-  }
-
-  /**
-   * リアクション削除
-   */
-  async removeReaction(postId: number, reactionId: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/posts/${postId}/reactions/${reactionId}`, {
-      headers: this.getAuthHeaders()
-    });
-  }
 }
 
 export const progressPostService = new ProgressPostService();

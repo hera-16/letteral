@@ -5,9 +5,9 @@ import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
 import ChatRoom from '@/components/ChatRoom';
 import GroupSettings from '@/components/GroupSettings';
-import ProgressPostTimeline from '@/components/ProgressPostTimeline';
 import ProgressPostForm from '@/components/ProgressPostForm';
 import OrganizationManagement from '@/components/OrganizationManagement';
+import OrganizationPostsList from '@/components/OrganizationPostsList';
 import { authService } from '@/services/api';
 
 type AuthMode = 'login' | 'signup';
@@ -28,13 +28,13 @@ export default function Home() {
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
-  const [progressTimelineKey, setProgressTimelineKey] = useState(0);
+  const [progressPostKey, setProgressPostKey] = useState(0);
 
   useEffect(() => {
     // 初回ロード時にローカルストレージから認証情報を確認
     const savedUser = authService.getCurrentUser();
     const token = localStorage.getItem('token');
-    
+
     if (savedUser && token && authService.isAuthenticated()) {
       setUser(savedUser);
     } else {
@@ -42,9 +42,10 @@ export default function Home() {
       authService.logout();
       setUser(null);
     }
-    
+
     setIsAuthChecking(false);
   }, []);
+
 
   const handleLogin = (userData: any) => {
     setUser(userData);
@@ -195,7 +196,7 @@ export default function Home() {
                   color: '#EEEEEE'
                 }}
               >
-                📈 進捗投稿
+                📈 投稿
               </button>
               <button
                 onClick={() => setViewMode('organization')}
@@ -214,19 +215,21 @@ export default function Home() {
               {viewMode === 'progress' && (
                 <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-6 items-start">
                   <div>
-                    <ProgressPostTimeline
-                      key={progressTimelineKey}
-                      tenantId={1}
-                      organizationId={1}
+                    <OrganizationPostsList
+                      key={progressPostKey}
+                      userId={user.id}
+                      tenantId={user.tenantId || 2}
+                      authorId={user.id}
+                      primaryOrganizationId={user.primaryOrganizationId || 2}
                     />
                   </div>
                   <div className="sticky top-6">
                     <ProgressPostForm
-                      tenantId={1}
-                      organizationId={1}
+                      tenantId={user.tenantId || 2}
+                      organizationId={user.primaryOrganizationId || 2}
                       authorId={user.id}
                       onPostCreated={() => {
-                        setProgressTimelineKey(prev => prev + 1);
+                        setProgressPostKey(prev => prev + 1);
                       }}
                     />
                   </div>
@@ -234,7 +237,7 @@ export default function Home() {
               )}
               {viewMode === 'organization' && (
                 <OrganizationManagement
-                  currentOrganizationId={1}
+                  currentOrganizationId={user.primaryOrganizationId || 2}
                   currentUserId={user.id}
                 />
               )}
