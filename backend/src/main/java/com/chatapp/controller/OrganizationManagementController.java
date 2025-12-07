@@ -43,24 +43,31 @@ public class OrganizationManagementController {
 
     /**
      * 組織のメンバー一覧を取得
+     * ソートオプション: name(名前), role(役割), joinedAt(参加日時)
+     * 順序オプション: asc(昇順), desc(降順)
      */
     @GetMapping("/{organizationId}/members")
     public ResponseEntity<?> getMembers(
             @PathVariable Long organizationId,
+            @RequestParam(defaultValue = "joinedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String order,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
         try {
             User user = userRepository.findById(currentUser.getId())
                     .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
 
-            // メンバーであることを確認
-            if (!permissionService.isMember(user, organizationId)) {
+            // 閲覧権限を確認（階層的な権限チェック）
+            if (!permissionService.canViewMembers(user, organizationId)) {
                 return ResponseEntity.status(403)
-                        .body(Map.of("error", "この組織のメンバーではありません"));
+                        .body(Map.of("error", "この組織のメンバーを閲覧する権限がありません"));
             }
 
             Organization organization = organizationService.getOrganizationById(organizationId);
             List<OrganizationMember> members = memberRepository.findByOrganization(organization);
+
+            // ソート処理
+            members = sortMembers(members, sortBy, order);
 
             List<Map<String, Object>> memberList = new ArrayList<>();
             for (OrganizationMember member : members) {
@@ -71,6 +78,40 @@ public class OrganizationManagementController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    /**
+     * メンバーリストをソート
+     */
+    private List<OrganizationMember> sortMembers(List<OrganizationMember> members, String sortBy, String order) {
+        boolean ascending = "asc".equalsIgnoreCase(order);
+
+        switch (sortBy.toLowerCase()) {
+            case "name":
+                members.sort((m1, m2) -> {
+                    String name1 = m1.getUser().getDisplayName() != null ?
+                            m1.getUser().getDisplayName() : m1.getUser().getUsername();
+                    String name2 = m2.getUser().getDisplayName() != null ?
+                            m2.getUser().getDisplayName() : m2.getUser().getUsername();
+                    return ascending ? name1.compareTo(name2) : name2.compareTo(name1);
+                });
+                break;
+            case "role":
+                members.sort((m1, m2) -> {
+                    int roleCompare = Integer.compare(m1.getRole().ordinal(), m2.getRole().ordinal());
+                    return ascending ? roleCompare : -roleCompare;
+                });
+                break;
+            case "joinedat":
+            default:
+                members.sort((m1, m2) -> {
+                    int dateCompare = m1.getJoinedAt().compareTo(m2.getJoinedAt());
+                    return ascending ? dateCompare : -dateCompare;
+                });
+                break;
+        }
+
+        return members;
     }
 
     /**
@@ -194,13 +235,29 @@ public class OrganizationManagementController {
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
 
+        System.out.println("=== checkPermissions ===");
+        System.out.println("ユーザー: " + user.getUsername() + " (ID: " + user.getId() + ")");
+        System.out.println("組織ID: " + organizationId);
+
+        boolean isMember = permissionService.isMember(user, organizationId);
+        String role = permissionService.getUserRole(user, organizationId)
+                .map(Enum::name).orElse(null);
+        boolean canAddMember = permissionService.canAddMember(user, organizationId);
+        boolean canRemoveMember = permissionService.canRemoveMember(user, organizationId);
+        boolean canCreateSubOrganization = permissionService.canCreateSubOrganization(user, organizationId);
+
+        System.out.println("isMember: " + isMember);
+        System.out.println("role: " + role);
+        System.out.println("canAddMember: " + canAddMember);
+        System.out.println("canRemoveMember: " + canRemoveMember);
+        System.out.println("canCreateSubOrganization: " + canCreateSubOrganization);
+
         Map<String, Object> permissions = new HashMap<>();
-        permissions.put("isMember", permissionService.isMember(user, organizationId));
-        permissions.put("role", permissionService.getUserRole(user, organizationId)
-                .map(Enum::name).orElse(null));
-        permissions.put("canAddMember", permissionService.canAddMember(user, organizationId));
-        permissions.put("canRemoveMember", permissionService.canRemoveMember(user, organizationId));
-        permissions.put("canCreateSubOrganization", permissionService.canCreateSubOrganization(user, organizationId));
+        permissions.put("isMember", isMember);
+        permissions.put("role", role);
+        permissions.put("canAddMember", canAddMember);
+        permissions.put("canRemoveMember", canRemoveMember);
+        permissions.put("canCreateSubOrganization", canCreateSubOrganization);
 
         return ResponseEntity.ok(permissions);
     }

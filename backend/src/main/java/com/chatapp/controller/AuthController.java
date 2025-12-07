@@ -77,7 +77,9 @@ public class AuthController {
                     userDetails.getId(),
                     userDetails.getUsername(),
                     userDetails.getEmail(),
-                    user != null ? user.getDisplayName() : null));
+                    user != null ? user.getDisplayName() : null,
+                    user != null ? user.getTenantId() : null,
+                    user != null ? user.getPrimaryOrganizationId() : null));
                     
         } catch (BadCredentialsException e) {
             logger.warn("Failed login attempt for user: {}", loginRequest.getUsername());

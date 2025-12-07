@@ -1,7 +1,11 @@
 package com.chatapp.controller;
 
+import com.chatapp.dto.OrganizationTreeNode;
 import com.chatapp.model.Organization;
+import com.chatapp.model.OrganizationMember;
 import com.chatapp.model.Tenant;
+import com.chatapp.repository.OrganizationMemberRepository;
+import com.chatapp.repository.UserRepository;
 import com.chatapp.security.Permission;
 import com.chatapp.security.RequirePermission;
 import com.chatapp.service.OrganizationService;
@@ -13,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 組織のREST APIエンドポイント
@@ -25,12 +30,18 @@ public class OrganizationController {
 
     private final OrganizationService organizationService;
     private final TenantService tenantService;
+    private final OrganizationMemberRepository organizationMemberRepository;
+    private final UserRepository userRepository;
 
     public OrganizationController(
             OrganizationService organizationService,
-            TenantService tenantService) {
+            TenantService tenantService,
+            OrganizationMemberRepository organizationMemberRepository,
+            UserRepository userRepository) {
         this.organizationService = organizationService;
         this.tenantService = tenantService;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -194,5 +205,50 @@ public class OrganizationController {
         Tenant tenant = tenantService.getTenantById(tenantId);
         long count = organizationService.countOrganizations(tenant);
         return ResponseEntity.ok(count);
+    }
+
+    /**
+     * 組織ツリー構造を取得
+     */
+    @GetMapping("/tenant/{tenantId}/tree")
+    public ResponseEntity<List<OrganizationTreeNode>> getOrganizationTree(@PathVariable Long tenantId) {
+        log.info("Fetching organization tree for tenant: {}", tenantId);
+        Tenant tenant = tenantService.getTenantById(tenantId);
+        List<OrganizationTreeNode> tree = organizationService.getOrganizationTree(tenant);
+        return ResponseEntity.ok(tree);
+    }
+
+    /**
+     * 特定組織配下のサブツリーを取得
+     */
+    @GetMapping("/{organizationId}/tree")
+    public ResponseEntity<OrganizationTreeNode> getOrganizationSubTree(@PathVariable Long organizationId) {
+        log.info("Fetching organization sub-tree for organization: {}", organizationId);
+        OrganizationTreeNode subTree = organizationService.getOrganizationSubTree(organizationId);
+        return ResponseEntity.ok(subTree);
+    }
+
+    /**
+     * ユーザーが所属する組織一覧を取得
+     * ユーザーが投稿可能な組織を返す
+     */
+    @GetMapping("/user/{userId}/accessible")
+    public ResponseEntity<List<Organization>> getUserAccessibleOrganizations(@PathVariable Long userId) {
+        log.info("Fetching accessible organizations for user: {}", userId);
+
+        // ユーザーの存在確認
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found: " + userId);
+        }
+
+        // ユーザーが所属する組織を取得
+        List<Organization> organizations = organizationMemberRepository.findByUserId(userId)
+                .stream()
+                .map(OrganizationMember::getOrganization)
+                .filter(org -> org.getIsActive() != null && org.getIsActive()) // アクティブな組織のみ
+                .collect(Collectors.toList());
+
+        log.info("Found {} accessible organizations for user {}", organizations.size(), userId);
+        return ResponseEntity.ok(organizations);
     }
 }

@@ -109,7 +109,9 @@ public class UserController {
                 user.getId(),
                 user.getUsername(),
                 user.getDisplayName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getTenantId(),
+                user.getPrimaryOrganizationId()
         );
     }
 
@@ -121,13 +123,18 @@ public class UserController {
         private final String username;
         private final String displayName;
         private final String email;
+        private final Long tenantId;
+        private final Long primaryOrganizationId;
 
-        public UserDto(final Long id, final String username, 
-                       final String displayName, final String email) {
+        public UserDto(final Long id, final String username,
+                       final String displayName, final String email,
+                       final Long tenantId, final Long primaryOrganizationId) {
             this.id = id;
             this.username = username;
             this.displayName = displayName;
             this.email = email;
+            this.tenantId = tenantId;
+            this.primaryOrganizationId = primaryOrganizationId;
         }
 
         public Long getId() {
@@ -144,6 +151,14 @@ public class UserController {
 
         public String getEmail() {
             return email;
+        }
+
+        public Long getTenantId() {
+            return tenantId;
+        }
+
+        public Long getPrimaryOrganizationId() {
+            return primaryOrganizationId;
         }
     }
 }
