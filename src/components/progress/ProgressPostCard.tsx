@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { postReplyService, PostReply } from '@/services/api';
 
 interface ProgressPost {
   id: number;
@@ -31,20 +32,90 @@ interface ProgressPost {
     name: string;
     displayName: string;
   };
-  reactionCount: number;
-  commentCount: number;
-  viewCount: number;
   createdAt: string;
 }
 
 interface ProgressPostCardProps {
   post: ProgressPost;
   onUpdate?: () => void;
+  currentUserId?: number;
 }
 
-export default function ProgressPostCard({ post, onUpdate }: ProgressPostCardProps) {
+export default function ProgressPostCard({ post, onUpdate, currentUserId }: ProgressPostCardProps) {
   const router = useRouter();
   const [showDetails, setShowDetails] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
+  const [replies, setReplies] = useState<PostReply[]>([]);
+  const [replyCount, setReplyCount] = useState(0);
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // 返信数を取得
+  useEffect(() => {
+    loadReplyCount();
+  }, [post.id]);
+
+  const loadReplyCount = async () => {
+    try {
+      const count = await postReplyService.getReplyCount(post.id);
+      setReplyCount(count);
+    } catch (error) {
+      console.error('Failed to load reply count:', error);
+    }
+  };
+
+  // 返信一覧を取得
+  const loadReplies = async () => {
+    try {
+      const fetchedReplies = await postReplyService.getRepliesByPostId(post.id);
+      setReplies(fetchedReplies);
+      setShowReplies(true);
+    } catch (error) {
+      console.error('Failed to load replies:', error);
+      setErrorMessage('返信の読み込みに失敗しました');
+    }
+  };
+
+  // 返信を送信
+  const handleSubmitReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!replyContent.trim()) {
+      setErrorMessage('返信内容を入力してください');
+      return;
+    }
+
+    setIsSubmittingReply(true);
+    setErrorMessage('');
+
+    try {
+      await postReplyService.createReply({
+        postId: post.id,
+        content: replyContent,
+      });
+
+      setReplyContent('');
+      setShowReplyForm(false);
+
+      // 返信数を更新
+      await loadReplyCount();
+
+      // 返信一覧が表示されている場合は再読み込み
+      if (showReplies) {
+        await loadReplies();
+      }
+    } catch (error: any) {
+      console.error('Failed to submit reply:', error);
+      console.error('Error response data:', error.response?.data);
+      const message = error.response?.data?.message || error.message || '返信の送信に失敗しました';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
 
   const handleCardClick = () => {
     router.push(`/progress/${post.id}`);
@@ -56,7 +127,8 @@ export default function ProgressPostCard({ post, onUpdate }: ProgressPostCardPro
       GOAL: '目標設定',
       CHALLENGE: '課題',
       ACHIEVEMENT: '達成',
-      LEARNING: '学び'
+      LEARNING: '学び',
+      QUESTION: '質問'
     };
     return labels[type] || type;
   };
@@ -67,7 +139,8 @@ export default function ProgressPostCard({ post, onUpdate }: ProgressPostCardPro
       GOAL: 'bg-green-100 text-green-800',
       CHALLENGE: 'bg-yellow-100 text-yellow-800',
       ACHIEVEMENT: 'bg-purple-100 text-purple-800',
-      LEARNING: 'bg-pink-100 text-pink-800'
+      LEARNING: 'bg-pink-100 text-pink-800',
+      QUESTION: 'bg-orange-100 text-orange-800'
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
   };
@@ -87,12 +160,15 @@ export default function ProgressPostCard({ post, onUpdate }: ProgressPostCardPro
     }
   };
 
+  // 返信権限のチェック: ログインしているユーザー全員に表示（バックエンドで権限チェック）
+  const canUserReply = !!currentUserId;
+
   return (
-    <div
-      className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-      onClick={handleCardClick}
-    >
-      <div className="p-6">
+    <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+      <div
+        className="p-6 cursor-pointer"
+        onClick={handleCardClick}
+      >
         {/* ヘッダー */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -208,24 +284,99 @@ export default function ProgressPostCard({ post, onUpdate }: ProgressPostCardPro
             ))}
           </div>
         )}
+      </div>
 
-        {/* フッター（リアクション・コメント） */}
-        <div className="flex items-center space-x-6 mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-          <button className="flex items-center space-x-1 hover:text-blue-600 transition-colors">
-            <span>👍</span>
-            <span>{post.reactionCount}</span>
+      {/* 返信セクション */}
+      <div
+        className="px-6 pb-4 border-t border-gray-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 返信数表示と返信一覧トグル */}
+        {replyCount > 0 && (
+          <button
+            onClick={async () => {
+              if (!showReplies) {
+                await loadReplies();
+              } else {
+                setShowReplies(false);
+              }
+            }}
+            className="text-sm text-gray-600 hover:text-gray-800 mt-3"
+          >
+            💬 {replyCount}件の返信 {showReplies ? '▼' : '▶'}
           </button>
+        )}
 
-          <button className="flex items-center space-x-1 hover:text-blue-600 transition-colors">
-            <span>💬</span>
-            <span>{post.commentCount}</span>
-          </button>
-
-          <div className="flex items-center space-x-1">
-            <span>👁️</span>
-            <span>{post.viewCount}</span>
+        {/* 返信一覧 */}
+        {showReplies && replies.length > 0 && (
+          <div className="mt-3 space-y-2 bg-gray-50 rounded-lg p-3">
+            {replies.map((reply) => (
+              <div key={reply.id} className="bg-white rounded p-3 text-sm">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="font-semibold text-gray-800">{reply.authorName}</span>
+                  <span className="text-xs text-gray-500">
+                    {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true, locale: ja })}
+                  </span>
+                </div>
+                <p className="text-gray-700 whitespace-pre-wrap">{reply.content}</p>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* 返信ボタン */}
+        {canUserReply && !showReplyForm && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowReplyForm(true);
+            }}
+            className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            ✉️ 返信する
+          </button>
+        )}
+
+        {/* 返信入力フォーム */}
+        {showReplyForm && (
+          <form onSubmit={handleSubmitReply} className="mt-3 space-y-2">
+            {errorMessage && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {errorMessage}
+              </div>
+            )}
+            <textarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="返信を入力してください..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              rows={3}
+              disabled={isSubmittingReply}
+            />
+            <div className="flex space-x-2">
+              <button
+                type="submit"
+                disabled={isSubmittingReply || !replyContent.trim()}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isSubmittingReply ? '送信中...' : '送信'}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowReplyForm(false);
+                  setReplyContent('');
+                  setErrorMessage('');
+                }}
+                disabled={isSubmittingReply}
+                className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

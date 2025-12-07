@@ -1,6 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { organizationService, Organization } from '@/services/api';
+import { Building2 } from 'lucide-react';
 
 interface Filters {
   tenantId: number;
@@ -18,6 +20,25 @@ interface ProgressPostFiltersProps {
 }
 
 export default function ProgressPostFilters({ filters, onFilterChange }: ProgressPostFiltersProps) {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(false);
+
+  useEffect(() => {
+    loadOrganizations();
+  }, [filters.tenantId]);
+
+  const loadOrganizations = async () => {
+    try {
+      setLoadingOrgs(true);
+      const orgs = await organizationService.getOrganizationsByTenant(filters.tenantId);
+      setOrganizations(orgs);
+    } catch (err) {
+      console.error('組織一覧の読み込みエラー:', err);
+    } finally {
+      setLoadingOrgs(false);
+    }
+  };
+
   const handlePostTypeChange = (postType: string) => {
     onFilterChange({
       postType: postType === filters.postType ? null : postType
@@ -58,6 +79,30 @@ export default function ProgressPostFilters({ filters, onFilterChange }: Progres
   return (
     <div className="bg-white rounded-lg shadow p-6 space-y-6">
       <h2 className="text-lg font-semibold text-gray-900">フィルター</h2>
+
+      {/* 組織フィルター */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <Building2 className="w-4 h-4" />
+          組織
+        </h3>
+        {loadingOrgs ? (
+          <div className="text-sm text-gray-500">読み込み中...</div>
+        ) : (
+          <select
+            value={filters.organizationId || ''}
+            onChange={(e) => onFilterChange({ organizationId: e.target.value ? Number(e.target.value) : null })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">すべての組織</option>
+            {organizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {/* 投稿タイプ */}
       <div>
@@ -158,10 +203,18 @@ export default function ProgressPostFilters({ filters, onFilterChange }: Progres
       </button>
 
       {/* 現在のフィルター表示 */}
-      {(filters.postType || filters.startDate || filters.endDate) && (
+      {(filters.organizationId || filters.postType || filters.startDate || filters.endDate) && (
         <div className="pt-4 border-t border-gray-200">
           <h3 className="text-xs font-medium text-gray-600 mb-2">適用中のフィルター</h3>
           <div className="space-y-1 text-xs text-gray-700">
+            {filters.organizationId && (
+              <div className="flex items-center justify-between">
+                <span>組織:</span>
+                <span className="font-medium">
+                  {organizations.find(o => o.id === filters.organizationId)?.name || '不明'}
+                </span>
+              </div>
+            )}
             {filters.postType && (
               <div className="flex items-center justify-between">
                 <span>タイプ:</span>

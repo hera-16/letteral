@@ -37,6 +37,8 @@ export default function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps)
         username: response.username,
         email: response.email,
         displayName: response.displayName,
+        tenantId: response.tenantId,
+        primaryOrganizationId: response.primaryOrganizationId,
       }));
       
       // 保存確認

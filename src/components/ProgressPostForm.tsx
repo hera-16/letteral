@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { progressPostService, CreateProgressPostRequest, PostType, Visibility } from '@/services/api';
+import { useState, useEffect } from 'react';
+import { progressPostService, CreateProgressPostRequest, PostType, organizationService, Organization } from '@/services/api';
 
 interface ProgressPostFormProps {
   tenantId: number;
@@ -25,14 +25,33 @@ export default function ProgressPostForm({
     postType: 'PROGRESS',
     content: '',
     postDate: new Date().toISOString().split('T')[0],
-    visibility: 'ORGANIZATION',
-    isAnonymous: true,
   });
 
   const [tags, setTags] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
+
+  // ユーザーがアクセス可能な組織を取得
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        setLoadingOrgs(true);
+        const orgs = await organizationService.getUserAccessibleOrganizations(authorId);
+        setOrganizations(orgs);
+        console.log(`📋 Loaded ${orgs.length} accessible organizations for user ${authorId}`);
+      } catch (err) {
+        console.error('組織一覧の取得に失敗:', err);
+        setError('組織一覧の取得に失敗しました');
+      } finally {
+        setLoadingOrgs(false);
+      }
+    };
+
+    fetchOrganizations();
+  }, [authorId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +73,7 @@ export default function ProgressPostForm({
           .filter(tag => tag.length > 0),
       };
 
+      console.log('📤 Sending post data:', JSON.stringify(postData, null, 2));
       await progressPostService.createPost(postData);
 
       setSuccess(true);
@@ -70,8 +90,6 @@ export default function ProgressPostForm({
           postType: 'PROGRESS',
           content: '',
           postDate: new Date().toISOString().split('T')[0],
-          visibility: 'ORGANIZATION',
-          isAnonymous: true,
         });
         setTags('');
       }, 1500);
@@ -89,14 +107,6 @@ export default function ProgressPostForm({
     { value: 'BLOCKER', label: '障害', icon: '🚧' },
     { value: 'LEARNING', label: '学び', icon: '💡' },
     { value: 'QUESTION', label: '質問', icon: '❓' },
-  ];
-
-  const visibilityOptions: { value: Visibility; label: string; icon: string }[] = [
-    { value: 'COMPANY', label: '全社', icon: '🏢' },
-    { value: 'ORGANIZATION', label: '組織', icon: '🏛️' },
-    { value: 'DEPARTMENT', label: '部署', icon: '🏢' },
-    { value: 'TEAM', label: 'チーム', icon: '👥' },
-    { value: 'PRIVATE', label: '非公開', icon: '🔒' },
   ];
 
   if (success) {
@@ -252,6 +262,40 @@ export default function ProgressPostForm({
           />
         </div>
 
+        {/* 組織選択 */}
+        <div>
+          <label className="block mb-2 font-semibold" style={{ color: '#EEEEEE' }}>
+            🏢 投稿先組織
+          </label>
+          {loadingOrgs ? (
+            <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: '#222831', color: '#EEEEEE' }}>
+              読み込み中...
+            </div>
+          ) : organizations.length === 0 ? (
+            <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: '#222831', color: '#FF6B6B' }}>
+              ⚠️ 所属組織がありません
+            </div>
+          ) : (
+            <select
+              value={formData.organizationId}
+              onChange={(e) => setFormData({ ...formData, organizationId: parseInt(e.target.value) })}
+              className="w-full px-4 py-3 rounded-lg"
+              style={{ backgroundColor: '#222831', color: '#EEEEEE', border: '2px solid #00ADB5' }}
+            >
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {!loadingOrgs && organizations.length > 0 && (
+            <p className="mt-1 text-sm" style={{ color: '#888' }}>
+              📌 あなたが閲覧可能な組織: {organizations.length}件
+            </p>
+          )}
+        </div>
+
         {/* タグ */}
         <div>
           <label className="block mb-2 font-semibold" style={{ color: '#EEEEEE' }}>
@@ -267,30 +311,6 @@ export default function ProgressPostForm({
             onFocus={(e) => e.currentTarget.style.borderColor = '#00ADB5'}
             onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
           />
-        </div>
-
-        {/* 公開範囲 */}
-        <div>
-          <label className="block mb-2 font-semibold" style={{ color: '#EEEEEE' }}>
-            公開範囲
-          </label>
-          <div className="grid grid-cols-4 gap-2">
-            {visibilityOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setFormData({ ...formData, visibility: option.value })}
-                className="px-4 py-3 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: formData.visibility === option.value ? '#00ADB5' : '#222831',
-                  color: '#EEEEEE'
-                }}
-              >
-                <div className="text-xl mb-1">{option.icon}</div>
-                <div className="text-xs">{option.label}</div>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* 送信ボタン */}
