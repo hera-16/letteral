@@ -78,6 +78,22 @@ public class BoxPermissionService {
     }
 
     /**
+     * ユーザーが特定のBoxTypeに返信可能かチェック
+     */
+    public boolean canReplyToBoxType(Long userId, Long organizationId, Long tenantId, Long boxTypeId) {
+        // BoxPermissionレコードをチェック
+        Optional<BoxPermission> permission = boxPermissionRepository
+                .findByUserIdAndBoxTypeIdAndOrganizationId(userId, boxTypeId, organizationId);
+
+        if (permission.isPresent() && permission.get().isValid()) {
+            return permission.get().getCanReply();
+        }
+
+        // BoxPermissionが無い場合は投稿権限で判定
+        return canPostToBoxType(userId, organizationId, tenantId, boxTypeId);
+    }
+
+    /**
      * ユーザーが閲覧可能なBoxTypeのリストを取得
      */
     public List<BoxType> getAccessibleBoxTypes(Long userId, Long organizationId, Long tenantId) {

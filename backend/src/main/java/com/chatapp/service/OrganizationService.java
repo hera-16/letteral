@@ -1,8 +1,14 @@
 package com.chatapp.service;
 
+import com.chatapp.dto.OrganizationTreeNode;
 import com.chatapp.model.Organization;
+import com.chatapp.model.OrganizationMember;
+import com.chatapp.model.enums.OrganizationRole;
 import com.chatapp.model.Tenant;
+import com.chatapp.model.User;
+import com.chatapp.repository.OrganizationMemberRepository;
 import com.chatapp.repository.OrganizationRepository;
+import com.chatapp.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -10,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 /**
  * 組織管理サービス
@@ -22,9 +28,16 @@ public class OrganizationService {
 
     private static final Logger log = LoggerFactory.getLogger(OrganizationService.class);
     private final OrganizationRepository organizationRepository;
+    private final OrganizationMemberRepository organizationMemberRepository;
+    private final UserRepository userRepository;
 
-    public OrganizationService(OrganizationRepository organizationRepository) {
+    public OrganizationService(
+            OrganizationRepository organizationRepository,
+            OrganizationMemberRepository organizationMemberRepository,
+            UserRepository userRepository) {
         this.organizationRepository = organizationRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -259,5 +272,138 @@ public class OrganizationService {
         log.debug("Fetching all descendants for organization ID: {}", organizationId);
         Organization org = getOrganizationById(organizationId);
         return organizationRepository.findByTenantAndPathStartingWith(org.getTenant(), org.getPath() + "/");
+    }
+
+    /**
+     * テナントの組織ツリー構造を取得
+     *
+     * @param tenant テナント
+     * @return 組織ツリーのルートノードリスト
+     */
+    public List<OrganizationTreeNode> getOrganizationTree(Tenant tenant) {
+        log.debug("Building organization tree for tenant: {}", tenant.getName());
+
+        // テナントの全組織を取得
+        List<Organization> allOrgs = getOrganizationsByTenant(tenant);
+
+        // 組織IDをキーとしたマップを作成
+        Map<Long, OrganizationTreeNode> nodeMap = new HashMap<>();
+        for (Organization org : allOrgs) {
+            OrganizationTreeNode node = new OrganizationTreeNode(org);
+            // メンバー数を設定
+            int memberCount = organizationMemberRepository.findByOrganization(org).size();
+            node.setMemberCount(memberCount);
+            nodeMap.put(org.getId(), node);
+        }
+
+        // ツリー構造を構築
+        List<OrganizationTreeNode> rootNodes = new ArrayList<>();
+        for (Organization org : allOrgs) {
+            OrganizationTreeNode node = nodeMap.get(org.getId());
+            if (org.getParent() == null) {
+                // ルートノード
+                rootNodes.add(node);
+            } else {
+                // 親ノードに追加
+                OrganizationTreeNode parentNode = nodeMap.get(org.getParent().getId());
+                if (parentNode != null) {
+                    parentNode.addChild(node);
+                }
+            }
+        }
+
+        log.debug("Organization tree built successfully with {} root nodes", rootNodes.size());
+        return rootNodes;
+    }
+
+    /**
+     * 特定組織配下のツリー構造を取得
+     *
+     * @param organizationId 組織ID
+     * @return 組織ツリーノード
+     */
+    public OrganizationTreeNode getOrganizationSubTree(Long organizationId) {
+        log.debug("Building organization sub-tree for organization ID: {}", organizationId);
+
+        Organization rootOrg = getOrganizationById(organizationId);
+        OrganizationTreeNode rootNode = new OrganizationTreeNode(rootOrg);
+
+        // メンバー数を設定
+        int memberCount = organizationMemberRepository.findByOrganization(rootOrg).size();
+        rootNode.setMemberCount(memberCount);
+
+        // 子孫組織を取得してツリーを構築
+        buildSubTree(rootNode, rootOrg);
+
+        log.debug("Organization sub-tree built successfully");
+        return rootNode;
+    }
+
+    /**
+     * サブツリーを再帰的に構築
+     *
+     * @param node 現在のノード
+     * @param organization 現在の組織
+     */
+    private void buildSubTree(OrganizationTreeNode node, Organization organization) {
+        List<Organization> children = getChildOrganizations(organization);
+        for (Organization child : children) {
+            OrganizationTreeNode childNode = new OrganizationTreeNode(child);
+            int memberCount = organizationMemberRepository.findByOrganization(child).size();
+            childNode.setMemberCount(memberCount);
+            node.addChild(childNode);
+            // 再帰的に子ノードを構築
+            buildSubTree(childNode, child);
+        }
+    }
+
+    /**
+     * 組織にメンバーを追加
+     *
+     * @param organizationId 組織ID
+     * @param userId ユーザーID
+     * @param role 役割
+     * @return 作成された組織メンバー
+     */
+    @Transactional
+    public OrganizationMember addMemberToOrganization(Long organizationId, Long userId, OrganizationRole role) {
+        log.info("Adding user {} to organization {} with role {}", userId, organizationId, role);
+
+        Organization organization = getOrganizationById(organizationId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+
+        // 既に存在する場合はチェック
+        Optional<OrganizationMember> existing = organizationMemberRepository.findByOrganizationAndUser(organization, user);
+        if (existing.isPresent()) {
+            throw new IllegalStateException("User is already a member of this organization");
+        }
+
+        OrganizationMember member = new OrganizationMember(organization.getTenant(), organization, user);
+        member.setRole(role);
+
+        return organizationMemberRepository.save(member);
+    }
+
+    /**
+     * ユーザーが組織に対して特定の権限以上を持っているかチェック
+     *
+     * @param userId ユーザーID
+     * @param organizationId 組織ID
+     * @param requiredRole 必要な役割
+     * @return 権限を持っている場合true
+     */
+    public boolean hasPermission(Long userId, Long organizationId, OrganizationRole requiredRole) {
+        log.debug("Checking permission for user {} in organization {} with required role {}", userId, organizationId, requiredRole);
+
+        Optional<OrganizationMember> memberOpt = organizationMemberRepository.findByUserIdAndOrganizationId(userId, organizationId);
+
+        if (memberOpt.isEmpty()) {
+            return false;
+        }
+
+        OrganizationMember member = memberOpt.get();
+        // メンバーの権限レベルが必要な権限レベル以下（数値が小さいほど上位）かチェック
+        return member.getRole().hasAuthorityOver(requiredRole);
     }
 }

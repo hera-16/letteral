@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -115,6 +116,86 @@ public class OrganizationPermissionService {
         return organizationMemberRepository
                 .findByUserIdAndOrganizationId(user.getId(), organizationId)
                 .isPresent();
+    }
+
+    /**
+     * ユーザーが組織のメンバーを閲覧できるかチェック
+     * - 組織のメンバーである場合
+     * - 親組織の管理者（ADMIN_SUPER以上）である場合
+     * - ADMIN_CORE/ADMIN_ROOTの場合（テナント全体を管理）
+     */
+    public boolean canViewMembers(User user, Long organizationId) {
+        System.out.println("=== canViewMembers チェック開始 ===");
+        System.out.println("ユーザーID: " + user.getId() + ", 組織ID: " + organizationId);
+
+        // 直接のメンバーである場合
+        if (isMember(user, organizationId)) {
+            System.out.println("✓ 直接のメンバーです");
+            return true;
+        }
+        System.out.println("✗ 直接のメンバーではありません");
+
+        // 組織情報を取得
+        Organization targetOrg = organizationRepository.findById(organizationId)
+                .orElse(null);
+        if (targetOrg == null) {
+            System.out.println("✗ 組織が見つかりません");
+            return false;
+        }
+        System.out.println("対象組織: " + targetOrg.getName() + " (テナントID: " + targetOrg.getTenant().getId() + ")");
+
+        // 同じテナント内の組織に所属しているかチェック
+        // ADMIN_COREまたはADMIN_ROOTの場合、テナント全体を閲覧可能
+        List<OrganizationMember> userMemberships = organizationMemberRepository.findByUserId(user.getId());
+        System.out.println("ユーザーの所属組織数: " + userMemberships.size());
+
+        Optional<OrganizationMember> anyMembershipInTenant = userMemberships.stream()
+                .filter(member -> {
+                    boolean sameTenant = member.getTenant().getId().equals(targetOrg.getTenant().getId());
+                    System.out.println("  - 組織: " + member.getOrganization().getName() +
+                                     ", 役割: " + member.getRole() +
+                                     ", 同じテナント: " + sameTenant);
+                    return sameTenant;
+                })
+                .filter(member -> member.getRole() == OrganizationRole.ADMIN_CORE
+                        || member.getRole() == OrganizationRole.ADMIN_ROOT)
+                .findFirst();
+
+        if (anyMembershipInTenant.isPresent()) {
+            System.out.println("✓ ADMIN_CORE/ADMIN_ROOTとしてテナント全体を閲覧可能");
+            return true;
+        }
+
+        // 親組織の管理者（ADMIN_SUPER以上）かチェック
+        System.out.println("親組織チェック開始...");
+        Organization currentOrg = targetOrg;
+        int level = 0;
+        while (currentOrg.getParent() != null) {
+            level++;
+            currentOrg = currentOrg.getParent();
+            System.out.println("  レベル" + level + ": " + currentOrg.getName() + " (ID: " + currentOrg.getId() + ")");
+
+            Optional<OrganizationMember> parentMembership = organizationMemberRepository
+                    .findByUserIdAndOrganizationId(user.getId(), currentOrg.getId());
+
+            if (parentMembership.isPresent()) {
+                OrganizationRole role = parentMembership.get().getRole();
+                System.out.println("    → ユーザーの役割: " + role);
+                // ADMIN_SUPER以上であれば子孫組織を閲覧可能
+                if (role == OrganizationRole.ADMIN_SUPER
+                        || role == OrganizationRole.ADMIN_LEAD
+                        || role == OrganizationRole.ADMIN_CORE
+                        || role == OrganizationRole.ADMIN_ROOT) {
+                    System.out.println("✓ 親組織の管理者として閲覧可能");
+                    return true;
+                }
+            } else {
+                System.out.println("    → メンバーではありません");
+            }
+        }
+
+        System.out.println("✗ 閲覧権限がありません");
+        return false;
     }
 
     /**

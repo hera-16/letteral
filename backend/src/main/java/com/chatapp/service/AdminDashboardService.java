@@ -1,7 +1,6 @@
 package com.chatapp.service;
 
 import com.chatapp.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +17,6 @@ public class AdminDashboardService {
     private final ReportRepository reportRepository;
     private final GroupRepository groupRepository;
 
-    @Autowired
     public AdminDashboardService(UserRepository userRepository,
                                  ProgressPostRepository progressPostRepository,
                                  ChatMessageRepository chatMessageRepository,
