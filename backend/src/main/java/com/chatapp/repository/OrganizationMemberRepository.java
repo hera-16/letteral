@@ -23,6 +23,8 @@ public interface OrganizationMemberRepository extends JpaRepository<Organization
 
     List<OrganizationMember> findByUser(User user);
 
+    List<OrganizationMember> findByUserId(Long userId);
+
     List<OrganizationMember> findByTenantAndUser(Tenant tenant, User user);
 
     Optional<OrganizationMember> findByOrganizationAndUser(Organization organization, User user);
