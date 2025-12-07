@@ -13,14 +13,13 @@
 ## 📋 目次
 
 - [概要](#概要)
-- [背景・課題](#背景課題)
-- [提供価値](#提供価値)
 - [主要機能](#主要機能)
 - [技術スタック](#技術スタック)
 - [クイックスタート](#クイックスタート)
-- [AWSデプロイ](#awsデプロイ)
+- [プロジェクト構造](#プロジェクト構造)
+- [実装済み機能](#実装済み機能)
+- [開発ロードマップ](#開発ロードマップ)
 - [ドキュメント](#ドキュメント)
-- [ロードマップ](#ロードマップ)
 
 ---
 
@@ -30,70 +29,64 @@
 
 従来のリアルタイムチャット機能を活かしつつ、**匿名性**と**階層的な公開範囲制御**を組み合わせることで、心理的安全性を保ちながら透明性のあるコミュニケーションを実現します。
 
-### 対象ユーザー
-
-- 中小〜大企業
-- 学校法人・研究室
-- 学生団体
-- その他組織利用
-
----
-
-## 背景・課題
-
-現代の組織では、以下のような課題が存在します：
+### 解決する課題
 
 - **進捗・目標の共有が属人化**し、会議コストや心理的安全性の低さから本音が出にくい
 - **評価・1on1の材料が散在**し、事実ベースの対話が難しい
-- **若手・新卒・インターンの悩みが表出しづらい**（ハラスメント・労働環境などの早期検知も困難）
+- **若手・新卒の悩みが表出しづらい**（早期検知が困難）
 
-Letteralは、これらの課題を**匿名性**と**構造化された進捗記録**で解決します。
+### 提供価値
 
----
-
-## 提供価値
-
-### 👔 会社・人事
-- 早期に組織課題を可視化し、離職リスクを低減
-- 評価の透明性と記録性を向上
-
-### 👨‍💼 管理職
-- 1on1・評価面談で使える「週次ダイジェスト」と「貢献履歴」を自動生成
-- 部下の状況をリアルタイムで把握
-
-### 👤 従業員
-- 匿名で安全に本音を共有
-- OKR/KGI/KPIとのひも付けで成長実感を得られる
+| 対象 | 価値 |
+|------|------|
+| 👔 **会社・人事** | 早期に組織課題を可視化し、離職リスクを低減 |
+| 👨‍💼 **管理職** | 1on1・評価面談で使える進捗データを自動生成 |
+| 👤 **従業員** | 匿名で安全に本音を共有、成長実感を得られる |
 
 ---
 
 ## 主要機能
 
-### 🎯 匿名目標・進捗投稿
+### ✅ 実装済み機能
 
-- **テンプレート投稿**: 今日の目標 / 達成度 / ブロッカー / 学び / 次の一手
-- **OKR連携**: Objective/Key Resultsとタグで紐づけ、期間別に自動集計
-- **スレッド＆リアクション**: 称賛・相談・補助リソース提案
-- **添付機能**: 画像・リンク・ドキュメント、社内ナレッジとの連携
+#### 🎯 進捗投稿システム
+- **日報・週報形式の進捗投稿**
+  - タイトル、本文、画像添付
+  - 投稿タイプ: 通常投稿 / 質問投稿
+  - 匿名番号による投稿者識別（同一人物の投稿を追跡可能）
 
-### 🏢 階層・公開範囲・ホスト権限
+- **返信・コメント機能**
+  - 投稿への返信
+  - 返信の編集・削除
+  - 返信者の匿名番号表示
 
-- **階層設定**: 会社 → 本部 → 部 → 課 → チーム → 同期（任意深度）
-- **公開範囲**: 全社 / 部門内 / チーム内 / 同期のみ から選択
-- **匿名度**: 完全匿名 / 仮名（固定ハンドル） / 実名 のポリシーをグループ単位で設定
-- **ホスト（管理者）**: 階層作成、ポリシー設定、モデレーション、エクスポート権限
+#### 🏢 組織階層管理
+- **階層的な組織構造**
+  - 会社 → 部門 → チーム → グループの多階層対応
+  - 組織ツリー表示（親子関係の可視化）
+  - 階層ごとの投稿フィルタリング
 
-### 📊 評価・1on1サポート
+- **組織ロール・権限管理**
+  - OWNER: 組織の全権限
+  - ADMIN: 組織管理・メンバー管理
+  - MODERATOR: 投稿モデレーション
+  - MEMBER: 一般メンバー
 
-- **週次／月次ダイジェスト**を自動生成（成果、貢献、阻害要因、サポート要請）
-- **評価期間スナップショット**（投稿・達成率・他者からの称賛をまとめたPDF/CSVエクスポート）
-- **1on1アジェンダ自動生成**（直近の課題・未解決スレッド・依頼事項）
+#### 👥 招待システム
+- 組織への招待コード生成
+- 招待リンクによる参加
+- 招待の有効期限管理
 
-### 💬 既存のコミュニケーション機能を維持
+#### 💬 リアルタイムチャット
+- グループチャット（WebSocket対応）
+- 個人間チャット
+- メッセージ履歴
 
-- **匿名グループチャット**: 若年層・学生ユーザーの流入を促進
-- **個人チャット**: 1対1の相談窓口として継続利用
-- **公開トピック**: 学習コミュニティ / 社外向け場にも転用可能（ホストがON/OFF）
+#### 🔐 認証・セキュリティ
+- JWT認証
+- ロールベースアクセス制御（RBAC）
+- Box（グループ）単位のアクセス制御
+- レート制限（API保護）
 
 ---
 
@@ -103,22 +96,23 @@ Letteralは、これらの課題を**匿名性**と**構造化された進捗記
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
-| ![Java](https://img.shields.io/badge/-Java%2017-007396?logo=openjdk&logoColor=white) | 17 | 実行環境 |
-| ![Spring Boot](https://img.shields.io/badge/-Spring%20Boot-6DB33F?logo=spring-boot&logoColor=white) | 3.5.6 | フレームワーク |
-| ![Spring Security](https://img.shields.io/badge/-Spring%20Security-6DB33F?logo=spring&logoColor=white) | - | JWT認証・RBAC |
-| ![Spring Data JPA](https://img.shields.io/badge/-Spring%20Data%20JPA-6DB33F?logo=spring&logoColor=white) | - | データアクセス層 |
-| ![WebSocket](https://img.shields.io/badge/-WebSocket-010101?logo=socketdotio) | STOMP | リアルタイム通信 |
-| ![MySQL](https://img.shields.io/badge/-MySQL-4479A1?logo=mysql&logoColor=white) | 8.0 | データベース |
+| Java | 17 | 実行環境 |
+| Spring Boot | 3.5.6 | フレームワーク |
+| Spring Security | - | JWT認証・RBAC |
+| Spring Data JPA | - | データアクセス層 |
+| WebSocket (STOMP) | - | リアルタイム通信 |
+| MySQL | 8.0 | データベース |
+| Flyway | - | データベースマイグレーション |
 
 ### フロントエンド
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
-| ![Next.js](https://img.shields.io/badge/-Next.js-000000?logo=next.js) | 15.5.4 | フレームワーク |
-| ![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white) | 5.0 | 型安全性 |
-| ![Tailwind CSS](https://img.shields.io/badge/-Tailwind-38B2AC?logo=tailwind-css&logoColor=white) | 3.0 | スタイリング |
-| ![Axios](https://img.shields.io/badge/-Axios-5A29E4?logo=axios&logoColor=white) | - | HTTP クライアント |
-| ![STOMP.js](https://img.shields.io/badge/-STOMP.js-010101?logo=socketdotio) | 1.6.1 | WebSocket クライアント |
+| Next.js | 15.5.4 | フレームワーク（App Router） |
+| TypeScript | 5.0 | 型安全性 |
+| Tailwind CSS | 3.0 | スタイリング |
+| Axios | - | HTTP クライアント |
+| STOMP.js | 1.6.1 | WebSocket クライアント |
 
 ---
 
@@ -129,91 +123,74 @@ Letteralは、これらの課題を**匿名性**と**構造化された進捗記
 - **Java 17** 以上
 - **Node.js 18** 以上
 - **MySQL 8.0**
-- **Maven**
+- **Maven**（または同梱の`mvnw`を使用）
 
-### ⚡ 3ステップで起動
+### ⚡ セットアップ手順
+
+#### 1️⃣ データベースのセットアップ
+
+```sql
+-- MySQLにログイン
+mysql -u root -p
+
+-- データベース作成
+CREATE DATABASE chatapp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ユーザー作成（オプション）
+CREATE USER 'chatapp_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON chatapp.* TO 'chatapp_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+#### 2️⃣ バックエンドの起動
 
 ```bash
-# 1️⃣ バックエンドを起動 (ターミナル1)
+# backendディレクトリに移動
 cd backend
-mvnw.cmd spring-boot:run
 
-# 2️⃣ フロントエンドを起動 (ターミナル2)
+# 環境変数設定（backend/src/main/resources/application.properties）
+# 以下の設定を確認・編集
+# spring.datasource.url=jdbc:mysql://localhost:3306/chatapp
+# spring.datasource.username=root
+# spring.datasource.password=your_password
+# jwt.secret=your-secret-key-here
+
+# Windowsの場合
+set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.16.8-hotspot
+..\mvnw.cmd spring-boot:run
+
+# Mac/Linuxの場合
+./mvnw spring-boot:run
+```
+
+バックエンドは `http://localhost:8080` で起動します。
+
+#### 3️⃣ フロントエンドの起動
+
+```bash
+# プロジェクトルートディレクトリで
 npm install
 npm run dev
-
-# 3️⃣ ブラウザでアクセス
-# 👉 http://localhost:3000
 ```
 
-### 🎬 初回セットアップ
+フロントエンドは `http://localhost:3000` で起動します。
 
-1. **データベース作成**
-```sql
-CREATE DATABASE chatapp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#### 4️⃣ ブラウザでアクセス
+
+```
+http://localhost:3000
 ```
 
-2. **環境変数設定** (`backend/.env`)
-```env
-JWT_SECRET=your-secret-key-here
-SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/chatapp
-SPRING_DATASOURCE_USERNAME=root
-SPRING_DATASOURCE_PASSWORD=your-password
-```
+### 🎬 初期データ
 
-3. **起動して完了!** 🎉
+アプリケーション起動時に以下のテストデータが自動作成されます：
 
----
+- **テストユーザー**:
+  - username: `testuser1` / password: `password123`
+  - username: `testuser2` / password: `password123`
 
-## AWSデプロイ
-
-### 🚀 クイックデプロイ（5ステップ）
-
-LetteralをAWSにデプロイして本番環境を構築できます。
-
-```bash
-# 1. 設定ファイルの準備
-.\deploy-to-aws.ps1 -Environment prod -Step setup
-
-# 2. 設定を編集
-# .aws-deploy-config-prod.env を編集
-
-# 3. RDSデータベースを作成（AWSコンソール）
-
-# 4. デプロイ実行
-.\deploy-to-aws.ps1 -Environment prod -Step all
-
-# 5. 動作確認
-curl http://YOUR_ALB_DNS/actuator/health
-```
-
-### 📚 デプロイガイド
-
-| ガイド | 対象 | 内容 |
-|--------|------|------|
-| [AWS初心者向けガイド](docs/AWS_BEGINNER_GUIDE.md) | AWS初心者 | アカウント作成から画像付き詳細手順 |
-| [クイックスタート](docs/AWS_QUICKSTART.md) | 経験者 | 最短5ステップでデプロイ |
-| [AWSデプロイガイド](docs/AWS_DEPLOYMENT.md) | 技術者 | Terraform、ECS、RDSの詳細設定 |
-| [インフラ設計書](docs/AWS_INFRASTRUCTURE_DESIGN.md) | アーキテクト | システム構成、コスト見積もり |
-
-### 💰 コスト概算
-
-| 構成 | 月額（目安） | 用途 |
-|------|-------------|------|
-| 開発環境 | $55-70 | テスト・開発 |
-| 小規模本番 | $200-300 | 〜500ユーザー |
-| 中規模本番 | $500-1,000 | 〜5,000ユーザー |
-
-💡 AWS無料枠を活用すれば、最初の12ヶ月間は一部無料で使えます！
-
-### 🛠️ デプロイスクリプト
-
-プロジェクトには自動デプロイスクリプトが含まれています：
-
-- **Windows**: `deploy-to-aws.ps1`
-- **Mac/Linux**: `deploy-to-aws.sh`
-
-詳細は [クイックスタートガイド](docs/AWS_QUICKSTART.md) を参照してください。
+- **テスト組織**: サンプル組織と階層構造
+- **テスト投稿**: サンプルの進捗投稿
 
 ---
 
@@ -221,165 +198,218 @@ curl http://YOUR_ALB_DNS/actuator/health
 
 ```
 letteral/
-├── backend/                    # Spring Boot バックエンド
+├── backend/                           # Spring Boot バックエンド
 │   ├── src/main/java/com/chatapp/
-│   │   ├── controller/        # REST API コントローラー
-│   │   ├── dto/              # データ転送オブジェクト
-│   │   ├── model/            # JPA エンティティ
-│   │   ├── repository/       # データアクセス層
-│   │   ├── security/         # 認証・認可設定
-│   │   ├── service/          # ビジネスロジック
-│   │   └── websocket/        # WebSocket設定
-│   └── pom.xml              # Maven 設定
+│   │   ├── config/                   # 設定クラス（Security, WebSocket等）
+│   │   ├── controller/               # REST API コントローラー
+│   │   │   ├── AuthController.java              # 認証API
+│   │   │   ├── ProgressPostController.java      # 進捗投稿API
+│   │   │   ├── PostReplyController.java         # 返信API
+│   │   │   ├── OrganizationController.java      # 組織API
+│   │   │   └── ...
+│   │   ├── dto/                      # データ転送オブジェクト
+│   │   ├── model/                    # JPA エンティティ
+│   │   │   ├── ProgressPost.java               # 進捗投稿
+│   │   │   ├── PostReply.java                  # 返信
+│   │   │   ├── Organization.java               # 組織
+│   │   │   ├── User.java                       # ユーザー
+│   │   │   └── ...
+│   │   ├── repository/               # データアクセス層
+│   │   ├── service/                  # ビジネスロジック
+│   │   │   ├── ProgressPostService.java
+│   │   │   ├── PostReplyService.java
+│   │   │   ├── OrganizationService.java
+│   │   │   └── ...
+│   │   ├── security/                 # 認証・認可
+│   │   ├── interceptor/              # リクエストインターセプター
+│   │   └── exception/                # 例外ハンドリング
+│   └── src/main/resources/
+│       ├── application.properties    # アプリケーション設定
+│       └── db/migration/            # Flywayマイグレーション
 │
-├── src/                      # Next.js フロントエンド
-│   ├── app/                 # App Router ページ
-│   ├── components/          # React コンポーネント
-│   └── services/           # API クライアント
+├── src/                              # Next.js フロントエンド
+│   ├── app/                          # App Router ページ
+│   │   ├── page.tsx                 # ホーム
+│   │   ├── progress/                # 進捗投稿
+│   │   ├── admin/                   # 管理画面
+│   │   └── invite/                  # 招待
+│   ├── components/                   # React コンポーネント
+│   │   ├── ProgressPostForm.tsx     # 投稿フォーム
+│   │   ├── ProgressPostTimeline.tsx # タイムライン
+│   │   ├── OrganizationTree.tsx     # 組織ツリー
+│   │   └── ...
+│   └── services/                     # API クライアント
+│       └── api.ts                   # API関数
 │
-├── docs/                    # ドキュメント
-│   ├── API_REFERENCE.md
-│   └── DEPLOYMENT.md
+├── docs/                             # ドキュメント
+│   ├── LETTERAL_NEW_SPEC_DESIGN.md  # 仕様設計書
+│   ├── API_DESIGN.md                # API設計書
+│   ├── DATABASE_SCHEMA_DESIGN.md    # DB設計書
+│   └── ...
 │
-└── package.json            # Node.js 依存関係
+├── package.json                      # Node.js 依存関係
+└── README.md                         # このファイル
 ```
 
 ---
 
-## 非機能要件・アーキテクチャ
+## 実装済み機能
 
-### セキュリティ・匿名性設計
+### データベーススキーマ（主要テーブル）
 
-- **匿名ID**は組織内でのみ一意。個人識別キーは暗号化保護し、運用者でも平文参照不可
-- **通報・モデレーション**: NGワード辞書、レートリミット、凍結、アーカイブ
-- **機密投稿**は「管理者にも実名非公開」モードをサポート（社外相談窓口にのみ開示など）
-- **データ保持ポリシー**: 評価期間後の自動アーカイブ、個人情報削除請求に対応
+| テーブル | 説明 |
+|---------|------|
+| `users` | ユーザー情報 |
+| `organizations` | 組織（階層構造対応） |
+| `organization_members` | 組織メンバーシップとロール |
+| `progress_posts` | 進捗投稿（匿名番号付き） |
+| `post_replies` | 投稿への返信 |
+| `boxes` | グループチャット |
+| `chat_messages` | チャットメッセージ |
+| `invites` | 招待コード |
 
-### システム要件
+### API エンドポイント（主要）
 
-- **テナント分離**: 会社単位のデータ分離（tenant_id）
-- **RBAC**: オーナー / 管理者 / モデレーター / 一般
-- **監査ログ**: エクスポート・ポリシー変更・通報対応
-- **可用性**: SLA 99.9%、水平スケール対応
-- **国際化**: UTF-8、タイムゾーン対応（Asia/Tokyo既定）
+#### 認証
+- `POST /api/auth/register` - ユーザー登録
+- `POST /api/auth/login` - ログイン
+- `POST /api/auth/logout` - ログアウト
+
+#### 進捗投稿
+- `GET /api/progress-posts` - 投稿一覧取得
+- `POST /api/progress-posts` - 投稿作成
+- `GET /api/progress-posts/{id}` - 投稿詳細取得
+- `PUT /api/progress-posts/{id}` - 投稿更新
+- `DELETE /api/progress-posts/{id}` - 投稿削除
+
+#### 返信
+- `GET /api/post-replies/post/{postId}` - 投稿の返信一覧
+- `POST /api/post-replies` - 返信作成
+- `PUT /api/post-replies/{id}` - 返信更新
+- `DELETE /api/post-replies/{id}` - 返信削除
+
+#### 組織管理
+- `GET /api/organizations/tree` - 組織ツリー取得
+- `POST /api/organizations` - 組織作成
+- `GET /api/organizations/{id}/members` - メンバー一覧
+- `POST /api/organizations/{id}/members` - メンバー追加
+
+詳細は [API設計書](docs/API_DESIGN.md) を参照。
 
 ---
 
-## 管理者コンソール（MVP）
+## 開発ロードマップ
 
-- **階層マネジメント**: 組織ツリー作成・編集
-- **ポリシー設定**: 匿名度 / 公開範囲 / 招待・参加要件
-- **ダッシュボード**: 投稿数、反応率、悩み相談件数、OKR達成率、リスク兆候
-- **エクスポート**: CSV/PDF、評価期間スナップショット
+### ✅ Phase 1-7: 完了
+- [x] 基本的なチャット機能
+- [x] 認証・認可システム
+- [x] 進捗投稿機能
+- [x] 返信機能
+- [x] 組織階層管理
+- [x] 招待システム
+- [x] 質問投稿タイプ
+- [x] 匿名番号システム
+
+### 🚧 Phase 8: 現在開発中
+- [ ] OKR連携機能
+- [ ] 週次/月次ダイジェスト自動生成
+- [ ] 評価期間スナップショット
+- [ ] 管理者ダッシュボード
+
+### 📋 Phase 9以降: 計画中
+- [ ] SSO（Single Sign-On）対応
+- [ ] 外部連携（Slack, Teams等）
+- [ ] モバイルアプリ
+- [ ] 高度な分析・レポート機能
+- [ ] 機械学習によるリスク検知
+
+詳細は [LETTERAL_NEW_SPEC_DESIGN.md](LETTERAL_NEW_SPEC_DESIGN.md) を参照。
 
 ---
 
-## 成功指標（KPI）
+## セキュリティ・匿名性設計
 
-- 週次アクティブ率（WAU/登録者）≧ 60%
-- 週次の進捗投稿率 ≧ 70%（対象者）
-- 未解決ブロッカーの平均解消リードタイム 30%短縮
-- 四半期の1on1準備時間 50%削減
-- 匿名相談の早期検知件数（人事連携済）
+### 匿名性の実装
+
+1. **匿名番号**: 各ユーザーに組織内で一意の匿名番号を自動割り当て
+2. **投稿者の匿名化**: 進捗投稿には匿名番号のみを表示
+3. **返信の匿名化**: 返信にも匿名番号を使用（投稿者との関連付け可能）
+
+### セキュリティ機能
+
+- **JWT認証**: トークンベースの認証
+- **RBAC**: ロールベースアクセス制御
+- **Box権限**: グループ単位のアクセス制御
+- **レート制限**: API過負荷保護
+- **入力検証**: XSS, SQLインジェクション対策
 
 ---
 
-## 収益化・料金案（参考）
+## トラブルシューティング
 
-- **フリーミアム**: 匿名チャットと小規模グループ（最大50名）
-- **プロ**: 組織ツリー・管理者コンソール・エクスポート（月額¥300/人）
-- **エンタープライズ**: SSO、専用サポート、データ保持ポリシー可変（見積）
+### バックエンド起動エラー
 
----
+**問題**: `Address already in use: bind`
+```bash
+# Windowsの場合
+netstat -ano | findstr :8080
+taskkill /PID <プロセスID> /F
 
-## ロードマップ
+# Mac/Linuxの場合
+lsof -ti:8080 | xargs kill -9
+```
 
-### Q1（MVP）
-- 匿名目標・進捗投稿
-- 組織ツリー、ポリシー
-- 週次ダイジェスト
+**問題**: データベース接続エラー
+- MySQL が起動しているか確認
+- `application.properties` の接続情報を確認
+- データベースが作成されているか確認
 
-### Q2
-- 評価期間スナップショット
-- OKR連携
-- 管理者ダッシュボード
+### フロントエンド起動エラー
 
-### Q3
-- SSO
-- アーカイブ/エクスポート強化
-- 通報ワークフロー
-- 外部連携（Slack等）
+**問題**: `EADDRINUSE: address already in use`
+```bash
+# ポート3000を使用しているプロセスを停止
+npx kill-port 3000
+```
 
 ---
 
 ## ドキュメント
 
-### 📚 ユーザー向けドキュメント
+### 📚 主要ドキュメント
 
 | ドキュメント | 説明 |
 |------------|------|
-| [USER_MANUAL.md](docs/USER_MANUAL.md) | ユーザーマニュアル（進捗投稿・OKR管理など） |
-| [openapi.yaml](docs/openapi.yaml) | OpenAPI 3.0 REST API仕様書 |
+| [LETTERAL_NEW_SPEC_DESIGN.md](LETTERAL_NEW_SPEC_DESIGN.md) | 新仕様設計書 |
+| [API_DESIGN.md](docs/API_DESIGN.md) | API設計書 |
+| [DATABASE_SCHEMA_DESIGN.md](docs/DATABASE_SCHEMA_DESIGN.md) | データベース設計書 |
+| [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) | 移行ガイド |
 
-### 🏗️ 開発者向けドキュメント
-
-| ドキュメント | 説明 |
-|------------|------|
-| [API_REFERENCE.md](docs/API_REFERENCE.md) | API仕様書（レガシー） |
-| [FEATURE_REQUIREMENTS.md](docs/FEATURE_REQUIREMENTS.md) | 機能要件定義 |
-| [PRODUCTION_SETUP.md](backend/PRODUCTION_SETUP.md) | 本番環境設定 |
-
-### ☁️ AWS / インフラドキュメント
+### 📋 Phase別サマリー
 
 | ドキュメント | 説明 |
 |------------|------|
-| [AWS_INFRASTRUCTURE_DESIGN.md](docs/AWS_INFRASTRUCTURE_DESIGN.md) | AWSインフラ設計書 |
-| [AWS_DEPLOYMENT.md](docs/AWS_DEPLOYMENT.md) | AWSデプロイガイド |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | デプロイ手順（汎用） |
-
-### 📋 プロジェクト進捗
-
-| ドキュメント | 説明 |
-|------------|------|
-| [PHASE5_SUMMARY.md](docs/PHASE5_SUMMARY.md) | Phase 5: Letteral新機能実装完了 |
-| [PHASE6_SUMMARY.md](docs/PHASE6_SUMMARY.md) | Phase 6: AWS本番インフラ構築完了 |
-| [PHASE7_SUMMARY.md](docs/PHASE7_SUMMARY.md) | Phase 7: テスト・ドキュメント・運用最適化完了 ✅ |
-
----
-
-## 競合比較
-
-Letteralの差別化ポイント：
-
-| 項目 | Letteral | OKRツール | HRスイート | スタンドアップBot |
-|------|----------|-----------|------------|------------------|
-| 匿名性 | ⭐⭐⭐ 完全匿名〜実名選択可 | ❌ 実名中心 | ❌ 実名中心 | ❌ 実名中心 |
-| 日次記録 | ⭐⭐⭐ 日次〜週次 | △ 週次〜月次 | △ 週次〜四半期 | ⭐⭐⭐ 日次 |
-| 階層公開制御 | ⭐⭐⭐ 柔軟な階層設定 | △ 限定的 | ⭐⭐ 組織連動 | ❌ なし |
-| 評価連動 | ⭐⭐⭐ スナップショット | ⭐⭐⭐ OKRネイティブ | ⭐⭐⭐ 人事統合 | ❌ 弱い |
-
-詳細は企画書の「競合比較表」を参照。
-
----
-
-## リスクと対策
-
-- **荒らし・誹謗中傷**: 自動検知、段階的制裁、教育コンテンツの提示
-- **匿名依存による実名コミュニケーション希薄化**: 階層・場面に応じて実名切替を促すUI
-- **評価での過度な数値化**: 定性コメントの重要性を示す設計と、偏り検知
-- **導入初期の投稿ネタ不足**: テンプレ・運営ガイド・社内イベントと連携
+| [PHASE5_SUMMARY.md](docs/PHASE5_SUMMARY.md) | Phase 5: Letteral新機能実装 |
+| [PHASE6_SUMMARY.md](docs/PHASE6_SUMMARY.md) | Phase 6: AWS本番インフラ構築 |
+| [PHASE7_SUMMARY.md](docs/PHASE7_SUMMARY.md) | Phase 7: テスト・ドキュメント整備 |
 
 ---
 
 ## 🤝 コントリビューション
 
-プルリクエスト大歓迎です!
+プルリクエスト大歓迎です！
 
 1. Fork this repository
 2. Create feature branch (`git checkout -b feature/amazing`)
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing`)
 5. Open Pull Request
+
+### 開発ガイドライン
+
+- コードスタイルは既存コードに準拠
+- 新機能には必ずテストを追加
+- コミットメッセージは日本語でも英語でも可
 
 ---
 
@@ -401,6 +431,8 @@ MIT License - 詳細は [LICENSE](LICENSE) を参照
 <div align="center">
 
 **企業の透明性と心理的安全性を両立する**
+
+Made with ❤️ by hera-16
 
 [🌟 Star this repo](https://github.com/hera-16/letteral) | [🐛 Report Bug](https://github.com/hera-16/letteral/issues) | [💡 Request Feature](https://github.com/hera-16/letteral/issues)
 
