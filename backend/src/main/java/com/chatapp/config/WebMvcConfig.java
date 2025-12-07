@@ -21,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private BoxAccessInterceptor boxAccessInterceptor;
 
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(@org.springframework.lang.NonNull InterceptorRegistry registry) {
         // ロール認可インターセプターを登録
         registry.addInterceptor(roleAuthorizationInterceptor)
             .addPathPatterns("/api/**")

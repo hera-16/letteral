@@ -29,7 +29,9 @@ public class RoleAuthorizationInterceptor implements HandlerInterceptor {
     private UserRoleRepository userRoleRepository;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@org.springframework.lang.NonNull HttpServletRequest request,
+                            @org.springframework.lang.NonNull HttpServletResponse response,
+                            @org.springframework.lang.NonNull Object handler) throws Exception {
         // ハンドラがメソッドでない場合はスキップ
         if (!(handler instanceof HandlerMethod)) {
             return true;

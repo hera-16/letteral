@@ -177,12 +177,18 @@ public class DataInitializer implements ApplicationRunner {
         User pm = createUser(tenant, "pm001", "pm@test-company.com", "中村七郎", "password");
         LOGGER.info("Created user: {} (プロジェクトマネージャー)", pm.getDisplayName());
 
-        // 一般ユーザー3人
+        // 一般ユーザー10人（各課に分散配置）
         User member1 = createUser(tenant, "member1", "member1@test-company.com", "小林八郎", "password");
         User member2 = createUser(tenant, "member2", "member2@test-company.com", "加藤九郎", "password");
         User member3 = createUser(tenant, "member3", "member3@test-company.com", "吉田十郎", "password");
-        LOGGER.info("Created users: {} (一般), {} (一般), {} (一般)",
-                    member1.getDisplayName(), member2.getDisplayName(), member3.getDisplayName());
+        User member4 = createUser(tenant, "member4", "member4@test-company.com", "山本十一郎", "password");
+        User member5 = createUser(tenant, "member5", "member5@test-company.com", "佐々木十二郎", "password");
+        User member6 = createUser(tenant, "member6", "member6@test-company.com", "木村十三郎", "password");
+        User member7 = createUser(tenant, "member7", "member7@test-company.com", "林十四郎", "password");
+        User member8 = createUser(tenant, "member8", "member8@test-company.com", "清水十五郎", "password");
+        User member9 = createUser(tenant, "member9", "member9@test-company.com", "山崎十六郎", "password");
+        User member10 = createUser(tenant, "member10", "member10@test-company.com", "森十七郎", "password");
+        LOGGER.info("Created 10 general users");
 
         // 4. 組織メンバーシップ作成
         // 社長 - 会社全体の管理者（プライマリ組織）
@@ -194,27 +200,76 @@ public class DataInitializer implements ApplicationRunner {
         createOrgMember(tenant, company, manager2, OrganizationRole.ADMIN_CORE, false);
         createOrgMember(tenant, dept2, manager2, OrganizationRole.ADMIN_CORE, true);
 
-        // 課長 - 各課の管理者（プライマリ組織）+ 会社にも所属
+        // 課長 - 各課の管理者（プライマリ組織）+ 親組織にも所属
         createOrgMember(tenant, company, chief1_1, OrganizationRole.ADMIN_LEAD, false);
+        createOrgMember(tenant, dept1, chief1_1, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section1_1, chief1_1, OrganizationRole.ADMIN_LEAD, true);
+
         createOrgMember(tenant, company, chief1_2, OrganizationRole.ADMIN_LEAD, false);
+        createOrgMember(tenant, dept1, chief1_2, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section1_2, chief1_2, OrganizationRole.ADMIN_LEAD, true);
+
         createOrgMember(tenant, company, chief2_1, OrganizationRole.ADMIN_LEAD, false);
+        createOrgMember(tenant, dept2, chief2_1, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section2_1, chief2_1, OrganizationRole.ADMIN_LEAD, true);
+
         createOrgMember(tenant, company, chief2_2, OrganizationRole.ADMIN_LEAD, false);
+        createOrgMember(tenant, dept2, chief2_2, OrganizationRole.ADMIN_LEAD, false);
         createOrgMember(tenant, section2_2, chief2_2, OrganizationRole.ADMIN_LEAD, true);
 
-        // PM - プロジェクトチームの管理者（プライマリ組織）+ 会社にも所属
+        // PM - プロジェクトチームの管理者（プライマリ組織）+ 親組織にも所属
         createOrgMember(tenant, company, pm, OrganizationRole.ADMIN_SUPER, false);
+        createOrgMember(tenant, dept1, pm, OrganizationRole.ADMIN_SUPER, false);
+        createOrgMember(tenant, section1_1, pm, OrganizationRole.ADMIN_SUPER, false);
         createOrgMember(tenant, projectTeam, pm, OrganizationRole.ADMIN_SUPER, true);
 
-        // 一般ユーザー - プロジェクトチームのメンバー（プライマリ組織）+ 会社にも所属
+        // 一般ユーザー - 各課とプロジェクトチームに分散配置
+        // プロジェクトチームメンバー (3人)
         createOrgMember(tenant, company, member1, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept1, member1, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section1_1, member1, OrganizationRole.MEMBER, false);
         createOrgMember(tenant, projectTeam, member1, OrganizationRole.MEMBER, true);
+
         createOrgMember(tenant, company, member2, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept1, member2, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section1_1, member2, OrganizationRole.MEMBER, false);
         createOrgMember(tenant, projectTeam, member2, OrganizationRole.MEMBER, true);
+
         createOrgMember(tenant, company, member3, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept1, member3, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section1_1, member3, OrganizationRole.MEMBER, false);
         createOrgMember(tenant, projectTeam, member3, OrganizationRole.MEMBER, true);
+
+        // 第1営業部 第2課メンバー (2人)
+        createOrgMember(tenant, company, member4, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept1, member4, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section1_2, member4, OrganizationRole.MEMBER, true);
+
+        createOrgMember(tenant, company, member5, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept1, member5, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section1_2, member5, OrganizationRole.MEMBER, true);
+
+        // 第2営業部 第1課メンバー (3人)
+        createOrgMember(tenant, company, member6, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept2, member6, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section2_1, member6, OrganizationRole.MEMBER, true);
+
+        createOrgMember(tenant, company, member7, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept2, member7, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section2_1, member7, OrganizationRole.MEMBER, true);
+
+        createOrgMember(tenant, company, member8, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept2, member8, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section2_1, member8, OrganizationRole.MEMBER, true);
+
+        // 第2営業部 第2課メンバー (2人)
+        createOrgMember(tenant, company, member9, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept2, member9, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section2_2, member9, OrganizationRole.MEMBER, true);
+
+        createOrgMember(tenant, company, member10, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, dept2, member10, OrganizationRole.MEMBER, false);
+        createOrgMember(tenant, section2_2, member10, OrganizationRole.MEMBER, true);
 
         LOGGER.info("Test data creation completed successfully!");
     }
