@@ -3,7 +3,6 @@ package com.chatapp.controller;
 import com.chatapp.dto.ReportRequestDTO;
 import com.chatapp.model.*;
 import com.chatapp.model.enums.TenantStatus;
-import com.chatapp.model.enums.Visibility;
 import com.chatapp.repository.*;
 import com.chatapp.security.JwtTokenProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,7 +127,6 @@ public class ReportControllerIntegrationTest {
             post.setAuthor(adminUser);
             post.setContent("Test post " + i);
             post.setPostDate(LocalDate.now().minusDays(i));
-            post.setVisibility(Visibility.COMPANY);
             post.setCreatedAt(LocalDateTime.now().minusDays(i));
             progressPostRepository.save(post);
         }

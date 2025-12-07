@@ -2,7 +2,6 @@ package com.chatapp.service;
 
 import com.chatapp.model.*;
 import com.chatapp.model.enums.PostType;
-import com.chatapp.model.enums.Visibility;
 import com.chatapp.repository.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -80,7 +79,6 @@ class ExportServiceTest {
         testProgressPost.setTitle("Test Progress");
         testProgressPost.setContent("Test progress content");
         testProgressPost.setPostType(PostType.PROGRESS);
-        testProgressPost.setVisibility(Visibility.ORGANIZATION);
         testProgressPost.setPostDate(LocalDate.now());
         testProgressPost.setAchievementRate(75);
         testProgressPost.setBlockers("No blockers");

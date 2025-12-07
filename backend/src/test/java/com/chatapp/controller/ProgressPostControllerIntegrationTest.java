@@ -3,7 +3,6 @@ package com.chatapp.controller;
 import com.chatapp.dto.ProgressPostDTO;
 import com.chatapp.model.*;
 import com.chatapp.model.enums.TenantStatus;
-import com.chatapp.model.enums.Visibility;
 import com.chatapp.repository.*;
 import com.chatapp.security.JwtTokenProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -138,7 +137,6 @@ public class ProgressPostControllerIntegrationTest {
         ProgressPostDTO postDTO = new ProgressPostDTO();
         postDTO.setContent("Today I completed the user authentication feature");
         postDTO.setCategory("achievement");
-        postDTO.setVisibility("public");
 
         mockMvc.perform(post("/api/progress")
                         .header("Authorization", authToken)
@@ -147,7 +145,6 @@ public class ProgressPostControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("Today I completed the user authentication feature"))
                 .andExpect(jsonPath("$.category").value("achievement"))
-                .andExpect(jsonPath("$.visibility").value("public"))
                 .andExpect(jsonPath("$.userId").value(testUser.getId()));
     }
 
@@ -160,7 +157,6 @@ public class ProgressPostControllerIntegrationTest {
         post1.setAuthor(testUser);
         post1.setContent("Post 1");
         post1.setPostDate(LocalDate.now());
-        post1.setVisibility(Visibility.ORGANIZATION);
         post1.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post1);
 
@@ -170,7 +166,6 @@ public class ProgressPostControllerIntegrationTest {
         post2.setAuthor(testUser);
         post2.setContent("Post 2");
         post2.setPostDate(LocalDate.now());
-        post2.setVisibility(Visibility.ORGANIZATION);
         post2.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post2);
 
@@ -190,7 +185,6 @@ public class ProgressPostControllerIntegrationTest {
         post.setAuthor(testUser);
         post.setContent("Tenant post");
         post.setPostDate(LocalDate.now());
-        post.setVisibility(Visibility.COMPANY);
         post.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post);
 
