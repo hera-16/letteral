@@ -8,5 +8,6 @@ public enum PostType {
     GOAL,        // 目標設定
     BLOCKER,     // ブロッカー報告
     LEARNING,    // 学び・気づき
-    REFLECTION   // 振り返り
+    REFLECTION,  // 振り返り
+    QUESTION     // 質問
 }

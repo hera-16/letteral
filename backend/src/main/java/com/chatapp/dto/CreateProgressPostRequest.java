@@ -1,7 +1,6 @@
 package com.chatapp.dto;
 
 import com.chatapp.model.enums.PostType;
-import com.chatapp.model.enums.Visibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -35,8 +34,6 @@ public class CreateProgressPostRequest {
     private String learnings;
 
     private String nextAction;
-
-    private Visibility visibility = Visibility.ORGANIZATION;
 
     private Long targetOrganizationId;
 
@@ -124,14 +121,6 @@ public class CreateProgressPostRequest {
 
     public void setNextAction(String nextAction) {
         this.nextAction = nextAction;
-    }
-
-    public Visibility getVisibility() {
-        return visibility;
-    }
-
-    public void setVisibility(Visibility visibility) {
-        this.visibility = visibility;
     }
 
     public Long getTargetOrganizationId() {

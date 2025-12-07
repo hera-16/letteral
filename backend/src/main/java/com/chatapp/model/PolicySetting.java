@@ -1,7 +1,6 @@
 package com.chatapp.model;
 
 import com.chatapp.model.enums.AnonymityLevel;
-import com.chatapp.model.enums.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -41,10 +40,6 @@ public class PolicySetting {
 
     @Column(name = "allow_real_name", nullable = false)
     private Boolean allowRealName = true;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "default_visibility", nullable = false, length = 20)
-    private Visibility defaultVisibility = Visibility.ORGANIZATION;
 
     @Column(name = "allow_company_wide", nullable = false)
     private Boolean allowCompanyWide = false;
@@ -142,14 +137,6 @@ public class PolicySetting {
 
     public void setAllowRealName(Boolean allowRealName) {
         this.allowRealName = allowRealName;
-    }
-
-    public Visibility getDefaultVisibility() {
-        return defaultVisibility;
-    }
-
-    public void setDefaultVisibility(Visibility defaultVisibility) {
-        this.defaultVisibility = defaultVisibility;
     }
 
     public Boolean getAllowCompanyWide() {

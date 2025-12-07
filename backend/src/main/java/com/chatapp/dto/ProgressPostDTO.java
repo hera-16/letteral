@@ -16,8 +16,6 @@ public class ProgressPostDTO {
 
     private String category;
 
-    private String visibility;
-
     private Long tenantId;
 
     private Long userId;
@@ -51,14 +49,6 @@ public class ProgressPostDTO {
 
     public void setCategory(String category) {
         this.category = category;
-    }
-
-    public String getVisibility() {
-        return visibility;
-    }
-
-    public void setVisibility(String visibility) {
-        this.visibility = visibility;
     }
 
     public Long getTenantId() {

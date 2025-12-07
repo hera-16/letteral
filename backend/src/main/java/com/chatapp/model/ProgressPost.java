@@ -1,7 +1,6 @@
 package com.chatapp.model;
 
 import com.chatapp.model.enums.PostType;
-import com.chatapp.model.enums.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -56,6 +55,9 @@ public class ProgressPost {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+    @Column(name = "anonymous_number", nullable = false)
+    private Integer anonymousNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type", nullable = false, length = 20)
     private PostType postType = PostType.PROGRESS;
@@ -80,10 +82,6 @@ public class ProgressPost {
     @Column(name = "next_action", columnDefinition = "TEXT")
     private String nextAction;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Visibility visibility = Visibility.ORGANIZATION;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_organization_id")
     private Organization targetOrganization;
@@ -98,9 +96,6 @@ public class ProgressPost {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSON")
     private List<Map<String, Object>> attachments;
-
-    @Column(name = "reaction_count", nullable = false)
-    private Integer reactionCount = 0;
 
     @Column(name = "comment_count", nullable = false)
     private Integer commentCount = 0;
@@ -223,14 +218,6 @@ public class ProgressPost {
         this.nextAction = nextAction;
     }
 
-    public Visibility getVisibility() {
-        return visibility;
-    }
-
-    public void setVisibility(Visibility visibility) {
-        this.visibility = visibility;
-    }
-
     public Organization getTargetOrganization() {
         return targetOrganization;
     }
@@ -261,14 +248,6 @@ public class ProgressPost {
 
     public void setAttachments(List<Map<String, Object>> attachments) {
         this.attachments = attachments;
-    }
-
-    public Integer getReactionCount() {
-        return reactionCount;
-    }
-
-    public void setReactionCount(Integer reactionCount) {
-        this.reactionCount = reactionCount;
     }
 
     public Integer getCommentCount() {
@@ -362,5 +341,23 @@ public class ProgressPost {
      */
     public boolean isRootPost() {
         return !isReplyPost();
+    }
+
+    public Integer getAnonymousNumber() {
+        return anonymousNumber;
+    }
+
+    public void setAnonymousNumber(Integer anonymousNumber) {
+        this.anonymousNumber = anonymousNumber;
+    }
+
+    /**
+     * 匿名番号を#0001形式で取得
+     */
+    public String getFormattedAnonymousNumber() {
+        if (anonymousNumber == null) {
+            return "#0000";
+        }
+        return String.format("#%04d", anonymousNumber);
     }
 }

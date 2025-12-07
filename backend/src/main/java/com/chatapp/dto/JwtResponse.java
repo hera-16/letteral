@@ -7,13 +7,17 @@ public class JwtResponse {
     private String username;
     private String email;
     private String displayName;
-    
-    public JwtResponse(String accessToken, Long id, String username, String email, String displayName) {
+    private Long tenantId;
+    private Long primaryOrganizationId;
+
+    public JwtResponse(String accessToken, Long id, String username, String email, String displayName, Long tenantId, Long primaryOrganizationId) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
         this.email = email;
         this.displayName = displayName;
+        this.tenantId = tenantId;
+        this.primaryOrganizationId = primaryOrganizationId;
     }
     
     // Getters and Setters
@@ -60,8 +64,24 @@ public class JwtResponse {
     public String getDisplayName() {
         return displayName;
     }
-    
+
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public Long getPrimaryOrganizationId() {
+        return primaryOrganizationId;
+    }
+
+    public void setPrimaryOrganizationId(Long primaryOrganizationId) {
+        this.primaryOrganizationId = primaryOrganizationId;
     }
 }
