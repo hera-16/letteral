@@ -126,7 +126,9 @@
       "Bash(\"..\\mvnw.cmd\" clean compile)",
       "Bash(\"..\\mvnw.cmd\" flyway:repair)",
       "Bash(..mvnw.cmd flyway:repair)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(ls:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
