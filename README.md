@@ -6,6 +6,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen?logo=spring)](https://spring.io/projects/spring-boot)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://openjdk.org/)
+[![CI Tests](https://github.com/hera-16/letteral/actions/workflows/ci.yml/badge.svg)](https://github.com/hera-16/letteral/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -410,6 +411,83 @@ npx kill-port 3000
 - コードスタイルは既存コードに準拠
 - 新機能には必ずテストを追加
 - コミットメッセージは日本語でも英語でも可
+
+---
+
+## 🧪 テスト
+
+### テストの種類
+
+このプロジェクトでは3種類のテストを実装しています：
+
+#### 1. ユニットテスト
+
+**バックエンド（JUnit）**
+```bash
+cd backend
+../mvnw test
+```
+
+**フロントエンド（Jest）**
+```bash
+npm test
+npm run test:coverage  # カバレッジレポート付き
+npm run test:watch     # ウォッチモード
+```
+
+#### 2. 統合テスト
+
+バックエンドの統合テストはMySQLデータベースを使用します：
+
+```bash
+cd backend
+../mvnw verify -P integration-tests
+```
+
+#### 3. E2Eテスト（Playwright）
+
+エンドツーエンドテストはブラウザを使用してアプリケーション全体をテストします：
+
+```bash
+# バックエンドとフロントエンドを起動した状態で
+npm run test:e2e
+
+# UIモードで実行（デバッグ用）
+npm run test:e2e:ui
+
+# ヘッドモードで実行（ブラウザを表示）
+npm run test:e2e:headed
+```
+
+### CI/CDでのテスト自動実行
+
+GitHub Actionsでテストが自動実行されます：
+
+- **PR時**: 軽量なユニットテストとLintチェック（高速）
+- **main/developブランチへのpush時**: 全テストスイート実行
+  - バックエンドユニットテスト
+  - バックエンド統合テスト
+  - フロントエンドユニットテスト
+  - E2Eテスト
+
+ワークフローファイル：
+- [.github/workflows/ci.yml](.github/workflows/ci.yml) - 包括的なテストスイート
+- [.github/workflows/pr-quick-check.yml](.github/workflows/pr-quick-check.yml) - PR向け高速チェック
+
+### テストカバレッジ
+
+テストカバレッジレポートは以下のコマンドで生成できます：
+
+```bash
+# バックエンド
+cd backend
+../mvnw jacoco:report
+# レポート: backend/target/site/jacoco/index.html
+
+# フロントエンド
+npm run test:coverage
+# レポート: coverage/lcov-report/index.html
+```
 
 ---
 

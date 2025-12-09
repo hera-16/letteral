@@ -1,0 +1,96 @@
+name: PR Quick Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '18'
+
+jobs:
+  quick-checks:
+    name: Quick Checks (Lint & Unit Tests)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run frontend linter
+        run: npm run lint
+
+      - name: Run backend unit tests (fast)
+        run: |
+          cd backend
+          chmod +x ../mvnw
+          ../mvnw test -Dtest=*ServiceTest
+        env:
+          SPRING_PROFILES_ACTIVE: test
+
+      - name: Run frontend unit tests
+        run: npm test -- --passWithNoTests
+
+      - name: Comment PR with results
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Quick Check Results')
+            );
+
+            const status = '${{ job.status }}';
+            const statusEmoji = status === 'success' ? '✅' : '❌';
+
+            const output = `## ${statusEmoji} Quick Check Results
+
+            **Status**: ${status}
+            **Commit**: \`${{ github.sha }}\`
+
+            ### Test Summary
+            - Frontend Lint: ${statusEmoji}
+            - Backend Unit Tests: ${statusEmoji}
+            - Frontend Unit Tests: ${statusEmoji}
+
+            ℹ️ Full test suite (integration & E2E tests) will run on the main branch.
+            `;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            }
