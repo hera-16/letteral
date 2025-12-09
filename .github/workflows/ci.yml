@@ -32,8 +32,8 @@ jobs:
       - name: Run unit tests
         run: |
           cd backend
-          chmod +x ../mvnw
-          ../mvnw clean test
+          chmod +x mvnw
+          ./mvnw clean test
         env:
           SPRING_PROFILES_ACTIVE: test
 
@@ -41,7 +41,7 @@ jobs:
         if: always()
         run: |
           cd backend
-          ../mvnw jacoco:report
+          ./mvnw jacoco:report
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -104,8 +104,8 @@ jobs:
       - name: Run integration tests
         run: |
           cd backend
-          chmod +x ../mvnw
-          ../mvnw clean verify -P integration-tests
+          chmod +x mvnw
+          ./mvnw clean verify -P integration-tests
         env:
           SPRING_PROFILES_ACTIVE: test
           DB_HOST: localhost
@@ -222,8 +222,8 @@ jobs:
       - name: Start backend server
         run: |
           cd backend
-          chmod +x ../mvnw
-          nohup ../mvnw spring-boot:run > backend.log 2>&1 &
+          chmod +x mvnw
+          nohup ./mvnw spring-boot:run > backend.log 2>&1 &
           echo $! > backend.pid
         env:
           SPRING_PROFILES_ACTIVE: test
