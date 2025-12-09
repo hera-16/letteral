@@ -84,11 +84,11 @@ export default function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps)
               <input
                 id="username"
                 name="username"
-                type="text"
+                type="email"
                 required
                 className="relative block w-full px-3 py-2 rounded-t-md focus:outline-none focus:z-10 sm:text-sm"
                 style={{ backgroundColor: '#393E46', border: '1px solid #00ADB5', color: '#EEEEEE' }}
-                placeholder="ユーザー名"
+                placeholder="メールアドレス"
                 value={credentials.username}
                 onChange={handleChange}
               />

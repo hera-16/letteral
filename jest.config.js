@@ -22,6 +22,27 @@ const customJestConfig = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/backend/',
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/backend/',
+    '/e2e/',
+  ],
+  watchPathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/backend/',
+  ],
+  maxWorkers: 1,
+  haste: {
+    enableSymlinks: false,
+    retainAllFiles: false,
+  },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

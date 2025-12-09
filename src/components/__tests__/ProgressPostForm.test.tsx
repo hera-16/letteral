@@ -39,7 +39,7 @@ describe('ProgressPostForm', () => {
     render(<ProgressPostForm {...mockProps} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('form')).toBeInTheDocument();
+      expect(screen.getByText(/新しい投稿を作成/i)).toBeInTheDocument();
     });
   });
 
@@ -50,8 +50,13 @@ describe('ProgressPostForm', () => {
       expect(organizationService.getUserAccessibleOrganizations).toHaveBeenCalled();
     });
 
-    const submitButton = screen.getByRole('button', { name: /投稿/i });
-    fireEvent.click(submitButton);
+    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や目標を入力/i);
+    fireEvent.change(contentTextarea, {
+      target: { value: '   ' }, // 空白のみ
+    });
+
+    const form = contentTextarea.closest('form');
+    fireEvent.submit(form!);
 
     await waitFor(() => {
       expect(screen.getByText(/内容を入力してください/i)).toBeInTheDocument();
@@ -73,13 +78,13 @@ describe('ProgressPostForm', () => {
     });
 
     // 内容を入力
-    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や達成したこと/i);
+    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や目標を入力/i);
     fireEvent.change(contentTextarea, {
       target: { value: 'Test post content' },
     });
 
     // 送信
-    const submitButton = screen.getByRole('button', { name: /投稿/i });
+    const submitButton = screen.getByRole('button', { name: /投稿する/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -107,19 +112,19 @@ describe('ProgressPostForm', () => {
     });
 
     // 内容を入力
-    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や達成したこと/i);
+    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や目標を入力/i);
     fireEvent.change(contentTextarea, {
       target: { value: 'Test post content' },
     });
 
     // タグを入力
-    const tagsInput = screen.getByPlaceholderText(/タグをカンマ区切りで入力/i);
+    const tagsInput = screen.getByPlaceholderText(/例: React, バックエンド, 設計/i);
     fireEvent.change(tagsInput, {
       target: { value: 'frontend, react, testing' },
     });
 
     // 送信
-    const submitButton = screen.getByRole('button', { name: /投稿/i });
+    const submitButton = screen.getByRole('button', { name: /投稿する/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -144,18 +149,18 @@ describe('ProgressPostForm', () => {
       expect(organizationService.getUserAccessibleOrganizations).toHaveBeenCalled();
     });
 
-    // 投稿タイプを質問に変更
-    const questionRadio = screen.getByLabelText(/質問/i);
-    fireEvent.click(questionRadio);
+    // 投稿タイプを質問に変更（ボタンとして探す）
+    const questionButton = screen.getByRole('button', { name: /❓/});
+    fireEvent.click(questionButton);
 
     // 内容を入力
-    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や達成したこと/i);
+    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や目標を入力/i);
     fireEvent.change(contentTextarea, {
       target: { value: 'Question post content' },
     });
 
     // 送信
-    const submitButton = screen.getByRole('button', { name: /投稿/i });
+    const submitButton = screen.getByRole('button', { name: /投稿する/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -181,13 +186,13 @@ describe('ProgressPostForm', () => {
     });
 
     // 内容を入力
-    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や達成したこと/i);
+    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や目標を入力/i);
     fireEvent.change(contentTextarea, {
       target: { value: 'Test post content' },
     });
 
     // 送信
-    const submitButton = screen.getByRole('button', { name: /投稿/i });
+    const submitButton = screen.getByRole('button', { name: /投稿する/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -234,13 +239,13 @@ describe('ProgressPostForm', () => {
     });
 
     // 内容を入力
-    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や達成したこと/i);
+    const contentTextarea = screen.getByPlaceholderText(/今日の進捗や目標を入力/i);
     fireEvent.change(contentTextarea, {
       target: { value: 'Test post content' },
     });
 
     // 送信
-    const submitButton = screen.getByRole('button', { name: /投稿/i });
+    const submitButton = screen.getByRole('button', { name: /投稿する/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
