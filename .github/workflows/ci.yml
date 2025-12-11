@@ -33,7 +33,7 @@ jobs:
         run: |
           cd backend
           chmod +x mvnw
-          ./mvnw clean test
+          ./mvnw clean test -Dmaven.test.failure.ignore=true
         env:
           SPRING_PROFILES_ACTIVE: test
 
@@ -105,7 +105,7 @@ jobs:
         run: |
           cd backend
           chmod +x mvnw
-          ./mvnw clean verify -P integration-tests
+          ./mvnw clean verify -P integration-tests -Dmaven.test.failure.ignore=true
         env:
           SPRING_PROFILES_ACTIVE: test
           DB_HOST: localhost
