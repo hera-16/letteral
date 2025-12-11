@@ -248,6 +248,28 @@ jobs:
           cat backend/backend.log || true
           exit 1
 
+      - name: Start frontend server
+        run: |
+          nohup npm run start > frontend.log 2>&1 &
+          echo $! > frontend.pid
+        env:
+          PORT: 3000
+
+      - name: Wait for frontend to be ready
+        run: |
+          echo "Waiting for frontend to start..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "Frontend is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: Frontend not ready yet..."
+            sleep 2
+          done
+          echo "Frontend failed to start"
+          cat frontend.log || true
+          exit 1
+
       - name: Run E2E tests
         run: npm run test:e2e
         env:
@@ -261,11 +283,14 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
-      - name: Stop backend server
+      - name: Stop servers
         if: always()
         run: |
           if [ -f backend/backend.pid ]; then
             kill $(cat backend/backend.pid) || true
+          fi
+          if [ -f frontend.pid ]; then
+            kill $(cat frontend.pid) || true
           fi
 
   # ========================================
