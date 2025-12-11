@@ -97,6 +97,7 @@ public class ProgressPostControllerIntegrationTest {
         testGroup = new Group();
         testGroup.setName("Test Group");
         testGroup.setGroupType(Group.GroupType.PUBLIC_TOPIC);
+        testGroup.setTenantId(testTenant.getId()); // Required field
         testGroup.setCreatedAt(LocalDateTime.now());
 
         // Create test user
@@ -157,6 +158,7 @@ public class ProgressPostControllerIntegrationTest {
         post1.setAuthor(testUser);
         post1.setContent("Post 1");
         post1.setPostDate(LocalDate.now());
+        post1.setAnonymousNumber(1); // Required field
         post1.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post1);
 
@@ -166,6 +168,7 @@ public class ProgressPostControllerIntegrationTest {
         post2.setAuthor(testUser);
         post2.setContent("Post 2");
         post2.setPostDate(LocalDate.now());
+        post2.setAnonymousNumber(1); // Required field
         post2.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post2);
 
@@ -185,6 +188,7 @@ public class ProgressPostControllerIntegrationTest {
         post.setAuthor(testUser);
         post.setContent("Tenant post");
         post.setPostDate(LocalDate.now());
+        post.setAnonymousNumber(1); // Required field
         post.setCreatedAt(LocalDateTime.now());
         progressPostRepository.save(post);
 

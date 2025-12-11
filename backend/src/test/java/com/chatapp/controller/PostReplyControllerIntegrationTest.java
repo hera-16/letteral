@@ -145,6 +145,7 @@ public class PostReplyControllerIntegrationTest {
         testPost.setTitle("Test Post");
         testPost.setContent("Test progress post content");
         testPost.setPostDate(LocalDate.now());
+        testPost.setAnonymousNumber(1); // Required field
         testPost.setCreatedAt(LocalDateTime.now());
         testPost = progressPostRepository.save(testPost);
 

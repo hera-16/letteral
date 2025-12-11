@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProgressPostForm from '../ProgressPostForm';
 import { progressPostService, organizationService } from '@/services/api';
@@ -253,7 +253,9 @@ describe('ProgressPostForm', () => {
     });
 
     // タイマーを進めてフォームのリセットを待つ
-    jest.advanceTimersByTime(1500);
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
 
     await waitFor(() => {
       expect(mockProps.onPostCreated).toHaveBeenCalled();

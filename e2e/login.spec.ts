@@ -14,7 +14,8 @@ test.describe('Login Flow', () => {
     await page.fill('input[type="password"]', 'wrongpassword');
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=ログインに失敗しました')).toBeVisible();
+    // APIから返される実際のエラーメッセージを待つ
+    await expect(page.locator('text=ユーザー名またはパスワードが正しくありません')).toBeVisible({ timeout: 10000 });
   });
 
   test('should successfully login with valid credentials', async ({ page }) => {

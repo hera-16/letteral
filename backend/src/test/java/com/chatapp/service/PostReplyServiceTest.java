@@ -97,8 +97,6 @@ class PostReplyServiceTest {
         when(progressPostRepository.findById(1L)).thenReturn(Optional.of(testPost));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(postReplyRepository.save(any(PostReply.class))).thenReturn(testReply);
-        when(organizationPermissionService.getUserRole(testUser, 1L))
-                .thenReturn(Optional.empty());
 
         // Act
         PostReplyDTO result = postReplyService.createReply(1L, request);
@@ -221,8 +219,6 @@ class PostReplyServiceTest {
         when(progressPostRepository.findById(1L)).thenReturn(Optional.of(testPost));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(postReplyRepository.findByPostIdOrderByCreatedAtAsc(1L)).thenReturn(replies);
-        when(organizationPermissionService.getUserRole(testUser, 1L))
-                .thenReturn(Optional.empty());
 
         // Act
         List<PostReplyDTO> result = postReplyService.getRepliesByPostId(1L, 1L);

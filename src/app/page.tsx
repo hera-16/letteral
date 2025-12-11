@@ -117,7 +117,7 @@ export default function Home() {
       {/* ヘッダー */}
       <header className="shadow" style={{ backgroundColor: '#393E46' }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>チャットアプリ</h1>
+          <h1 className="text-2xl font-bold" style={{ color: '#EEEEEE' }}>Letteral</h1>
           <div className="flex items-center gap-4">
             <span style={{ color: '#EEEEEE' }}>
               {user.displayName || user.username} さん
