@@ -32,8 +32,7 @@ jobs:
       - name: Run unit tests
         run: |
           cd backend
-          chmod +x mvnw
-          ./mvnw clean test -Dmaven.test.failure.ignore=true
+          mvn clean test -Dmaven.test.failure.ignore=true
         env:
           SPRING_PROFILES_ACTIVE: test
 
@@ -41,7 +40,7 @@ jobs:
         if: always()
         run: |
           cd backend
-          ./mvnw jacoco:report
+          mvn jacoco:report
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -104,8 +103,7 @@ jobs:
       - name: Run integration tests
         run: |
           cd backend
-          chmod +x mvnw
-          ./mvnw clean verify -P integration-tests -Dmaven.test.failure.ignore=true
+          mvn clean verify -P integration-tests -Dmaven.test.failure.ignore=true
         env:
           SPRING_PROFILES_ACTIVE: test
           DB_HOST: localhost
@@ -222,8 +220,7 @@ jobs:
       - name: Start backend server
         run: |
           cd backend
-          chmod +x mvnw
-          nohup ./mvnw spring-boot:run > backend.log 2>&1 &
+          nohup mvn spring-boot:run > backend.log 2>&1 &
           echo $! > backend.pid
         env:
           SPRING_PROFILES_ACTIVE: test
