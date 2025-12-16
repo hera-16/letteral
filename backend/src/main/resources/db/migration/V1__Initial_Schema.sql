@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS groups_table (
 
 CREATE UNIQUE INDEX uk_invite_code ON groups_table(invite_code);
 CREATE INDEX idx_group_type ON groups_table(group_type);
-CREATE INDEX idx_creator ON groups_table(creator_id);
-CREATE INDEX idx_created_at ON groups_table(created_at);
+CREATE INDEX idx_groups_creator ON groups_table(creator_id);
+CREATE INDEX idx_groups_created_at ON groups_table(created_at);
 
 -- グループメンバーテーブル
 CREATE TABLE IF NOT EXISTS group_members (
@@ -83,11 +83,11 @@ CREATE TABLE IF NOT EXISTS topics (
     FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_category ON topics(category);
-CREATE INDEX idx_creator ON topics(creator_id);
-CREATE INDEX idx_is_active ON topics(is_active);
-CREATE INDEX idx_created_at ON topics(created_at);
-CREATE INDEX idx_category_active ON topics(category, is_active);
+CREATE INDEX idx_topics_category ON topics(category);
+CREATE INDEX idx_topics_creator ON topics(creator_id);
+CREATE INDEX idx_topics_is_active ON topics(is_active);
+CREATE INDEX idx_topics_created_at ON topics(created_at);
+CREATE INDEX idx_topics_category_active ON topics(category, is_active);
 
 -- チャットメッセージテーブル
 CREATE TABLE IF NOT EXISTS chat_messages (
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     CHECK (message_type IN ('CHAT', 'JOIN', 'LEAVE'))
 );
 
-CREATE INDEX idx_room ON chat_messages(room_id);
-CREATE INDEX idx_sender ON chat_messages(sender_id);
-CREATE INDEX idx_created_at ON chat_messages(created_at);
-CREATE INDEX idx_room_created ON chat_messages(room_id, created_at);
+CREATE INDEX idx_chat_messages_room ON chat_messages(room_id);
+CREATE INDEX idx_chat_messages_sender ON chat_messages(sender_id);
+CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);
+CREATE INDEX idx_chat_messages_room_created ON chat_messages(room_id, created_at);
