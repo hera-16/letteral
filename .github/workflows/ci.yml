@@ -1,5 +1,9 @@
 name: CI - Comprehensive Test Suite
 
+permissions:
+  checks: write
+  contents: read
+
 on:
   push:
     branches: [ main, develop ]
