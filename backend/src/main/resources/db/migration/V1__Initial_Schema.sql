@@ -9,10 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     display_name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP NULL,
-    INDEX idx_username (username),
-    INDEX idx_email (email)
+    last_login TIMESTAMP NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_username ON users(username);
+CREATE INDEX idx_email ON users(email);
 
 -- フレンド関係テーブル
 CREATE TABLE IF NOT EXISTS friends (
@@ -24,13 +25,14 @@ CREATE TABLE IF NOT EXISTS friends (
     responded_at TIMESTAMP NULL,
     FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_friendship (requester_id, addressee_id),
-    INDEX idx_requester (requester_id),
-    INDEX idx_addressee (addressee_id),
-    INDEX idx_status (status),
     CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'BLOCKED')),
     CHECK (requester_id != addressee_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE UNIQUE INDEX uk_friendship ON friends(requester_id, addressee_id);
+CREATE INDEX idx_requester ON friends(requester_id);
+CREATE INDEX idx_addressee ON friends(addressee_id);
+CREATE INDEX idx_status ON friends(status);
 
 -- グループテーブル
 CREATE TABLE IF NOT EXISTS groups_table (
@@ -43,13 +45,14 @@ CREATE TABLE IF NOT EXISTS groups_table (
     creator_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_invite_code (invite_code),
-    INDEX idx_group_type (group_type),
-    INDEX idx_creator (creator_id),
-    INDEX idx_created_at (created_at),
     CHECK (group_type IN ('INVITE_ONLY', 'PUBLIC_TOPIC')),
     CHECK (max_members > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE UNIQUE INDEX uk_invite_code ON groups_table(invite_code);
+CREATE INDEX idx_group_type ON groups_table(group_type);
+CREATE INDEX idx_creator ON groups_table(creator_id);
+CREATE INDEX idx_created_at ON groups_table(created_at);
 
 -- グループメンバーテーブル
 CREATE TABLE IF NOT EXISTS group_members (
@@ -60,12 +63,13 @@ CREATE TABLE IF NOT EXISTS group_members (
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES groups_table(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_group_member (group_id, user_id),
-    INDEX idx_group (group_id),
-    INDEX idx_user (user_id),
-    INDEX idx_role (role),
     CHECK (role IN ('ADMIN', 'MEMBER'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE UNIQUE INDEX uk_group_member ON group_members(group_id, user_id);
+CREATE INDEX idx_group ON group_members(group_id);
+CREATE INDEX idx_user ON group_members(user_id);
+CREATE INDEX idx_role ON group_members(role);
 
 -- トピックテーブル
 CREATE TABLE IF NOT EXISTS topics (
@@ -76,13 +80,14 @@ CREATE TABLE IF NOT EXISTS topics (
     creator_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_category (category),
-    INDEX idx_creator (creator_id),
-    INDEX idx_is_active (is_active),
-    INDEX idx_created_at (created_at),
-    INDEX idx_category_active (category, is_active)
+    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_category ON topics(category);
+CREATE INDEX idx_creator ON topics(creator_id);
+CREATE INDEX idx_is_active ON topics(is_active);
+CREATE INDEX idx_created_at ON topics(created_at);
+CREATE INDEX idx_category_active ON topics(category, is_active);
 
 -- チャットメッセージテーブル
 CREATE TABLE IF NOT EXISTS chat_messages (
@@ -93,9 +98,10 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     message_type VARCHAR(20) NOT NULL DEFAULT 'CHAT',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_room (room_id),
-    INDEX idx_sender (sender_id),
-    INDEX idx_created_at (created_at),
-    INDEX idx_room_created (room_id, created_at),
     CHECK (message_type IN ('CHAT', 'JOIN', 'LEAVE'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_room ON chat_messages(room_id);
+CREATE INDEX idx_sender ON chat_messages(sender_id);
+CREATE INDEX idx_created_at ON chat_messages(created_at);
+CREATE INDEX idx_room_created ON chat_messages(room_id, created_at);
