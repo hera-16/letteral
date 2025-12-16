@@ -4,6 +4,7 @@ import com.chatapp.dto.OrganizationTreeNode;
 import com.chatapp.model.Organization;
 import com.chatapp.model.OrganizationMember;
 import com.chatapp.model.Tenant;
+import com.chatapp.model.User;
 import com.chatapp.repository.OrganizationMemberRepository;
 import com.chatapp.repository.UserRepository;
 import com.chatapp.security.Permission;
@@ -231,17 +232,28 @@ public class OrganizationController {
     /**
      * ユーザーが所属する組織一覧を取得
      * ユーザーが投稿可能な組織を返す
+     * CEO/SUPER_ADMINの場合はテナント内の全組織を返す
      */
     @GetMapping("/user/{userId}/accessible")
     public ResponseEntity<List<Organization>> getUserAccessibleOrganizations(@PathVariable Long userId) {
         log.info("Fetching accessible organizations for user: {}", userId);
 
-        // ユーザーの存在確認
-        if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found: " + userId);
+        // ユーザーの存在確認と取得
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        // CEO/SUPER_ADMIN権限チェック（全組織を返す）
+        String userRole = user.getRole();
+        log.info("User {} role: '{}' (comparing with TENANT_ADMIN and SUPER_ADMIN)", userId, userRole);
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            log.info("User {} is TENANT_ADMIN/SUPER_ADMIN - returning all organizations in tenant", userId);
+            Tenant tenant = tenantService.getTenantById(user.getTenantId());
+            List<Organization> allOrganizations = organizationService.getOrganizationsByTenant(tenant);
+            log.info("Found {} organizations for TENANT_ADMIN/SUPER_ADMIN user {}", allOrganizations.size(), userId);
+            return ResponseEntity.ok(allOrganizations);
         }
 
-        // ユーザーが所属する組織を取得
+        // 通常ユーザー: 所属する組織を取得
         List<Organization> organizations = organizationMemberRepository.findByUserId(userId)
                 .stream()
                 .map(OrganizationMember::getOrganization)

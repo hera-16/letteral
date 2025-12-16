@@ -30,6 +30,12 @@ public class OrganizationPermissionService {
      * ユーザーが組織内で特定の権限を持っているかチェック
      */
     public boolean hasPermission(User user, Long organizationId, OrganizationRole requiredRole) {
+        // CEO/SUPER_ADMIN権限チェック（全権限を持つ）
+        String userRole = user.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            return true;
+        }
+
         Optional<OrganizationMember> memberOpt = organizationMemberRepository
                 .findByUserIdAndOrganizationId(user.getId(), organizationId);
 
@@ -45,6 +51,12 @@ public class OrganizationPermissionService {
      * ユーザーが特定の役割をメンバーに付与できるかチェック
      */
     public boolean canAssignRole(User assigner, Long organizationId, OrganizationRole targetRole) {
+        // CEO/SUPER_ADMIN権限チェック（全役割を付与可能）
+        String userRole = assigner.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            return true;
+        }
+
         Optional<OrganizationMember> assignerMemberOpt = organizationMemberRepository
                 .findByUserIdAndOrganizationId(assigner.getId(), organizationId);
 
@@ -84,6 +96,12 @@ public class OrganizationPermissionService {
      * ユーザーが組織内の特定メンバーを管理できるかチェック
      */
     public boolean canManageMember(User manager, Long organizationId, Long targetUserId) {
+        // CEO/SUPER_ADMIN権限チェック（全メンバーを管理可能）
+        String userRole = manager.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            return true;
+        }
+
         Optional<OrganizationMember> managerMemberOpt = organizationMemberRepository
                 .findByUserIdAndOrganizationId(manager.getId(), organizationId);
         Optional<OrganizationMember> targetMemberOpt = organizationMemberRepository
@@ -123,17 +141,11 @@ public class OrganizationPermissionService {
      * - 組織のメンバーである場合
      * - 親組織の管理者（ADMIN_SUPER以上）である場合
      * - ADMIN_CORE/ADMIN_ROOTの場合（テナント全体を管理）
+     * - TENANT_ADMIN/SUPER_ADMIN役割を持つ場合（CEO等、全組織を閲覧可能）
      */
     public boolean canViewMembers(User user, Long organizationId) {
         System.out.println("=== canViewMembers チェック開始 ===");
         System.out.println("ユーザーID: " + user.getId() + ", 組織ID: " + organizationId);
-
-        // 直接のメンバーである場合
-        if (isMember(user, organizationId)) {
-            System.out.println("✓ 直接のメンバーです");
-            return true;
-        }
-        System.out.println("✗ 直接のメンバーではありません");
 
         // 組織情報を取得
         Organization targetOrg = organizationRepository.findById(organizationId)
@@ -143,6 +155,24 @@ public class OrganizationPermissionService {
             return false;
         }
         System.out.println("対象組織: " + targetOrg.getName() + " (テナントID: " + targetOrg.getTenant().getId() + ")");
+
+        // CEO/SUPER_ADMIN権限チェック（全組織を閲覧可能）
+        String userRole = user.getRole();
+        System.out.println("ユーザーロール: " + userRole);
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            // 同じテナント内であれば閲覧可能
+            if (user.getTenantId().equals(targetOrg.getTenant().getId())) {
+                System.out.println("✓ TENANT_ADMIN/SUPER_ADMINとして全組織を閲覧可能");
+                return true;
+            }
+        }
+
+        // 直接のメンバーである場合
+        if (isMember(user, organizationId)) {
+            System.out.println("✓ 直接のメンバーです");
+            return true;
+        }
+        System.out.println("✗ 直接のメンバーではありません");
 
         // 同じテナント内の組織に所属しているかチェック
         // ADMIN_COREまたはADMIN_ROOTの場合、テナント全体を閲覧可能

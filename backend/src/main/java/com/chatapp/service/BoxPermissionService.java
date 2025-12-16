@@ -24,6 +24,9 @@ public class BoxPermissionService {
     @Autowired
     private UserRoleService userRoleService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // Note: This repository is kept for future use when implementing role hierarchy checks
     @SuppressWarnings("unused")
     @Autowired
@@ -33,6 +36,15 @@ public class BoxPermissionService {
      * ユーザーが特定のBoxTypeを閲覧可能かチェック
      */
     public boolean canViewBoxType(Long userId, Long organizationId, Long tenantId, Long boxTypeId) {
+        // CEO/SUPER_ADMIN権限チェック（全BoxTypeを閲覧可能）
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            String userRole = userOpt.get().getRole();
+            if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+                return true;
+            }
+        }
+
         // BoxType情報を取得
         Optional<BoxType> boxTypeOptional = boxTypeRepository.findById(boxTypeId);
         if (boxTypeOptional.isEmpty()) {
@@ -57,6 +69,15 @@ public class BoxPermissionService {
      * ユーザーが特定のBoxTypeに投稿可能かチェック
      */
     public boolean canPostToBoxType(Long userId, Long organizationId, Long tenantId, Long boxTypeId) {
+        // CEO/SUPER_ADMIN権限チェック（全BoxTypeに投稿可能）
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            String userRole = userOpt.get().getRole();
+            if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+                return true;
+            }
+        }
+
         // BoxType情報を取得
         Optional<BoxType> boxTypeOptional = boxTypeRepository.findById(boxTypeId);
         if (boxTypeOptional.isEmpty()) {
@@ -81,6 +102,15 @@ public class BoxPermissionService {
      * ユーザーが特定のBoxTypeに返信可能かチェック
      */
     public boolean canReplyToBoxType(Long userId, Long organizationId, Long tenantId, Long boxTypeId) {
+        // CEO/SUPER_ADMIN権限チェック（全BoxTypeに返信可能）
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            String userRole = userOpt.get().getRole();
+            if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+                return true;
+            }
+        }
+
         // BoxPermissionレコードをチェック
         Optional<BoxPermission> permission = boxPermissionRepository
                 .findByUserIdAndBoxTypeIdAndOrganizationId(userId, boxTypeId, organizationId);

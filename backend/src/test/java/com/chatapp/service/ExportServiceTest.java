@@ -137,7 +137,7 @@ class ExportServiceTest {
         // Assert
         assertNotNull(csvData);
         assertTrue(csvData.length > 0);
-        String csvContent = new String(csvData);
+        String csvContent = new String(csvData, java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(csvContent.contains("Test Progress"));
         assertTrue(csvContent.contains("Test progress content"));
         assertTrue(csvContent.contains("75"));
@@ -188,7 +188,7 @@ class ExportServiceTest {
         // Assert
         assertNotNull(csvData);
         assertTrue(csvData.length > 0);
-        String csvContent = new String(csvData);
+        String csvContent = new String(csvData, java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(csvContent.contains("WEEKLY"));
         assertTrue(csvContent.contains("10"));
     }
@@ -201,7 +201,7 @@ class ExportServiceTest {
         // Assert
         assertNotNull(markdownData);
         assertTrue(markdownData.length > 0);
-        String markdownContent = new String(markdownData);
+        String markdownContent = new String(markdownData, java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(markdownContent.contains("# 進捗ダイジェスト"));
         assertTrue(markdownContent.contains("WEEKLY"));
         assertTrue(markdownContent.contains("Achievement 1"));
@@ -222,7 +222,7 @@ class ExportServiceTest {
         // Assert
         assertNotNull(csvData);
         assertTrue(csvData.length > 0);
-        String csvContent = new String(csvData);
+        String csvContent = new String(csvData, java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(csvContent.contains("COMPLETED"));
         verify(oneOnOneMeetingRepository, times(1))
                 .findByTenantAndStatusOrderByScheduledAtDesc(eq(testTenant), eq(OneOnOneMeeting.MeetingStatus.COMPLETED));
@@ -308,7 +308,7 @@ class ExportServiceTest {
 
         // Assert
         assertNotNull(csvData);
-        String csvContent = new String(csvData);
+        String csvContent = new String(csvData, java.nio.charset.StandardCharsets.UTF_8);
         // Should contain only header
         assertTrue(csvContent.contains("日付"));
     }
@@ -327,7 +327,7 @@ class ExportServiceTest {
         // Assert
         assertNotNull(markdownData);
         assertTrue(markdownData.length > 0);
-        String markdownContent = new String(markdownData);
+        String markdownContent = new String(markdownData, java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(markdownContent.contains("# 進捗ダイジェスト"));
     }
 }

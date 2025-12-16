@@ -109,7 +109,7 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Created department: {}", dept2.getName());
 
         // 第1営業部 - 第1課
-        Organization section1_1 = new Organization(tenant, "第1課");
+        Organization section1_1 = new Organization(tenant, "第1営業部 第1課");
         section1_1.setOrganizationType("SECTION");
         section1_1.setParent(dept1);
         section1_1.setLevel(3);
@@ -118,7 +118,7 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Created section: {} (under {})", section1_1.getName(), dept1.getName());
 
         // 第1営業部 - 第2課
-        Organization section1_2 = new Organization(tenant, "第2課");
+        Organization section1_2 = new Organization(tenant, "第1営業部 第2課");
         section1_2.setOrganizationType("SECTION");
         section1_2.setParent(dept1);
         section1_2.setLevel(3);
@@ -127,7 +127,7 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Created section: {} (under {})", section1_2.getName(), dept1.getName());
 
         // 第2営業部 - 第1課
-        Organization section2_1 = new Organization(tenant, "第1課");
+        Organization section2_1 = new Organization(tenant, "第2営業部 第1課");
         section2_1.setOrganizationType("SECTION");
         section2_1.setParent(dept2);
         section2_1.setLevel(3);
@@ -136,7 +136,7 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Created section: {} (under {})", section2_1.getName(), dept2.getName());
 
         // 第2営業部 - 第2課
-        Organization section2_2 = new Organization(tenant, "第2課");
+        Organization section2_2 = new Organization(tenant, "第2営業部 第2課");
         section2_2.setOrganizationType("SECTION");
         section2_2.setParent(dept2);
         section2_2.setLevel(3);
@@ -156,7 +156,9 @@ public class DataInitializer implements ApplicationRunner {
         // 3. ユーザー作成
         // 社長
         User ceo = createUser(tenant, "ceo", "ceo@test-company.com", "山田太郎", "password");
-        LOGGER.info("Created user: {} (社長)", ceo.getDisplayName());
+        ceo.setRole("TENANT_ADMIN");  // CEOはテナント管理者権限を持つ
+        ceo = userRepository.save(ceo);
+        LOGGER.info("Created user: {} (社長, TENANT_ADMIN)", ceo.getDisplayName());
 
         // 部長2人
         User manager1 = createUser(tenant, "manager1", "manager1@test-company.com", "佐藤一郎", "password");
@@ -191,8 +193,15 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Created 10 general users");
 
         // 4. 組織メンバーシップ作成
-        // 社長 - 会社全体の管理者（プライマリ組織）
+        // 社長 - 全組織の管理者（全組織に匿名投稿できるように）
         createOrgMember(tenant, company, ceo, OrganizationRole.ADMIN_ROOT, true);
+        createOrgMember(tenant, dept1, ceo, OrganizationRole.ADMIN_ROOT, false);
+        createOrgMember(tenant, dept2, ceo, OrganizationRole.ADMIN_ROOT, false);
+        createOrgMember(tenant, section1_1, ceo, OrganizationRole.ADMIN_ROOT, false);
+        createOrgMember(tenant, section1_2, ceo, OrganizationRole.ADMIN_ROOT, false);
+        createOrgMember(tenant, section2_1, ceo, OrganizationRole.ADMIN_ROOT, false);
+        createOrgMember(tenant, section2_2, ceo, OrganizationRole.ADMIN_ROOT, false);
+        createOrgMember(tenant, projectTeam, ceo, OrganizationRole.ADMIN_ROOT, false);
 
         // 部長 - 各部の管理者（プライマリ組織）+ 会社にも所属
         createOrgMember(tenant, company, manager1, OrganizationRole.ADMIN_CORE, false);

@@ -48,6 +48,12 @@ public class BoxAccessControlService {
             return false;
         }
 
+        // CEO/SUPER_ADMIN権限チェック（全投稿を閲覧可能）
+        String userRoleStr = user.getRole();
+        if ("TENANT_ADMIN".equals(userRoleStr) || "SUPER_ADMIN".equals(userRoleStr)) {
+            return true;
+        }
+
         BoxType boxType = post.getBoxType();
         String boxTypeName = (boxType != null && boxType.getBoxName() != null)
             ? boxType.getBoxName().toUpperCase()
@@ -150,6 +156,7 @@ public class BoxAccessControlService {
      * ユーザーが返信を閲覧可能かチェック
      * - 投稿者本人
      * - PM以上
+     * - CEO/SUPER_ADMIN
      * - 一般メンバーは他者の返信は見えない
      *
      * @param user ユーザー
@@ -160,6 +167,12 @@ public class BoxAccessControlService {
     public boolean canViewReply(User user, ProgressPost post, Long replyAuthorId) {
         if (user == null || post == null) {
             return false;
+        }
+
+        // CEO/SUPER_ADMIN権限チェック（全返信を閲覧可能）
+        String userRoleStr = user.getRole();
+        if ("TENANT_ADMIN".equals(userRoleStr) || "SUPER_ADMIN".equals(userRoleStr)) {
+            return true;
         }
 
         // 投稿者本人
@@ -181,6 +194,7 @@ public class BoxAccessControlService {
     /**
      * ユーザーが返信可能かチェック
      * - ADMIN_SUPER以上のみ返信可能
+     * - CEO/SUPER_ADMINも返信可能
      *
      * @param user ユーザー
      * @return 返信可能ならtrue
@@ -188,6 +202,12 @@ public class BoxAccessControlService {
     public boolean canReply(User user) {
         if (user == null) {
             return false;
+        }
+
+        // CEO/SUPER_ADMIN権限チェック（返信可能）
+        String userRoleStr = user.getRole();
+        if ("TENANT_ADMIN".equals(userRoleStr) || "SUPER_ADMIN".equals(userRoleStr)) {
+            return true;
         }
 
         OrganizationRole userRole = getUserOrganizationRole(user);

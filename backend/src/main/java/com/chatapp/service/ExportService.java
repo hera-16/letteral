@@ -85,19 +85,19 @@ public class ExportService {
         content.append("課題数,").append(digest.getChallenges()).append("\n\n");
 
         content.append("サマリー\n");
-        content.append(escapeCsvField(digest.getSummary())).append("\n\n");
+        content.append(escapeCsvField(digest.getSummary() != null ? digest.getSummary() : "")).append("\n\n");
 
         content.append("主な達成事項\n");
-        content.append(escapeCsvField(digest.getTopAchievements())).append("\n\n");
+        content.append(escapeCsvField(digest.getTopAchievements() != null ? digest.getTopAchievements() : "")).append("\n\n");
 
         content.append("主な課題\n");
-        content.append(escapeCsvField(digest.getTopChallenges())).append("\n\n");
+        content.append(escapeCsvField(digest.getTopChallenges() != null ? digest.getTopChallenges() : "")).append("\n\n");
 
         content.append("重要な学び\n");
-        content.append(escapeCsvField(digest.getKeyLearnings())).append("\n\n");
+        content.append(escapeCsvField(digest.getKeyLearnings() != null ? digest.getKeyLearnings() : "")).append("\n\n");
 
         content.append("次のステップ\n");
-        content.append(escapeCsvField(digest.getNextSteps())).append("\n");
+        content.append(escapeCsvField(digest.getNextSteps() != null ? digest.getNextSteps() : "")).append("\n");
 
         outputStream.write(content.toString().getBytes(StandardCharsets.UTF_8));
         return outputStream.toByteArray();
@@ -122,19 +122,27 @@ public class ExportService {
         markdown.append("- 課題: ").append(digest.getChallenges()).append("件\n\n");
 
         markdown.append("## サマリー\n\n");
-        markdown.append(digest.getSummary()).append("\n\n");
+        markdown.append(digest.getSummary() != null ? digest.getSummary() : "なし").append("\n\n");
 
-        markdown.append("## 主な達成事項\n\n");
-        markdown.append(digest.getTopAchievements()).append("\n\n");
+        if (digest.getTopAchievements() != null && !digest.getTopAchievements().trim().isEmpty()) {
+            markdown.append("## 主な達成事項\n\n");
+            markdown.append(digest.getTopAchievements()).append("\n\n");
+        }
 
-        markdown.append("## 主な課題\n\n");
-        markdown.append(digest.getTopChallenges()).append("\n\n");
+        if (digest.getTopChallenges() != null && !digest.getTopChallenges().trim().isEmpty()) {
+            markdown.append("## 主な課題\n\n");
+            markdown.append(digest.getTopChallenges()).append("\n\n");
+        }
 
-        markdown.append("## 重要な学び\n\n");
-        markdown.append(digest.getKeyLearnings()).append("\n\n");
+        if (digest.getKeyLearnings() != null && !digest.getKeyLearnings().trim().isEmpty()) {
+            markdown.append("## 重要な学び\n\n");
+            markdown.append(digest.getKeyLearnings()).append("\n\n");
+        }
 
-        markdown.append("## 次のステップ\n\n");
-        markdown.append(digest.getNextSteps()).append("\n");
+        if (digest.getNextSteps() != null && !digest.getNextSteps().trim().isEmpty()) {
+            markdown.append("## 次のステップ\n\n");
+            markdown.append(digest.getNextSteps()).append("\n");
+        }
 
         return markdown.toString().getBytes(StandardCharsets.UTF_8);
     }
@@ -203,7 +211,7 @@ public class ExportService {
 
         // 期間でフィルタリング
         meetings = meetings.stream()
-                .filter(m -> m.getScheduledAt().isAfter(startDate) && m.getScheduledAt().isBefore(endDate))
+                .filter(m -> !m.getScheduledAt().isBefore(startDate) && !m.getScheduledAt().isAfter(endDate))
                 .filter(m -> m.getEmployee().getId().equals(user.getId()) || m.getManager().getId().equals(user.getId()))
                 .toList();
 
@@ -247,7 +255,7 @@ public class ExportService {
 
         // 期間でフィルタリング
         meetings = meetings.stream()
-                .filter(m -> m.getScheduledAt().isAfter(startDate) && m.getScheduledAt().isBefore(endDate))
+                .filter(m -> !m.getScheduledAt().isBefore(startDate) && !m.getScheduledAt().isAfter(endDate))
                 .filter(m -> m.getEmployee().getId().equals(user.getId()) || m.getManager().getId().equals(user.getId()))
                 .toList();
 

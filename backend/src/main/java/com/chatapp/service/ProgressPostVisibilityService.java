@@ -50,6 +50,7 @@ public class ProgressPostVisibilityService {
      * 新しいロジック (組織階層による権限制御):
      * - 同じテナント内であること
      * - 投稿された組織またはその上位組織のメンバーであること
+     * - TENANT_ADMIN/SUPER_ADMIN役割を持つ場合は全投稿を閲覧可能
      *
      * @param user ユーザー
      * @param post 投稿
@@ -61,26 +62,39 @@ public class ProgressPostVisibilityService {
             return false;
         }
 
-        // 2. 投稿された組織を確認
+        // 2. CEO/SUPER_ADMIN権限チェック（全投稿を閲覧可能）
+        String userRole = user.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            return true;
+        }
+
+        // 3. 投稿された組織を確認
         Organization postOrganization = post.getOrganization();
         if (postOrganization == null) {
             // 組織が設定されていない場合は閲覧不可
             return false;
         }
 
-        // 3. 投稿された組織またはその上位組織のメンバーであるかチェック
+        // 4. 投稿された組織またはその上位組織のメンバーであるかチェック
         return canViewOrganizationPost(user, postOrganization);
     }
 
     /**
      * ユーザーが組織の投稿を閲覧できるかチェック
      * 組織階層を考慮し、投稿組織またはその上位組織のメンバーであれば閲覧可能
+     * TENANT_ADMIN/SUPER_ADMIN役割を持つ場合は全投稿を閲覧可能
      *
      * @param user ユーザー
      * @param organization 投稿された組織
      * @return 閲覧可能な場合true
      */
     public boolean canViewOrganizationPost(User user, Organization organization) {
+        // CEO/SUPER_ADMIN権限チェック（全投稿を閲覧可能）
+        String userRole = user.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            return true;
+        }
+
         // 投稿された組織のメンバーか確認
         if (isOrganizationMember(user, organization)) {
             return true;
@@ -114,6 +128,7 @@ public class ProgressPostVisibilityService {
     /**
      * ユーザーが閲覧可能な組織IDのセットを取得
      * ユーザーが所属する組織とその下位組織すべてを含む
+     * TENANT_ADMIN/SUPER_ADMIN役割を持つ場合はテナント内の全組織を返す
      *
      * @param user ユーザー
      * @param tenantId テナントID
@@ -121,6 +136,17 @@ public class ProgressPostVisibilityService {
      */
     public Set<Long> getViewableOrganizationIds(User user, Long tenantId) {
         Set<Long> viewableOrgIds = new HashSet<>();
+
+        // CEO/SUPER_ADMIN権限チェック（全組織を閲覧可能）
+        String userRole = user.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            // テナント内の全組織を返す
+            return organizationRepository.findByTenantAndIsActiveOrderByDisplayOrder(
+                    user.getTenant(), true)
+                    .stream()
+                    .map(Organization::getId)
+                    .collect(Collectors.toSet());
+        }
 
         // ユーザーが所属する組織を取得
         List<Long> memberOrganizationIds = organizationMemberRepository
@@ -172,12 +198,19 @@ public class ProgressPostVisibilityService {
     /**
      * ユーザーが特定の組織以下の投稿を閲覧できるかチェック
      * 組織本体またはその親組織のメンバーである必要がある
+     * TENANT_ADMIN/SUPER_ADMIN役割を持つ場合は全投稿を閲覧可能
      *
      * @param user ユーザー
      * @param organizationId 組織ID
      * @return 閲覧可能な場合true
      */
     public boolean canViewOrganizationPosts(User user, Long organizationId) {
+        // CEO/SUPER_ADMIN権限チェック（全投稿を閲覧可能）
+        String userRole = user.getRole();
+        if ("TENANT_ADMIN".equals(userRole) || "SUPER_ADMIN".equals(userRole)) {
+            return true;
+        }
+
         Organization organization = organizationRepository.findById(organizationId)
                 .orElse(null);
         if (organization == null) {

@@ -150,15 +150,6 @@ class ProgressPostService {
     return response.data;
   }
 
-  /**
-   * 投稿削除
-   */
-  async deletePost(id: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/posts/${id}`, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
 }
 
 export const progressPostService = new ProgressPostService();
