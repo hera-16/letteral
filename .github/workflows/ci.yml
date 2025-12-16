@@ -228,11 +228,10 @@ jobs:
           echo $! > backend.pid
         env:
           SPRING_PROFILES_ACTIVE: test
-          DB_HOST: localhost
-          DB_PORT: 3306
-          DB_NAME: chatapp
-          DB_USER: root
-          DB_PASSWORD: testpassword
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:ci;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
+          SPRING_FLYWAY_ENABLED: "true"
 
       - name: Wait for backend to be ready
         run: |
