@@ -39,6 +39,47 @@ public class ProgressPostResponse {
     private Integer viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private BoxTypeInfo boxType;
+
+    // 内部クラス: Box Type情報
+    public static class BoxTypeInfo {
+        private Long id;
+        private String name;
+        private String displayName;
+
+        public BoxTypeInfo() {
+        }
+
+        public BoxTypeInfo(Long id, String name, String displayName) {
+            this.id = id;
+            this.name = name;
+            this.displayName = displayName;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
+        }
+    }
 
     // 内部クラス: 組織情報
     public static class OrganizationInfo {
@@ -130,6 +171,15 @@ public class ProgressPostResponse {
         this.viewCount = post.getViewCount();
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
+
+        // BoxType情報の設定
+        if (post.getBoxType() != null) {
+            this.boxType = new BoxTypeInfo(
+                post.getBoxType().getId(),
+                post.getBoxType().getBoxName(),
+                post.getBoxType().getDisplayName()
+            );
+        }
     }
 
     // Getters and Setters
@@ -331,5 +381,13 @@ public class ProgressPostResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public BoxTypeInfo getBoxType() {
+        return boxType;
+    }
+
+    public void setBoxType(BoxTypeInfo boxType) {
+        this.boxType = boxType;
     }
 }

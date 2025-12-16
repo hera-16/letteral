@@ -182,6 +182,12 @@ export interface OrganizationInfo {
   role?: string;
 }
 
+export interface BoxTypeInfo {
+  id: number;
+  name: string;
+  displayName: string;
+}
+
 export interface ProgressPost {
   id?: number;
   tenantId: number;
@@ -208,6 +214,7 @@ export interface ProgressPost {
   createdAt?: string;
   updatedAt?: string;
   visibility?: string;
+  boxType?: BoxTypeInfo;
 }
 
 export interface CreateProgressPostRequest {
