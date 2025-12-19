@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS progress_digests (
     INDEX idx_digest_type (digest_type),
     INDEX idx_period (period_start, period_end),
     UNIQUE (user_id, tenant_id, digest_type, period_start, period_end)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
 
 -- 1on1ミーティングテーブル
 CREATE TABLE IF NOT EXISTS one_on_one_meetings (
@@ -51,4 +51,4 @@ CREATE TABLE IF NOT EXISTS one_on_one_meetings (
     INDEX idx_manager_tenant (manager_id, tenant_id),
     INDEX idx_scheduled_at (scheduled_at),
     INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);

@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS organization_invites (
     INDEX idx_created_by (created_by),
 
     CHECK (default_role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='組織招待URLテーブル';
 
 -- ========================================
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS invite_usage_history (
     INDEX idx_invite_id (invite_id),
     INDEX idx_user_id (user_id),
     INDEX idx_used_at (used_at DESC)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='招待URL使用履歴テーブル';
 
 -- ========================================
