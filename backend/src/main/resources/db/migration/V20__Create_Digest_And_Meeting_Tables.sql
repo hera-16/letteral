@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS progress_digests (
     INDEX idx_user_tenant (user_id, tenant_id),
     INDEX idx_digest_type (digest_type),
     INDEX idx_period (period_start, period_end),
-    UNIQUE KEY unique_digest (user_id, tenant_id, digest_type, period_start, period_end)
+    UNIQUE (user_id, tenant_id, digest_type, period_start, period_end)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 1on1ミーティングテーブル

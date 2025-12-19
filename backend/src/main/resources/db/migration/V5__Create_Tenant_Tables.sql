@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS tenants (
     CHECK (status IN ('ACTIVE', 'SUSPENDED', 'CLOSED')),
     CHECK (max_users > 0),
     CHECK (max_storage_gb > 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='テナント（企業・組織）管理テーブル';
 
 -- デフォルトテナントを作成（既存データの移行用）
@@ -52,5 +52,5 @@ CREATE TABLE IF NOT EXISTS tenant_invitations (
     INDEX idx_expires_at (expires_at),
     CHECK (role IN ('TENANT_ADMIN', 'ORG_ADMIN', 'MODERATOR', 'USER')),
     CHECK (status IN ('PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='テナント招待管理テーブル';

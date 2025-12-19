@@ -26,12 +26,12 @@ CREATE TABLE IF NOT EXISTS role_hierarchy (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_tenant_role_name (tenant_id, role_name),
-    UNIQUE KEY uk_tenant_role_level (tenant_id, role_level),
+    UNIQUE (tenant_id, role_name),
+    UNIQUE (tenant_id, role_level),
     INDEX idx_tenant (tenant_id),
     INDEX idx_role_level (role_level),
     INDEX idx_tenant_level (tenant_id, role_level)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='権限階級定義テーブル';
 
 -- =====================================================
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
-    UNIQUE KEY uk_user_org_role (user_id, organization_id),
+    UNIQUE (user_id, organization_id),
     INDEX idx_tenant (tenant_id),
     INDEX idx_user (user_id),
     INDEX idx_organization (organization_id),
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
     INDEX idx_approval_status (approval_status),
     INDEX idx_tenant_org (tenant_id, organization_id),
     CHECK (approval_status IN ('PENDING', 'APPROVED', 'REJECTED'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='ユーザー権限階級テーブル';
 
 -- =====================================================
@@ -110,11 +110,11 @@ CREATE TABLE IF NOT EXISTS box_types (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_tenant_box_name (tenant_id, box_name),
+    UNIQUE (tenant_id, box_name),
     INDEX idx_tenant (tenant_id),
     INDEX idx_is_active (is_active),
     INDEX idx_tenant_active (tenant_id, is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='Box種別定義テーブル';
 
 -- =====================================================
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS box_permissions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (box_type_id) REFERENCES box_types(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_user_box_org (user_id, box_type_id, organization_id),
+    UNIQUE (user_id, box_type_id, organization_id),
     INDEX idx_tenant (tenant_id),
     INDEX idx_user (user_id),
     INDEX idx_box_type (box_type_id),
@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS box_permissions (
     INDEX idx_tenant_user (tenant_id, user_id),
     INDEX idx_expires_at (expires_at),
     CHECK (granted_by IN ('AUTO', 'MANUAL', 'SYSTEM'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='Box閲覧権限テーブル';
 
 -- =====================================================
@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS role_promotion_requests (
     INDEX idx_tenant_status (tenant_id, status),
     INDEX idx_created_at (created_at DESC),
     CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='権限昇格申請テーブル';
 
 -- =====================================================

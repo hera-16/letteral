@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS daily_challenges (
     challenge_type VARCHAR(50) NOT NULL, -- GRATITUDE, KINDNESS, SELF_CARE, CREATIVITY, CONNECTION
     difficulty_level VARCHAR(20) NOT NULL DEFAULT 'EASY', -- EASY, MEDIUM, HARD
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_challenge_type (challenge_type),
-    INDEX idx_active (is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_challenge_type ON daily_challenges(challenge_type);
+CREATE INDEX idx_active ON daily_challenges(is_active);
 
 -- ユーザー進捗テーブル
 CREATE TABLE IF NOT EXISTS user_progress (
@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS user_progress (
     last_challenge_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_user_progress (user_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id),
-    INDEX idx_flower_level (flower_level)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    UNIQUE (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_user_id ON user_progress(user_id);
+CREATE INDEX idx_flower_level ON user_progress(flower_level);
 
 -- チャレンジ達成記録テーブル
 CREATE TABLE IF NOT EXISTS challenge_completions (
@@ -40,10 +40,10 @@ CREATE TABLE IF NOT EXISTS challenge_completions (
     points_earned INT NOT NULL,
     note TEXT, -- ユーザーのメモ（任意）
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (challenge_id) REFERENCES daily_challenges(id) ON DELETE CASCADE,
-    INDEX idx_user_completions (user_id, completed_at),
-    INDEX idx_challenge_completions (challenge_id, completed_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    FOREIGN KEY (challenge_id) REFERENCES daily_challenges(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_user_completions ON challenge_completions(user_id, completed_at);
+CREATE INDEX idx_challenge_completions ON challenge_completions(challenge_id, completed_at);
 
 -- 初期チャレンジデータを投入
 INSERT INTO daily_challenges (title, description, points, challenge_type, difficulty_level) VALUES

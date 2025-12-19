@@ -13,4 +13,4 @@ CREATE TABLE post_replies (
     INDEX idx_post_replies_post_id (post_id),
     INDEX idx_post_replies_author_id (author_id),
     INDEX idx_post_replies_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);

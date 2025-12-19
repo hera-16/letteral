@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS progress_posts (
     CHECK (post_type IN ('PROGRESS', 'GOAL', 'BLOCKER', 'LEARNING', 'REFLECTION')),
     CHECK (visibility IN ('PRIVATE', 'TEAM', 'DEPARTMENT', 'ORGANIZATION', 'COMPANY')),
     CHECK (achievement_rate IS NULL OR (achievement_rate >= 0 AND achievement_rate <= 100))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='進捗投稿テーブル';
 
 -- 投稿リアクションテーブル
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS post_reactions (
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_post_user_reaction (post_id, user_id, reaction_type),
+    UNIQUE (post_id, user_id, reaction_type),
     INDEX idx_tenant (tenant_id),
     INDEX idx_post (post_id),
     INDEX idx_user (user_id),
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS post_reactions (
     INDEX idx_tenant_post (tenant_id, post_id),
     INDEX idx_created_at (created_at DESC),
     CHECK (reaction_type IN ('PRAISE', 'EMPATHY', 'SUPPORT', 'QUESTION', 'HEART', 'THUMBS_UP', 'FIRE', 'CLAP'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='投稿リアクションテーブル';
 
 -- 投稿コメントテーブル
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS post_comments (
     INDEX idx_parent (parent_comment_id),
     INDEX idx_post_created (post_id, created_at DESC),
     INDEX idx_created_at (created_at DESC)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='投稿コメントテーブル';
 
 -- 投稿閲覧履歴テーブル（統計用）
@@ -129,10 +129,10 @@ CREATE TABLE IF NOT EXISTS post_views (
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_post_user_view (post_id, user_id),
+    UNIQUE (post_id, user_id),
     INDEX idx_tenant (tenant_id),
     INDEX idx_post (post_id),
     INDEX idx_user (user_id),
     INDEX idx_viewed_at (viewed_at DESC)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='投稿閲覧履歴テーブル';

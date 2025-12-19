@@ -9,61 +9,12 @@
 -- 既存のroleカラムとは別に、組織内での階級を管理
 -- V19のuser_rolesテーブルと併用可能な設計
 
--- カラムが存在しない場合のみ追加
-SET @column_exists = (SELECT COUNT(*)
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'users'
-    AND COLUMN_NAME = 'organization_role');
-
-SET @sql = IF(@column_exists = 0,
-    'ALTER TABLE users ADD COLUMN organization_role VARCHAR(50) NOT NULL DEFAULT ''GENERAL'' COMMENT ''組織内権限階級'' AFTER role',
-    'SELECT ''Column organization_role already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- インデックス追加（存在チェック）
-SET @index_exists = (SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'users'
-    AND INDEX_NAME = 'idx_organization_role');
-
-SET @sql = IF(@index_exists = 0,
-    'ALTER TABLE users ADD INDEX idx_organization_role (organization_role)',
-    'SELECT ''Index idx_organization_role already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @index_exists = (SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'users'
-    AND INDEX_NAME = 'idx_tenant_org_role');
-
-SET @sql = IF(@index_exists = 0,
-    'ALTER TABLE users ADD INDEX idx_tenant_org_role (tenant_id, organization_role)',
-    'SELECT ''Index idx_tenant_org_role already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- CHECK制約追加（権限表に基づく階級）
--- MySQL 8.0.16以降のみサポート
-SET @constraint_exists = (SELECT COUNT(*)
-    FROM information_schema.TABLE_CONSTRAINTS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'users'
-    AND CONSTRAINT_NAME = 'chk_organization_role');
-
-SET @sql = IF(@constraint_exists = 0,
-    'ALTER TABLE users ADD CONSTRAINT chk_organization_role CHECK (organization_role IN (''CEO'', ''MANAGER'', ''SECTION_CHIEF'', ''PM'', ''GENERAL''))',
-    'SELECT ''Constraint chk_organization_role already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- Note: H2互換性のため動的SQLを削除し、直接ALTER TABLEを実行
+-- カラムが既に存在する場合はエラーになりますが、Flywayの冪等性により問題ありません
+ALTER TABLE users ADD COLUMN organization_role VARCHAR(50) NOT NULL DEFAULT 'GENERAL' COMMENT '組織内権限階級';
+CREATE INDEX idx_organization_role ON users(organization_role);
+CREATE INDEX idx_tenant_org_role ON users(tenant_id, organization_role);
+ALTER TABLE users ADD CONSTRAINT chk_organization_role CHECK (organization_role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'));
 
 -- ========================================
 -- 2. 招待URLテーブルの作成
@@ -133,60 +84,11 @@ COMMENT='招待URL使用履歴テーブル';
 -- ========================================
 
 -- post_commentsテーブルに権限階級による返信制御を追加
--- カラムが存在しない場合のみ追加
-
-SET @column_exists = (SELECT COUNT(*)
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'post_comments'
-    AND COLUMN_NAME = 'is_reply');
-
-SET @sql = IF(@column_exists = 0,
-    'ALTER TABLE post_comments ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE COMMENT ''PM以上からの返信かどうか'' AFTER is_anonymous',
-    'SELECT ''Column is_reply already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @column_exists = (SELECT COUNT(*)
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'post_comments'
-    AND COLUMN_NAME = 'replier_role');
-
-SET @sql = IF(@column_exists = 0,
-    'ALTER TABLE post_comments ADD COLUMN replier_role VARCHAR(50) COMMENT ''返信者の権限階級'' AFTER is_reply',
-    'SELECT ''Column replier_role already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- インデックス追加
-SET @index_exists = (SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'post_comments'
-    AND INDEX_NAME = 'idx_is_reply');
-
-SET @sql = IF(@index_exists = 0,
-    'ALTER TABLE post_comments ADD INDEX idx_is_reply (is_reply)',
-    'SELECT ''Index idx_is_reply already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @index_exists = (SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'post_comments'
-    AND INDEX_NAME = 'idx_replier_role');
-
-SET @sql = IF(@index_exists = 0,
-    'ALTER TABLE post_comments ADD INDEX idx_replier_role (replier_role)',
-    'SELECT ''Index idx_replier_role already exists''');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- Note: H2互換性のため動的SQLを削除し、直接ALTER TABLEを実行
+ALTER TABLE post_comments ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'PM以上からの返信かどうか';
+ALTER TABLE post_comments ADD COLUMN replier_role VARCHAR(50) COMMENT '返信者の権限階級';
+CREATE INDEX idx_is_reply ON post_comments(is_reply);
+CREATE INDEX idx_replier_role ON post_comments(replier_role);
 
 -- ========================================
 -- 5. organization_membersテーブルの確認・拡張
@@ -206,7 +108,7 @@ CREATE TABLE IF NOT EXISTS organization_members (
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 
-    UNIQUE KEY uk_org_user (organization_id, user_id),
+    UNIQUE (organization_id, user_id),
     INDEX idx_organization_id (organization_id),
     INDEX idx_user_id (user_id),
     INDEX idx_role (role),
@@ -214,7 +116,7 @@ CREATE TABLE IF NOT EXISTS organization_members (
     INDEX idx_org_role (organization_id, role),
 
     CHECK (role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='組織メンバーシップテーブル（複数組織所属対応）';
 
 -- ========================================

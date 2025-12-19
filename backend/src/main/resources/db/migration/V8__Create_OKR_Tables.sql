@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS okr_objectives (
     CHECK (status IN ('DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ON_HOLD')),
     CHECK (progress_rate >= 0 AND progress_rate <= 100),
     CHECK (confidence_level IS NULL OR confidence_level IN ('HIGH', 'MEDIUM', 'LOW', 'AT_RISK'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='OKR目標テーブル';
 
 -- OKR主要結果テーブル
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS okr_key_results (
     CHECK (metric_type IN ('NUMBER', 'PERCENTAGE', 'BOOLEAN', 'CURRENCY')),
     CHECK (status IN ('ACTIVE', 'COMPLETED', 'CANCELLED', 'ON_HOLD')),
     CHECK (progress_rate >= 0 AND progress_rate <= 100)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='OKR主要結果テーブル';
 
 -- 投稿とOKRの紐付けテーブル
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS post_okr_links (
     INDEX idx_tenant_objective (tenant_id, objective_id),
     CHECK (objective_id IS NOT NULL OR key_result_id IS NOT NULL),
     CHECK (impact_score IS NULL OR (impact_score >= 1 AND impact_score <= 5))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='投稿とOKRの紐付けテーブル';
 
 -- OKR更新履歴テーブル（進捗の変遷を記録）
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS okr_update_history (
     INDEX idx_key_result (key_result_id),
     INDEX idx_created_at (created_at DESC),
     CHECK (objective_id IS NOT NULL OR key_result_id IS NOT NULL)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='OKR更新履歴テーブル';
 
 -- 評価スナップショットテーブル
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS evaluation_snapshots (
     INDEX idx_tenant_user_period (tenant_id, user_id, period_start),
     INDEX idx_period_label (period_label),
     CHECK (export_format IS NULL OR export_format IN ('PDF', 'CSV', 'JSON'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='評価期間スナップショットテーブル';
 
 -- 監査ログテーブル
@@ -196,5 +196,5 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     INDEX idx_created_at (created_at DESC),
     INDEX idx_tenant_action (tenant_id, action),
     INDEX idx_tenant_created (tenant_id, created_at DESC)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='監査ログテーブル';

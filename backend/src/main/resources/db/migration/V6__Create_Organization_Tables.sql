@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS organizations (
     INDEX idx_tenant_active (tenant_id, is_active),
     INDEX idx_tenant_parent (tenant_id, parent_id),
     INDEX idx_display_order (display_order)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='組織階層テーブル';
 
 -- デフォルトテナントのルート組織を作成
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS organization_members (
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_org_user (organization_id, user_id),
+    UNIQUE (organization_id, user_id),
     INDEX idx_tenant (tenant_id),
     INDEX idx_organization (organization_id),
     INDEX idx_user (user_id),
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS organization_members (
     INDEX idx_tenant_user (tenant_id, user_id),
     INDEX idx_is_primary (is_primary),
     CHECK (role IN ('OWNER', 'ADMIN', 'MODERATOR', 'MEMBER'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='組織メンバーシップテーブル';
 
 -- 匿名プロフィールテーブル
@@ -75,15 +75,15 @@ CREATE TABLE IF NOT EXISTS anonymous_profiles (
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_org_user_anonymous (organization_id, user_id),
-    UNIQUE KEY uk_tenant_anonymous_id (tenant_id, anonymous_id),
+    UNIQUE (organization_id, user_id),
+    UNIQUE (tenant_id, anonymous_id),
     INDEX idx_tenant (tenant_id),
     INDEX idx_organization (organization_id),
     INDEX idx_user (user_id),
     INDEX idx_anonymous_id (anonymous_id),
     INDEX idx_anonymity_level (anonymity_level),
     CHECK (anonymity_level IN ('FULL', 'PSEUDONYM', 'REAL'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='匿名プロフィールテーブル';
 
 -- ポリシー設定テーブル
@@ -119,14 +119,14 @@ CREATE TABLE IF NOT EXISTS policy_settings (
 
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
-    UNIQUE KEY uk_org_policy (organization_id),
+    UNIQUE (organization_id),
     INDEX idx_tenant (tenant_id),
     INDEX idx_organization (organization_id),
     CHECK (default_anonymity_level IN ('FULL', 'PSEUDONYM', 'REAL')),
     CHECK (default_visibility IN ('PRIVATE', 'TEAM', 'DEPARTMENT', 'ORGANIZATION', 'COMPANY')),
     CHECK (min_post_length > 0),
     CHECK (max_post_length >= min_post_length)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+)
 COMMENT='組織別ポリシー設定テーブル';
 
 -- デフォルト組織のポリシーを作成
