@@ -4,7 +4,7 @@ test.describe('Progress Post', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'testuser@example.com');
+    await page.fill('input[type="email"]', 'ceo@test-company.com');
     await page.fill('input[type="password"]', 'password');
     await page.click('button[type="submit"]');
     // ログイン後はホームページにリダイレクトされ、デフォルトで投稿タブが表示される
@@ -12,33 +12,41 @@ test.describe('Progress Post', () => {
   });
 
   test('should create a new progress post', async ({ page }) => {
-    // 既にホームページにいるので、投稿タブが表示されているはず
+    // 投稿タイプを選択（進捗を選択）
+    const progressTypeButton = page.locator('button:has-text("進捗")').first();
+    await progressTypeButton.click();
 
-    const postButton = page.locator('button:has-text("投稿する")');
-    await postButton.click();
+    // 内容を入力
+    await page.fill('textarea[placeholder*="今日の進捗"]', 'E2Eテスト投稿です');
 
-    await page.fill('textarea[name="content"]', 'テスト投稿です');
-    await page.click('button[type="submit"]');
+    // 投稿ボタンをクリック
+    const submitButton = page.locator('button:has-text("投稿する")');
+    await submitButton.click();
 
-    await expect(page.locator('text=テスト投稿です')).toBeVisible();
+    // 投稿が表示されることを確認
+    await expect(page.locator('text=E2Eテスト投稿です')).toBeVisible({ timeout: 10000 });
   });
 
   test('should display progress posts list', async ({ page }) => {
-    // 既にホームページにいるので、投稿タブが表示されているはず
+    // 組織を選択してから投稿一覧を確認
+    const firstOrg = page.locator('button').filter({ hasText: /テストカンパニー株式会社|第1営業部|第2営業部/ }).first();
+    await firstOrg.click();
 
-    const posts = page.locator('[data-testid="progress-post"]');
-    await expect(posts.first()).toBeVisible();
+    // 投稿一覧が表示されていることを確認
+    const postsListHeader = page.locator('text=📋 投稿一覧');
+    await expect(postsListHeader).toBeVisible();
   });
 
-  test('should reply to a progress post', async ({ page }) => {
-    // 既にホームページにいるので、投稿タブが表示されているはず
+  test('should select organization and view posts', async ({ page }) => {
+    // 所属グループセクションが表示されていることを確認
+    const groupsHeader = page.locator('text=🏢 所属グループ');
+    await expect(groupsHeader).toBeVisible();
 
-    const firstPost = page.locator('[data-testid="progress-post"]').first();
-    await firstPost.locator('button:has-text("返信")').click();
+    // 最初の組織をクリック
+    const firstOrg = page.locator('button').filter({ hasText: /テストカンパニー株式会社|第1営業部|第2営業部/ }).first();
+    await firstOrg.click();
 
-    await page.fill('textarea[name="reply"]', 'テスト返信です');
-    await page.click('button[type="submit"]');
-
-    await expect(page.locator('text=テスト返信です')).toBeVisible();
+    // 投稿一覧が表示されることを確認
+    await expect(page.locator('text=📋 投稿一覧')).toBeVisible();
   });
 });

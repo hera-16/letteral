@@ -32,15 +32,17 @@ export default function Home() {
 
   useEffect(() => {
     // 初回ロード時にローカルストレージから認証情報を確認
-    const savedUser = authService.getCurrentUser();
-    const token = localStorage.getItem('token');
+    if (typeof window !== 'undefined') {
+      const savedUser = authService.getCurrentUser();
+      const token = localStorage.getItem('token');
 
-    if (savedUser && token && authService.isAuthenticated()) {
-      setUser(savedUser);
-    } else {
-      // トークンまたはユーザー情報が不完全な場合はクリア
-      authService.logout();
-      setUser(null);
+      if (savedUser && token && authService.isAuthenticated()) {
+        setUser(savedUser);
+      } else {
+        // トークンまたはユーザー情報が不完全な場合はクリア
+        authService.logout();
+        setUser(null);
+      }
     }
 
     setIsAuthChecking(false);

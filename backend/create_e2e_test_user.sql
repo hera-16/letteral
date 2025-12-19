@@ -1,12 +1,12 @@
--- Add test user for E2E testing
+-- E2E Test User Setup Script
+-- This script creates a test user for E2E testing
 -- Username: testuser
 -- Email: testuser@example.com
 -- Password: password
 -- BCrypt hash for "password": $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
 
 -- 1. E2Eテスト用のテナントを作成（既に存在する場合はスキップ）
-MERGE INTO tenants (id, name, slug, plan_type, status, max_users, max_storage_gb, contact_email, created_at)
-KEY(id)
+INSERT INTO tenants (id, name, slug, plan_type, status, max_users, max_storage_gb, contact_email, created_at)
 VALUES (
   999,
   'E2E Test Organization',
@@ -17,11 +17,11 @@ VALUES (
   10,
   'e2e-test@example.com',
   NOW()
-);
+)
+ON DUPLICATE KEY UPDATE name = name;
 
 -- 2. E2Eテスト用の組織を作成（既に存在する場合はスキップ）
-MERGE INTO organizations (id, tenant_id, parent_id, name, organization_type, level, path, created_at)
-KEY(id)
+INSERT INTO organizations (id, tenant_id, parent_id, name, organization_type, level, path, created_at)
 VALUES (
   999,
   999,
@@ -31,11 +31,11 @@ VALUES (
   1,
   '/999',
   NOW()
-);
+)
+ON DUPLICATE KEY UPDATE name = name;
 
 -- 3. E2Eテスト用のポリシー設定を作成（既に存在する場合はスキップ）
--- V32でdefault_visibilityが削除されたため、それは含めない
-MERGE INTO policy_settings (
+INSERT INTO policy_settings (
   tenant_id,
   organization_id,
   default_anonymity_level,
@@ -49,7 +49,6 @@ MERGE INTO policy_settings (
   enable_auto_moderation,
   created_at
 )
-KEY(tenant_id, organization_id)
 VALUES (
   999,
   999,
@@ -63,7 +62,8 @@ VALUES (
   TRUE,
   TRUE,
   NOW()
-);
+)
+ON DUPLICATE KEY UPDATE tenant_id = tenant_id;
 
 -- 4. テストユーザーを削除（既に存在する場合は削除して再作成）
 DELETE FROM users WHERE email = 'testuser@example.com';
@@ -82,7 +82,7 @@ VALUES (
   NOW()
 );
 
--- 6. ユーザーIDを取得して組織メンバーシップを作成
+-- 6. ユーザーIDを取得
 SET @test_user_id = LAST_INSERT_ID();
 
 -- 7. 組織メンバーシップを作成
@@ -107,3 +107,8 @@ VALUES (
   'PSEUDONYM',
   NOW()
 );
+
+-- 確認
+SELECT u.id, u.username, u.email, u.display_name, u.tenant_id, u.primary_organization_id
+FROM users u
+WHERE u.email = 'testuser@example.com';
