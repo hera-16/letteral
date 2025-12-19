@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS tenants (
     CHECK (max_storage_gb > 0)
 );
 
-CREATE INDEX idx_slug ON tenants(slug);
-CREATE INDEX idx_status ON tenants(status);
-CREATE INDEX idx_plan_type ON tenants(plan_type);
-CREATE INDEX idx_created_at ON tenants(created_at);
+CREATE INDEX idx_tenants_slug ON tenants(slug);
+CREATE INDEX idx_tenants_status ON tenants(status);
+CREATE INDEX idx_tenants_plan_type ON tenants(plan_type);
+CREATE INDEX idx_tenants_created_at ON tenants(created_at);
 
 -- デフォルトテナントを作成（既存データの移行用）
 INSERT INTO tenants (name, slug, plan_type, status, max_users, max_storage_gb, contact_email)
@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS tenant_invitations (
     CHECK (status IN ('PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED'))
 );
 
-CREATE INDEX idx_tenant ON tenant_invitations(tenant_id);
-CREATE INDEX idx_email ON tenant_invitations(email);
-CREATE INDEX idx_invite_code ON tenant_invitations(invite_code);
-CREATE INDEX idx_status ON tenant_invitations(status);
-CREATE INDEX idx_expires_at ON tenant_invitations(expires_at);
+CREATE INDEX idx_tenant_invitations_tenant ON tenant_invitations(tenant_id);
+CREATE INDEX idx_tenant_invitations_email ON tenant_invitations(email);
+CREATE INDEX idx_tenant_invitations_invite_code ON tenant_invitations(invite_code);
+CREATE INDEX idx_tenant_invitations_status ON tenant_invitations(status);
+CREATE INDEX idx_tenant_invitations_expires_at ON tenant_invitations(expires_at);
