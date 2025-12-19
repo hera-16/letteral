@@ -5,82 +5,62 @@
 -- =====================================================
 -- 1. friendsテーブルにtenant_idを追加
 -- =====================================================
-ALTER TABLE friends
-ADD COLUMN tenant_id BIGINT AFTER id,
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER responded_at;
-
--- カラムにコメントを追加
-ALTER TABLE friends
-MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント',
-MODIFY COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時';
+-- H2ではAFTER句は使用できないため、順番に追加
+ALTER TABLE friends ADD COLUMN tenant_id BIGINT;
+ALTER TABLE friends ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE friends
 ADD CONSTRAINT fk_friends_tenant
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE;
 
-ALTER TABLE friends
-ADD INDEX idx_tenant (tenant_id),
-ADD INDEX idx_tenant_requester (tenant_id, requester_id),
-ADD INDEX idx_tenant_addressee (tenant_id, addressee_id);
+CREATE INDEX idx_friends_tenant ON friends(tenant_id);
+CREATE INDEX idx_friends_tenant_requester ON friends(tenant_id, requester_id);
+CREATE INDEX idx_friends_tenant_addressee ON friends(tenant_id, addressee_id);
 
 -- 既存フレンドデータをデフォルトテナントに紐付け
 UPDATE friends
 SET tenant_id = 1
 WHERE tenant_id IS NULL;
 
-ALTER TABLE friends
-MODIFY COLUMN tenant_id BIGINT NOT NULL COMMENT '所属テナント';
+ALTER TABLE friends ALTER COLUMN tenant_id SET NOT NULL;
 
 -- =====================================================
 -- 2. group_membersテーブルにtenant_idを追加
 -- =====================================================
-ALTER TABLE group_members
-ADD COLUMN tenant_id BIGINT AFTER id;
-
--- カラムにコメントを追加
-ALTER TABLE group_members
-MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント';
+ALTER TABLE group_members ADD COLUMN tenant_id BIGINT;
 
 ALTER TABLE group_members
 ADD CONSTRAINT fk_group_members_tenant
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE;
 
-ALTER TABLE group_members
-ADD INDEX idx_tenant (tenant_id);
+CREATE INDEX idx_group_members_tenant ON group_members(tenant_id);
 
 -- 既存グループメンバーデータをデフォルトテナントに紐付け
 UPDATE group_members
 SET tenant_id = 1
 WHERE tenant_id IS NULL;
 
-ALTER TABLE group_members
-MODIFY COLUMN tenant_id BIGINT NOT NULL COMMENT '所属テナント';
+ALTER TABLE group_members ALTER COLUMN tenant_id SET NOT NULL;
 
 -- =====================================================
 -- 3. topicsテーブルにtenant_idを追加
 -- =====================================================
-ALTER TABLE topics
-ADD COLUMN tenant_id BIGINT AFTER id,
-ADD COLUMN organization_id BIGINT AFTER tenant_id,
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
-
--- カラムにコメントを追加
-ALTER TABLE topics
-MODIFY COLUMN tenant_id BIGINT COMMENT '所属テナント',
-MODIFY COLUMN organization_id BIGINT COMMENT '所属組織',
-MODIFY COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時';
+ALTER TABLE topics ADD COLUMN tenant_id BIGINT;
+ALTER TABLE topics ADD COLUMN organization_id BIGINT;
+ALTER TABLE topics ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE topics
 ADD CONSTRAINT fk_topics_tenant
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE;
+
+ALTER TABLE topics
 ADD CONSTRAINT fk_topics_organization
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL;
 
-ALTER TABLE topics
-ADD INDEX idx_tenant (tenant_id),
-ADD INDEX idx_organization (organization_id),
-ADD INDEX idx_tenant_category (tenant_id, category),
-ADD INDEX idx_tenant_active (tenant_id, is_active);
+CREATE INDEX idx_topics_tenant ON topics(tenant_id);
+CREATE INDEX idx_topics_organization ON topics(organization_id);
+CREATE INDEX idx_topics_tenant_category ON topics(tenant_id, category);
+CREATE INDEX idx_topics_tenant_active ON topics(tenant_id, is_active);
 
 -- 既存トピックデータをデフォルトテナントに紐付け
 UPDATE topics
@@ -88,8 +68,7 @@ SET tenant_id = 1,
     organization_id = 1
 WHERE tenant_id IS NULL;
 
-ALTER TABLE topics
-MODIFY COLUMN tenant_id BIGINT NOT NULL COMMENT '所属テナント';
+ALTER TABLE topics ALTER COLUMN tenant_id SET NOT NULL;
 
 -- =====================================================
 -- 4. 既存ユーザーの匿名プロフィールを生成
