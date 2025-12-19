@@ -33,16 +33,16 @@ ADD CONSTRAINT fk_messages_parent
     FOREIGN KEY (parent_message_id) REFERENCES chat_messages(id) ON DELETE CASCADE;
 
 -- インデックスを追加
-CREATE INDEX idx_tenant ON chat_messages(tenant_id);
-CREATE INDEX idx_is_anonymous ON chat_messages(is_anonymous);
-CREATE INDEX idx_anonymous_sender ON chat_messages(anonymous_sender_id);
-CREATE INDEX idx_parent ON chat_messages(parent_message_id);
-CREATE INDEX idx_post_template ON chat_messages(post_template);
-CREATE INDEX idx_is_deleted ON chat_messages(is_deleted);
-CREATE INDEX idx_tenant_room ON chat_messages(tenant_id, room_id);
-CREATE INDEX idx_tenant_room_created ON chat_messages(tenant_id, room_id, created_at DESC);
-CREATE INDEX idx_room_created_deleted ON chat_messages(room_id, created_at DESC, is_deleted);
-CREATE INDEX idx_sender_created ON chat_messages(sender_id, created_at DESC);
+CREATE INDEX idx_messages_tenant ON chat_messages(tenant_id);
+CREATE INDEX idx_messages_is_anonymous ON chat_messages(is_anonymous);
+CREATE INDEX idx_messages_anonymous_sender ON chat_messages(anonymous_sender_id);
+CREATE INDEX idx_messages_parent ON chat_messages(parent_message_id);
+CREATE INDEX idx_messages_post_template ON chat_messages(post_template);
+CREATE INDEX idx_messages_is_deleted ON chat_messages(is_deleted);
+CREATE INDEX idx_messages_tenant_room ON chat_messages(tenant_id, room_id);
+CREATE INDEX idx_messages_tenant_room_created ON chat_messages(tenant_id, room_id, created_at DESC);
+CREATE INDEX idx_messages_room_created_deleted ON chat_messages(room_id, created_at DESC, is_deleted);
+CREATE INDEX idx_messages_sender_created ON chat_messages(sender_id, created_at DESC);
 
 -- CHECK制約を追加
 ALTER TABLE chat_messages
