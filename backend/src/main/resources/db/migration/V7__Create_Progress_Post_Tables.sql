@@ -40,25 +40,26 @@ CREATE TABLE IF NOT EXISTS progress_posts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
-    FOREIGN KEY (author_id) REFERENCES anonymous_profiles(id) ON DELETE CASCADE,
-    FOREIGN KEY (target_organization_id) REFERENCES organizations(id) ON DELETE SET NULL,
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_organization (organization_id),
-    INDEX idx_author (author_id),
-    INDEX idx_post_date (post_date),
-    INDEX idx_post_type (post_type),
-    INDEX idx_visibility (visibility),
-    INDEX idx_is_archived (is_archived),
-    INDEX idx_tenant_date (tenant_id, post_date DESC),
-    INDEX idx_org_date (organization_id, post_date DESC),
-    INDEX idx_tenant_org_date (tenant_id, organization_id, post_date DESC),
-    INDEX idx_author_date (author_id, post_date DESC),
-    CHECK (post_type IN ('PROGRESS', 'GOAL', 'BLOCKER', 'LEARNING', 'REFLECTION')),
-    CHECK (visibility IN ('PRIVATE', 'TEAM', 'DEPARTMENT', 'ORGANIZATION', 'COMPANY')),
-    CHECK (achievement_rate IS NULL OR (achievement_rate >= 0 AND achievement_rate <= 100))
+    CONSTRAINT fk_progress_posts_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    CONSTRAINT fk_progress_posts_organization FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT fk_progress_posts_author FOREIGN KEY (author_id) REFERENCES anonymous_profiles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_progress_posts_target_org FOREIGN KEY (target_organization_id) REFERENCES organizations(id) ON DELETE SET NULL,
+    CONSTRAINT chk_progress_posts_type CHECK (post_type IN ('PROGRESS', 'GOAL', 'BLOCKER', 'LEARNING', 'REFLECTION')),
+    CONSTRAINT chk_progress_posts_visibility CHECK (visibility IN ('PRIVATE', 'TEAM', 'DEPARTMENT', 'ORGANIZATION', 'COMPANY')),
+    CONSTRAINT chk_progress_posts_achievement CHECK (achievement_rate IS NULL OR (achievement_rate >= 0 AND achievement_rate <= 100))
 );
+
+CREATE INDEX idx_progress_posts_tenant ON progress_posts(tenant_id);
+CREATE INDEX idx_progress_posts_organization ON progress_posts(organization_id);
+CREATE INDEX idx_progress_posts_author ON progress_posts(author_id);
+CREATE INDEX idx_progress_posts_post_date ON progress_posts(post_date);
+CREATE INDEX idx_progress_posts_post_type ON progress_posts(post_type);
+CREATE INDEX idx_progress_posts_visibility ON progress_posts(visibility);
+CREATE INDEX idx_progress_posts_is_archived ON progress_posts(is_archived);
+CREATE INDEX idx_progress_posts_tenant_date ON progress_posts(tenant_id, post_date DESC);
+CREATE INDEX idx_progress_posts_org_date ON progress_posts(organization_id, post_date DESC);
+CREATE INDEX idx_progress_posts_tenant_org_date ON progress_posts(tenant_id, organization_id, post_date DESC);
+CREATE INDEX idx_progress_posts_author_date ON progress_posts(author_id, post_date DESC);
 
 
 -- 投稿リアクションテーブル
@@ -74,18 +75,19 @@ CREATE TABLE IF NOT EXISTS post_reactions (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE (post_id, user_id, reaction_type),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_post (post_id),
-    INDEX idx_user (user_id),
-    INDEX idx_reaction_type (reaction_type),
-    INDEX idx_tenant_post (tenant_id, post_id),
-    INDEX idx_created_at (created_at DESC),
-    CHECK (reaction_type IN ('PRAISE', 'EMPATHY', 'SUPPORT', 'QUESTION', 'HEART', 'THUMBS_UP', 'FIRE', 'CLAP'))
+    CONSTRAINT fk_post_reactions_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_reactions_post FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_reactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_post_reactions_post_user_type UNIQUE (post_id, user_id, reaction_type),
+    CONSTRAINT chk_post_reactions_type CHECK (reaction_type IN ('PRAISE', 'EMPATHY', 'SUPPORT', 'QUESTION', 'HEART', 'THUMBS_UP', 'FIRE', 'CLAP'))
 );
+
+CREATE INDEX idx_post_reactions_tenant ON post_reactions(tenant_id);
+CREATE INDEX idx_post_reactions_post ON post_reactions(post_id);
+CREATE INDEX idx_post_reactions_user ON post_reactions(user_id);
+CREATE INDEX idx_post_reactions_type ON post_reactions(reaction_type);
+CREATE INDEX idx_post_reactions_tenant_post ON post_reactions(tenant_id, post_id);
+CREATE INDEX idx_post_reactions_created_at ON post_reactions(created_at DESC);
 
 
 -- 投稿コメントテーブル
@@ -105,17 +107,18 @@ CREATE TABLE IF NOT EXISTS post_comments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (author_id) REFERENCES anonymous_profiles(id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_comment_id) REFERENCES post_comments(id) ON DELETE CASCADE,
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_post (post_id),
-    INDEX idx_author (author_id),
-    INDEX idx_parent (parent_comment_id),
-    INDEX idx_post_created (post_id, created_at DESC),
-    INDEX idx_created_at (created_at DESC)
+    CONSTRAINT fk_post_comments_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_comments_post FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_comments_author FOREIGN KEY (author_id) REFERENCES anonymous_profiles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_comments_parent FOREIGN KEY (parent_comment_id) REFERENCES post_comments(id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_post_comments_tenant ON post_comments(tenant_id);
+CREATE INDEX idx_post_comments_post ON post_comments(post_id);
+CREATE INDEX idx_post_comments_author ON post_comments(author_id);
+CREATE INDEX idx_post_comments_parent ON post_comments(parent_comment_id);
+CREATE INDEX idx_post_comments_post_created ON post_comments(post_id, created_at DESC);
+CREATE INDEX idx_post_comments_created_at ON post_comments(created_at DESC);
 
 
 -- 投稿閲覧履歴テーブル（統計用）
@@ -126,13 +129,14 @@ CREATE TABLE IF NOT EXISTS post_views (
     user_id BIGINT NOT NULL,
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE (post_id, user_id),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_post (post_id),
-    INDEX idx_user (user_id),
-    INDEX idx_viewed_at (viewed_at DESC)
+    CONSTRAINT fk_post_views_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_views_post FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_views_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_post_views_post_user UNIQUE (post_id, user_id)
 );
+
+CREATE INDEX idx_post_views_tenant ON post_views(tenant_id);
+CREATE INDEX idx_post_views_post ON post_views(post_id);
+CREATE INDEX idx_post_views_user ON post_views(user_id);
+CREATE INDEX idx_post_views_viewed_at ON post_views(viewed_at DESC);
 
