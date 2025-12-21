@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"tenant_id", "box_name"})
     },
     indexes = {
-        @Index(name = "idx_tenant", columnList = "tenant_id"),
-        @Index(name = "idx_is_active", columnList = "is_active"),
-        @Index(name = "idx_tenant_active", columnList = "tenant_id, is_active")
+        @Index(name = "idx_bt_tenant", columnList = "tenant_id"),
+        @Index(name = "idx_bt_is_active", columnList = "is_active"),
+        @Index(name = "idx_bt_tenant_active", columnList = "tenant_id, is_active")
     }
 )
 public class BoxType {

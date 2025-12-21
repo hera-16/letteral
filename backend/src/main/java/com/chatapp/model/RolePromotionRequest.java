@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "role_promotion_requests",
     indexes = {
-        @Index(name = "idx_tenant", columnList = "tenant_id"),
-        @Index(name = "idx_user", columnList = "user_id"),
-        @Index(name = "idx_organization", columnList = "organization_id"),
-        @Index(name = "idx_status", columnList = "status"),
-        @Index(name = "idx_tenant_status", columnList = "tenant_id, status"),
-        @Index(name = "idx_created_at", columnList = "created_at")
+        @Index(name = "idx_rpr_tenant", columnList = "tenant_id"),
+        @Index(name = "idx_rpr_user", columnList = "user_id"),
+        @Index(name = "idx_rpr_organization", columnList = "organization_id"),
+        @Index(name = "idx_rpr_status", columnList = "status"),
+        @Index(name = "idx_rpr_tenant_status", columnList = "tenant_id, status"),
+        @Index(name = "idx_rpr_created_at", columnList = "created_at")
     }
 )
 public class RolePromotionRequest {

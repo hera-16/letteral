@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"tenant_id", "role_level"})
     },
     indexes = {
-        @Index(name = "idx_tenant", columnList = "tenant_id"),
-        @Index(name = "idx_role_level", columnList = "role_level"),
-        @Index(name = "idx_tenant_level", columnList = "tenant_id, role_level")
+        @Index(name = "idx_rh_tenant", columnList = "tenant_id"),
+        @Index(name = "idx_rh_role_level", columnList = "role_level"),
+        @Index(name = "idx_rh_tenant_level", columnList = "tenant_id, role_level")
     }
 )
 public class RoleHierarchy {

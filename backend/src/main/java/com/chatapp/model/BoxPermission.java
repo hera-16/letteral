@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"user_id", "box_type_id", "organization_id"})
     },
     indexes = {
-        @Index(name = "idx_tenant", columnList = "tenant_id"),
-        @Index(name = "idx_user", columnList = "user_id"),
-        @Index(name = "idx_box_type", columnList = "box_type_id"),
-        @Index(name = "idx_organization", columnList = "organization_id"),
-        @Index(name = "idx_tenant_user", columnList = "tenant_id, user_id"),
-        @Index(name = "idx_expires_at", columnList = "expires_at")
+        @Index(name = "idx_bp_tenant", columnList = "tenant_id"),
+        @Index(name = "idx_bp_user", columnList = "user_id"),
+        @Index(name = "idx_bp_box_type", columnList = "box_type_id"),
+        @Index(name = "idx_bp_organization", columnList = "organization_id"),
+        @Index(name = "idx_bp_tenant_user", columnList = "tenant_id, user_id"),
+        @Index(name = "idx_bp_expires_at", columnList = "expires_at")
     }
 )
 public class BoxPermission {
