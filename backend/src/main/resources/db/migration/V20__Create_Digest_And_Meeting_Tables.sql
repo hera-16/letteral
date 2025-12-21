@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS progress_digests (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     tenant_id BIGINT NOT NULL,
-    digest_type VARCHAR(20) NOT NULL COMMENT 'WEEKLY, MONTHLY, QUARTERLY',
+    digest_type VARCHAR(20) NOT NULL,
     period_start DATETIME NOT NULL,
     period_end DATETIME NOT NULL,
     summary TEXT,
@@ -22,11 +22,12 @@ CREATE TABLE IF NOT EXISTS progress_digests (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    INDEX idx_user_tenant (user_id, tenant_id),
-    INDEX idx_digest_type (digest_type),
-    INDEX idx_period (period_start, period_end),
     UNIQUE (user_id, tenant_id, digest_type, period_start, period_end)
 );
+
+CREATE INDEX idx_user_tenant ON progress_digests(user_id, tenant_id);
+CREATE INDEX idx_digest_type ON progress_digests(digest_type);
+CREATE INDEX idx_period ON progress_digests(period_start, period_end);
 
 -- 1on1ミーティングテーブル
 CREATE TABLE IF NOT EXISTS one_on_one_meetings (
@@ -40,15 +41,16 @@ CREATE TABLE IF NOT EXISTS one_on_one_meetings (
     discussion_topics TEXT,
     action_items TEXT,
     notes TEXT,
-    status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED' COMMENT 'SCHEDULED, COMPLETED, CANCELLED',
+    status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
     completed_at DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    INDEX idx_employee_tenant (employee_id, tenant_id),
-    INDEX idx_manager_tenant (manager_id, tenant_id),
-    INDEX idx_scheduled_at (scheduled_at),
-    INDEX idx_status (status)
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_employee_tenant ON one_on_one_meetings(employee_id, tenant_id);
+CREATE INDEX idx_manager_tenant ON one_on_one_meetings(manager_id, tenant_id);
+CREATE INDEX idx_scheduled_at ON one_on_one_meetings(scheduled_at);
+CREATE INDEX idx_status ON one_on_one_meetings(status);
