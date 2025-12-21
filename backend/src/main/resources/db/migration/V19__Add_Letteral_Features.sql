@@ -27,12 +27,12 @@ CREATE TABLE IF NOT EXISTS role_hierarchy (
 
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     UNIQUE (tenant_id, role_name),
-    UNIQUE (tenant_id, role_level),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_role_level (role_level),
-    INDEX idx_tenant_level (tenant_id, role_level)
-)
-COMMENT='権限階級定義テーブル';
+    UNIQUE (tenant_id, role_level)
+);
+
+CREATE INDEX idx_rh_tenant ON role_hierarchy(tenant_id);
+CREATE INDEX idx_rh_role_level ON role_hierarchy(role_level);
+CREATE INDEX idx_rh_tenant_level ON role_hierarchy(tenant_id, role_level);
 
 -- =====================================================
 -- 2. デフォルト権限階級データの挿入
@@ -74,15 +74,15 @@ CREATE TABLE IF NOT EXISTS user_roles (
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
     UNIQUE (user_id, organization_id),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_user (user_id),
-    INDEX idx_organization (organization_id),
-    INDEX idx_role_level (role_level),
-    INDEX idx_approval_status (approval_status),
-    INDEX idx_tenant_org (tenant_id, organization_id),
     CHECK (approval_status IN ('PENDING', 'APPROVED', 'REJECTED'))
-)
-COMMENT='ユーザー権限階級テーブル';
+);
+
+CREATE INDEX idx_ur_tenant ON user_roles(tenant_id);
+CREATE INDEX idx_ur_user ON user_roles(user_id);
+CREATE INDEX idx_ur_organization ON user_roles(organization_id);
+CREATE INDEX idx_ur_role_level ON user_roles(role_level);
+CREATE INDEX idx_ur_approval_status ON user_roles(approval_status);
+CREATE INDEX idx_ur_tenant_org ON user_roles(tenant_id, organization_id);
 
 -- =====================================================
 -- 4. Box種別（Box Type）テーブル
@@ -110,12 +110,12 @@ CREATE TABLE IF NOT EXISTS box_types (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-    UNIQUE (tenant_id, box_name),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_is_active (is_active),
-    INDEX idx_tenant_active (tenant_id, is_active)
-)
-COMMENT='Box種別定義テーブル';
+    UNIQUE (tenant_id, box_name)
+);
+
+CREATE INDEX idx_bt_tenant ON box_types(tenant_id);
+CREATE INDEX idx_bt_is_active ON box_types(is_active);
+CREATE INDEX idx_bt_tenant_active ON box_types(tenant_id, is_active);
 
 -- =====================================================
 -- 5. デフォルトBox種別データの挿入
@@ -181,15 +181,15 @@ CREATE TABLE IF NOT EXISTS box_permissions (
     FOREIGN KEY (box_type_id) REFERENCES box_types(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     UNIQUE (user_id, box_type_id, organization_id),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_user (user_id),
-    INDEX idx_box_type (box_type_id),
-    INDEX idx_organization (organization_id),
-    INDEX idx_tenant_user (tenant_id, user_id),
-    INDEX idx_expires_at (expires_at),
     CHECK (granted_by IN ('AUTO', 'MANUAL', 'SYSTEM'))
-)
-COMMENT='Box閲覧権限テーブル';
+);
+
+CREATE INDEX idx_bp_tenant ON box_permissions(tenant_id);
+CREATE INDEX idx_bp_user ON box_permissions(user_id);
+CREATE INDEX idx_bp_box_type ON box_permissions(box_type_id);
+CREATE INDEX idx_bp_organization ON box_permissions(organization_id);
+CREATE INDEX idx_bp_tenant_user ON box_permissions(tenant_id, user_id);
+CREATE INDEX idx_bp_expires_at ON box_permissions(expires_at);
 
 -- =====================================================
 -- 8. 権限昇格申請テーブル
@@ -222,15 +222,15 @@ CREATE TABLE IF NOT EXISTS role_promotion_requests (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_user (user_id),
-    INDEX idx_organization (organization_id),
-    INDEX idx_status (status),
-    INDEX idx_tenant_status (tenant_id, status),
-    INDEX idx_created_at (created_at DESC),
     CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))
-)
-COMMENT='権限昇格申請テーブル';
+);
+
+CREATE INDEX idx_rpr_tenant ON role_promotion_requests(tenant_id);
+CREATE INDEX idx_rpr_user ON role_promotion_requests(user_id);
+CREATE INDEX idx_rpr_organization ON role_promotion_requests(organization_id);
+CREATE INDEX idx_rpr_status ON role_promotion_requests(status);
+CREATE INDEX idx_rpr_tenant_status ON role_promotion_requests(tenant_id, status);
+CREATE INDEX idx_rpr_created_at ON role_promotion_requests(created_at DESC);
 
 -- =====================================================
 -- 9. 既存ユーザーにデフォルト権限を割り当て
