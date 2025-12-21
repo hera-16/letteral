@@ -8,9 +8,9 @@ CREATE TABLE post_replies (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (post_id) REFERENCES progress_posts(id) ON DELETE CASCADE,
-    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
-
-    INDEX idx_post_replies_post_id (post_id),
-    INDEX idx_post_replies_author_id (author_id),
-    INDEX idx_post_replies_created_at (created_at)
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_post_replies_post_id ON post_replies(post_id);
+CREATE INDEX idx_post_replies_author_id ON post_replies(author_id);
+CREATE INDEX idx_post_replies_created_at ON post_replies(created_at);

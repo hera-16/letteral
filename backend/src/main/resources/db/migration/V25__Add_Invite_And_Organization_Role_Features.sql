@@ -11,7 +11,7 @@
 
 -- Note: H2互換性のため動的SQLを削除し、直接ALTER TABLEを実行
 -- カラムが既に存在する場合はエラーになりますが、Flywayの冪等性により問題ありません
-ALTER TABLE users ADD COLUMN organization_role VARCHAR(50) NOT NULL DEFAULT 'GENERAL' COMMENT '組織内権限階級';
+ALTER TABLE users ADD COLUMN organization_role VARCHAR(50) NOT NULL DEFAULT 'GENERAL';
 CREATE INDEX idx_organization_role ON users(organization_role);
 CREATE INDEX idx_tenant_org_role ON users(tenant_id, organization_role);
 ALTER TABLE users ADD CONSTRAINT chk_organization_role CHECK (organization_role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'));
@@ -22,41 +22,30 @@ ALTER TABLE users ADD CONSTRAINT chk_organization_role CHECK (organization_role 
 
 CREATE TABLE IF NOT EXISTS organization_invites (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tenant_id BIGINT NOT NULL COMMENT '所属テナント',
-    organization_id BIGINT NOT NULL COMMENT '招待先組織',
-
-    -- 招待コード
-    invite_code VARCHAR(64) UNIQUE NOT NULL COMMENT '招待コード（URL用）',
-
-    -- デフォルト設定
-    default_role VARCHAR(50) NOT NULL DEFAULT 'GENERAL' COMMENT 'デフォルト権限階級',
-
-    -- 制限
-    expires_at DATETIME COMMENT '有効期限',
-    max_uses INT COMMENT '最大使用回数',
-    current_uses INT NOT NULL DEFAULT 0 COMMENT '現在の使用回数',
-
-    -- 状態
-    is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'アクティブ状態',
-
-    -- 管理
-    created_by BIGINT NOT NULL COMMENT '作成者ユーザーID',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    tenant_id BIGINT NOT NULL,
+    organization_id BIGINT NOT NULL,
+    invite_code VARCHAR(64) UNIQUE NOT NULL,
+    default_role VARCHAR(50) NOT NULL DEFAULT 'GENERAL',
+    expires_at DATETIME,
+    max_uses INT,
+    current_uses INT NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
 
-    INDEX idx_invite_code (invite_code),
-    INDEX idx_tenant_org (tenant_id, organization_id),
-    INDEX idx_is_active (is_active),
-    INDEX idx_expires_at (expires_at),
-    INDEX idx_created_by (created_by),
-
     CHECK (default_role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'))
-)
-COMMENT='組織招待URLテーブル';
+);
+
+CREATE INDEX idx_invite_code ON organization_invites(invite_code);
+CREATE INDEX idx_tenant_org ON organization_invites(tenant_id, organization_id);
+CREATE INDEX idx_is_active ON organization_invites(is_active);
+CREATE INDEX idx_expires_at ON organization_invites(expires_at);
+CREATE INDEX idx_created_by ON organization_invites(created_by);
 
 -- ========================================
 -- 3. 招待使用履歴テーブルの作成
@@ -64,20 +53,19 @@ COMMENT='組織招待URLテーブル';
 
 CREATE TABLE IF NOT EXISTS invite_usage_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    invite_id BIGINT NOT NULL COMMENT '招待ID',
-    user_id BIGINT NOT NULL COMMENT '登録したユーザーID',
-    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '使用日時',
-    ip_address VARCHAR(45) COMMENT '使用時のIPアドレス',
-    user_agent TEXT COMMENT 'ユーザーエージェント',
+    invite_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
 
     FOREIGN KEY (invite_id) REFERENCES organization_invites(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
-    INDEX idx_invite_id (invite_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_used_at (used_at DESC)
-)
-COMMENT='招待URL使用履歴テーブル';
+CREATE INDEX idx_invite_id ON invite_usage_history(invite_id);
+CREATE INDEX idx_user_id ON invite_usage_history(user_id);
+CREATE INDEX idx_used_at ON invite_usage_history(used_at DESC);
 
 -- ========================================
 -- 4. 返信（Reply）機能の拡張
@@ -85,8 +73,8 @@ COMMENT='招待URL使用履歴テーブル';
 
 -- post_commentsテーブルに権限階級による返信制御を追加
 -- Note: H2互換性のため動的SQLを削除し、直接ALTER TABLEを実行
-ALTER TABLE post_comments ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'PM以上からの返信かどうか';
-ALTER TABLE post_comments ADD COLUMN replier_role VARCHAR(50) COMMENT '返信者の権限階級';
+ALTER TABLE post_comments ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE post_comments ADD COLUMN replier_role VARCHAR(50);
 CREATE INDEX idx_is_reply ON post_comments(is_reply);
 CREATE INDEX idx_replier_role ON post_comments(replier_role);
 
@@ -99,25 +87,25 @@ CREATE INDEX idx_replier_role ON post_comments(replier_role);
 
 CREATE TABLE IF NOT EXISTS organization_members (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    organization_id BIGINT NOT NULL COMMENT '組織ID',
-    user_id BIGINT NOT NULL COMMENT 'ユーザーID',
-    role VARCHAR(50) NOT NULL DEFAULT 'GENERAL' COMMENT 'この組織での権限階級',
-    is_primary BOOLEAN NOT NULL DEFAULT FALSE COMMENT '主所属組織かどうか',
-    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '参加日時',
+    organization_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'GENERAL',
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 
     UNIQUE (organization_id, user_id),
-    INDEX idx_organization_id (organization_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_role (role),
-    INDEX idx_is_primary (is_primary),
-    INDEX idx_org_role (organization_id, role),
 
     CHECK (role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'))
-)
-COMMENT='組織メンバーシップテーブル（複数組織所属対応）';
+);
+
+CREATE INDEX idx_organization_id ON organization_members(organization_id);
+CREATE INDEX idx_user_id ON organization_members(user_id);
+CREATE INDEX idx_role ON organization_members(role);
+CREATE INDEX idx_is_primary ON organization_members(is_primary);
+CREATE INDEX idx_org_role ON organization_members(organization_id, role);
 
 -- ========================================
 -- 完了
