@@ -5,10 +5,10 @@
 CREATE TABLE IF NOT EXISTS roles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
-    description VARCHAR(255),
-    INDEX idx_name (name)
-)
-COMMENT='Spring Securityロールテーブル';
+    description VARCHAR(255)
+);
+
+CREATE INDEX idx_name ON roles(name);
 
 -- user_role_mappingsジョインテーブル（User.javaのManyToMany関係用）
 CREATE TABLE IF NOT EXISTS user_role_mappings (
@@ -17,8 +17,7 @@ CREATE TABLE IF NOT EXISTS user_role_mappings (
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-)
-COMMENT='ユーザーとロールの関連テーブル';
+);
 
 -- デフォルトロールの挿入
 INSERT INTO roles (name, description) VALUES

@@ -19,10 +19,11 @@ CREATE TABLE reports (
     FOREIGN KEY (reported_user_id) REFERENCES users(id),
     FOREIGN KEY (reported_post_id) REFERENCES progress_posts(id),
     FOREIGN KEY (reported_message_id) REFERENCES chat_messages(id),
-    FOREIGN KEY (resolved_by) REFERENCES users(id),
-    INDEX idx_tenant_status (tenant_id, status),
-    INDEX idx_created_at (created_at)
+    FOREIGN KEY (resolved_by) REFERENCES users(id)
 );
+
+CREATE INDEX idx_tenant_status ON reports(tenant_id, status);
+CREATE INDEX idx_created_at ON reports(created_at);
 
 -- Slack連携設定テーブル
 CREATE TABLE slack_integrations (
@@ -52,9 +53,10 @@ CREATE TABLE slack_notification_rules (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id),
-    FOREIGN KEY (integration_id) REFERENCES slack_integrations(id) ON DELETE CASCADE,
-    INDEX idx_tenant_event (tenant_id, event_type)
+    FOREIGN KEY (integration_id) REFERENCES slack_integrations(id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_tenant_event ON slack_notification_rules(tenant_id, event_type);
 
 -- 管理者アクションログテーブル
 CREATE TABLE admin_action_logs (
@@ -68,10 +70,11 @@ CREATE TABLE admin_action_logs (
     metadata JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id),
-    FOREIGN KEY (admin_user_id) REFERENCES users(id),
-    INDEX idx_tenant_admin (tenant_id, admin_user_id),
-    INDEX idx_created_at (created_at)
+    FOREIGN KEY (admin_user_id) REFERENCES users(id)
 );
+
+CREATE INDEX idx_tenant_admin ON admin_action_logs(tenant_id, admin_user_id);
+CREATE INDEX idx_created_at ON admin_action_logs(created_at);
 
 -- テナント統計キャッシュテーブル（パフォーマンス向上のため）
 CREATE TABLE tenant_statistics_cache (
