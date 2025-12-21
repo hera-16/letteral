@@ -6,9 +6,15 @@ test.describe('Progress Post', () => {
     await page.goto('/login');
     await page.fill('input[type="email"]', 'ceo@test-company.com');
     await page.fill('input[type="password"]', 'password');
-    await page.click('button[type="submit"]');
-    // ログイン後はホームページにリダイレクトされ、デフォルトで投稿タブが表示される
-    await page.waitForURL('/', { timeout: 10000 });
+
+    // ログインボタンをクリックしてナビゲーションを待つ
+    await Promise.all([
+      page.waitForURL('/', { timeout: 15000 }),
+      page.click('button[type="submit"]')
+    ]);
+
+    // ホームページの主要な要素が読み込まれるまで待つ
+    await page.waitForSelector('text=🏢 所属グループ', { timeout: 10000 });
   });
 
   test('should create a new progress post', async ({ page }) => {
