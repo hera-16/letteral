@@ -241,15 +241,17 @@ jobs:
         run: |
           cd backend
           echo "Starting backend server..."
-          nohup java -jar \
+          JAR_FILE=$(ls target/*.jar | head -n 1)
+          echo "Using JAR: $JAR_FILE"
+          nohup java \
+            -Xmx512m \
             -Dspring.profiles.active=test \
             -Dspring.datasource.url=jdbc:h2:mem:ci;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE \
             -Dspring.datasource.driver-class-name=org.h2.Driver \
             -Dspring.jpa.hibernate.ddl-auto=update \
             -Dspring.flyway.enabled=true \
             -Dserver.port=8080 \
-            -Xmx512m \
-            target/*.jar > backend.log 2>&1 &
+            -jar "$JAR_FILE" > backend.log 2>&1 &
           echo $! > backend.pid
           echo "Backend PID: $(cat backend.pid)"
 
