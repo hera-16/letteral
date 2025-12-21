@@ -38,7 +38,7 @@ CREATE TABLE slack_integrations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id),
-    UNIQUE KEY uk_tenant_workspace (tenant_id, workspace_id)
+    UNIQUE (tenant_id, workspace_id)
 );
 
 -- Slack通知ルールテーブル
@@ -91,5 +91,5 @@ CREATE TABLE tenant_statistics_cache (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id),
-    UNIQUE KEY uk_tenant_date (tenant_id, stat_date)
+    UNIQUE (tenant_id, stat_date)
 );
