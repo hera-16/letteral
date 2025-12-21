@@ -132,24 +132,24 @@ VALUES
 -- =====================================================
 -- 6. 進捗投稿にBox種別カラムを追加
 -- =====================================================
-ALTER TABLE progress_posts
-ADD COLUMN box_type_id BIGINT COMMENT 'Box種別' AFTER organization_id,
-ADD COLUMN parent_post_id BIGINT COMMENT '親投稿（返信の場合）' AFTER box_type_id,
-ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE COMMENT '返信かどうか' AFTER parent_post_id,
-ADD COLUMN reply_depth INT NOT NULL DEFAULT 0 COMMENT '返信の深さ（0=親投稿）' AFTER is_reply;
+ALTER TABLE progress_posts ADD COLUMN box_type_id BIGINT;
+ALTER TABLE progress_posts ADD COLUMN parent_post_id BIGINT;
+ALTER TABLE progress_posts ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE progress_posts ADD COLUMN reply_depth INT NOT NULL DEFAULT 0;
 
 ALTER TABLE progress_posts
 ADD CONSTRAINT fk_posts_box_type
-    FOREIGN KEY (box_type_id) REFERENCES box_types(id) ON DELETE SET NULL,
+    FOREIGN KEY (box_type_id) REFERENCES box_types(id) ON DELETE SET NULL;
+
+ALTER TABLE progress_posts
 ADD CONSTRAINT fk_posts_parent
     FOREIGN KEY (parent_post_id) REFERENCES progress_posts(id) ON DELETE CASCADE;
 
-ALTER TABLE progress_posts
-ADD INDEX idx_box_type (box_type_id),
-ADD INDEX idx_parent_post (parent_post_id),
-ADD INDEX idx_is_reply (is_reply),
-ADD INDEX idx_box_date (box_type_id, post_date DESC),
-ADD INDEX idx_parent_created (parent_post_id, created_at DESC);
+CREATE INDEX idx_box_type ON progress_posts(box_type_id);
+CREATE INDEX idx_parent_post ON progress_posts(parent_post_id);
+CREATE INDEX idx_is_reply ON progress_posts(is_reply);
+CREATE INDEX idx_box_date ON progress_posts(box_type_id, post_date DESC);
+CREATE INDEX idx_parent_created ON progress_posts(parent_post_id, created_at DESC);
 
 -- =====================================================
 -- 7. Box閲覧権限テーブル
@@ -292,8 +292,7 @@ AND NOT EXISTS (
 -- =====================================================
 -- 11. 返信数カウント用のカラムを追加
 -- =====================================================
-ALTER TABLE progress_posts
-ADD COLUMN reply_count INT NOT NULL DEFAULT 0 COMMENT '返信数' AFTER comment_count;
+ALTER TABLE progress_posts ADD COLUMN reply_count INT NOT NULL DEFAULT 0;
 
 -- =====================================================
 -- 12. 返信数カウント更新用トリガー
