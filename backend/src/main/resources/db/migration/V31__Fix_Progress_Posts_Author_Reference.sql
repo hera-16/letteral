@@ -4,7 +4,7 @@
 
 -- 1. 既存の外部キー制約を削除
 ALTER TABLE progress_posts
-DROP FOREIGN KEY progress_posts_ibfk_3;
+DROP CONSTRAINT fk_progress_posts_author;
 
 -- 2. 新しい外部キー制約を追加（usersテーブルを参照）
 ALTER TABLE progress_posts
