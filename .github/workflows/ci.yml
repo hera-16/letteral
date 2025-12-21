@@ -221,30 +221,75 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Resolve backend dependencies
+        run: |
+          cd backend
+          echo "Downloading Maven dependencies..."
+          mvn dependency:go-offline -B -q || mvn dependency:resolve -B
+        env:
+          MAVEN_OPTS: "-Xmx512m"
+
+      - name: Build backend JAR
+        run: |
+          cd backend
+          echo "Building backend JAR..."
+          mvn clean package -DskipTests -B -q
+        env:
+          MAVEN_OPTS: "-Xmx512m"
+
       - name: Start backend server
         run: |
           cd backend
-          nohup mvn spring-boot:run > backend.log 2>&1 &
+          echo "Starting backend server..."
+          nohup java -jar \
+            -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:h2:mem:ci;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE \
+            -Dspring.datasource.driver-class-name=org.h2.Driver \
+            -Dspring.jpa.hibernate.ddl-auto=update \
+            -Dspring.flyway.enabled=true \
+            -Dserver.port=8080 \
+            -Xmx512m \
+            target/*.jar > backend.log 2>&1 &
           echo $! > backend.pid
-        env:
-          SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:h2:mem:ci;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
-          SPRING_JPA_HIBERNATE_DDL_AUTO: update
-          SPRING_FLYWAY_ENABLED: "true"
+          echo "Backend PID: $(cat backend.pid)"
 
       - name: Wait for backend to be ready
         run: |
           echo "Waiting for backend to start..."
-          for i in {1..30}; do
-            if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+          MAX_ATTEMPTS=120
+          SLEEP_INTERVAL=5
+
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            # Check if process is still running
+            if [ -f backend/backend.pid ]; then
+              PID=$(cat backend/backend.pid)
+              if ! kill -0 $PID 2>/dev/null; then
+                echo "ERROR: Backend process died!"
+                echo "=== Last 50 lines of backend log ==="
+                tail -n 50 backend/backend.log || true
+                exit 1
+              fi
+            fi
+
+            # Try health check
+            if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
               echo "Backend is ready!"
+              echo "Startup took approximately $((i * SLEEP_INTERVAL)) seconds"
               exit 0
             fi
-            echo "Attempt $i: Backend not ready yet..."
-            sleep 2
+
+            # Show progress
+            if [ $((i % 6)) -eq 0 ]; then
+              echo "Attempt $i/$MAX_ATTEMPTS: Still waiting... (${i}0s elapsed)"
+              # Show last line of log for progress indication
+              tail -n 1 backend/backend.log 2>/dev/null || true
+            fi
+
+            sleep $SLEEP_INTERVAL
           done
-          echo "Backend failed to start"
+
+          echo "ERROR: Backend failed to start within $((MAX_ATTEMPTS * SLEEP_INTERVAL)) seconds"
+          echo "=== Full backend log ==="
           cat backend/backend.log || true
           exit 1
 
@@ -258,15 +303,38 @@ jobs:
       - name: Wait for frontend to be ready
         run: |
           echo "Waiting for frontend to start..."
-          for i in {1..30}; do
-            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+          MAX_ATTEMPTS=60
+          SLEEP_INTERVAL=5
+
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            # Check if process is still running
+            if [ -f frontend.pid ]; then
+              PID=$(cat frontend.pid)
+              if ! kill -0 $PID 2>/dev/null; then
+                echo "ERROR: Frontend process died!"
+                echo "=== Last 50 lines of frontend log ==="
+                tail -n 50 frontend.log || true
+                exit 1
+              fi
+            fi
+
+            # Try health check
+            if curl -sf http://localhost:3000 > /dev/null 2>&1; then
               echo "Frontend is ready!"
+              echo "Startup took approximately $((i * SLEEP_INTERVAL)) seconds"
               exit 0
             fi
-            echo "Attempt $i: Frontend not ready yet..."
-            sleep 2
+
+            # Show progress every 30 seconds
+            if [ $((i % 6)) -eq 0 ]; then
+              echo "Attempt $i/$MAX_ATTEMPTS: Still waiting... ($((i * SLEEP_INTERVAL))s elapsed)"
+            fi
+
+            sleep $SLEEP_INTERVAL
           done
-          echo "Frontend failed to start"
+
+          echo "ERROR: Frontend failed to start within $((MAX_ATTEMPTS * SLEEP_INTERVAL)) seconds"
+          echo "=== Full frontend log ==="
           cat frontend.log || true
           exit 1
 
@@ -283,14 +351,39 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      - name: Upload server logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: server-logs
+          path: |
+            backend/backend.log
+            frontend.log
+          retention-days: 7
+
       - name: Stop servers
         if: always()
         run: |
+          echo "Stopping servers..."
           if [ -f backend/backend.pid ]; then
-            kill $(cat backend/backend.pid) || true
+            PID=$(cat backend/backend.pid)
+            echo "Stopping backend (PID: $PID)"
+            kill $PID || true
+            # Wait for graceful shutdown
+            for i in {1..10}; do
+              if ! kill -0 $PID 2>/dev/null; then
+                echo "Backend stopped gracefully"
+                break
+              fi
+              sleep 1
+            done
+            # Force kill if still running
+            kill -9 $PID 2>/dev/null || true
           fi
           if [ -f frontend.pid ]; then
-            kill $(cat frontend.pid) || true
+            PID=$(cat frontend.pid)
+            echo "Stopping frontend (PID: $PID)"
+            kill $PID || true
           fi
 
   # ========================================
