@@ -23,7 +23,7 @@ CREATE TABLE reports (
 );
 
 CREATE INDEX idx_tenant_status ON reports(tenant_id, status);
-CREATE INDEX idx_created_at ON reports(created_at);
+CREATE INDEX idx_reports_created_at ON reports(created_at);
 
 -- Slack連携設定テーブル
 CREATE TABLE slack_integrations (
@@ -74,7 +74,7 @@ CREATE TABLE admin_action_logs (
 );
 
 CREATE INDEX idx_tenant_admin ON admin_action_logs(tenant_id, admin_user_id);
-CREATE INDEX idx_created_at ON admin_action_logs(created_at);
+CREATE INDEX idx_admin_logs_created_at ON admin_action_logs(created_at);
 
 -- テナント統計キャッシュテーブル（パフォーマンス向上のため）
 CREATE TABLE tenant_statistics_cache (
