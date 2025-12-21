@@ -65,12 +65,12 @@ VALUES (
   NOW()
 );
 
--- 4. テストユーザーを削除（既に存在する場合は削除して再作成）
-DELETE FROM users WHERE email = 'testuser@example.com';
-
--- 5. E2Eテスト用のユーザーを作成
-INSERT INTO users (username, email, password, display_name, tenant_id, primary_organization_id, role, is_active, created_at)
+-- 4. E2Eテスト用のユーザーを作成（既に存在する場合はスキップ）
+-- 固定ID 999を使用してH2互換性を確保
+MERGE INTO users (id, username, email, password, display_name, tenant_id, primary_organization_id, role, is_active, created_at)
+KEY(id)
 VALUES (
+  999,
   'testuser',
   'testuser@example.com',
   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
@@ -82,26 +82,25 @@ VALUES (
   NOW()
 );
 
--- 6. ユーザーIDを取得して組織メンバーシップを作成
-SET @test_user_id = LAST_INSERT_ID();
-
--- 7. 組織メンバーシップを作成
-INSERT INTO organization_members (tenant_id, organization_id, user_id, role, is_primary, joined_at)
+-- 5. 組織メンバーシップを作成（既に存在する場合はスキップ）
+MERGE INTO organization_members (tenant_id, organization_id, user_id, role, is_primary, joined_at)
+KEY(tenant_id, organization_id, user_id)
 VALUES (
   999,
   999,
-  @test_user_id,
+  999,
   'MEMBER',
   TRUE,
   NOW()
 );
 
--- 8. 匿名プロフィールを作成
-INSERT INTO anonymous_profiles (tenant_id, organization_id, user_id, anonymous_id, display_name, anonymity_level, created_at)
+-- 6. 匿名プロフィールを作成（既に存在する場合はスキップ）
+MERGE INTO anonymous_profiles (tenant_id, organization_id, user_id, anonymous_id, display_name, anonymity_level, created_at)
+KEY(tenant_id, organization_id, user_id)
 VALUES (
   999,
   999,
-  @test_user_id,
+  999,
   'anonymous_999999',
   'テストユーザー',
   'PSEUDONYM',
