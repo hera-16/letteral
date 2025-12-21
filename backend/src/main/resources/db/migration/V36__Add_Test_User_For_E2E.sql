@@ -83,9 +83,11 @@ VALUES (
 );
 
 -- 5. 組織メンバーシップを作成（既に存在する場合はスキップ）
-MERGE INTO organization_members (tenant_id, organization_id, user_id, role, is_primary, joined_at)
-KEY(tenant_id, organization_id, user_id)
+-- 固定ID 999を使用してH2互換性を確保
+MERGE INTO organization_members (id, tenant_id, organization_id, user_id, role, is_primary, joined_at)
+KEY(id)
 VALUES (
+  999,
   999,
   999,
   999,
