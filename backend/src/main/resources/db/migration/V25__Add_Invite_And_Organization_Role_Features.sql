@@ -75,7 +75,7 @@ CREATE INDEX idx_invite_usage_used_at ON invite_usage_history(used_at DESC);
 -- Note: H2互換性のため動的SQLを削除し、直接ALTER TABLEを実行
 ALTER TABLE post_comments ADD COLUMN is_reply BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE post_comments ADD COLUMN replier_role VARCHAR(50);
-CREATE INDEX idx_is_reply ON post_comments(is_reply);
+CREATE INDEX idx_post_comments_is_reply ON post_comments(is_reply);
 CREATE INDEX idx_replier_role ON post_comments(replier_role);
 
 -- ========================================
