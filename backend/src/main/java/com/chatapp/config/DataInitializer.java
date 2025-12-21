@@ -53,7 +53,8 @@ public class DataInitializer implements ApplicationRunner {
         LOGGER.info("Deleting all existing data...");
 
         // 既存のテナントをチェック
-        if (tenantRepository.findBySlug("test-company").isPresent()) {
+        if (tenantRepository.findBySlug("test-company").isPresent() ||
+            tenantRepository.findBySlug("e2e-test").isPresent()) {
             LOGGER.info("Test data already exists. Skipping initialization.");
             return;
         }
