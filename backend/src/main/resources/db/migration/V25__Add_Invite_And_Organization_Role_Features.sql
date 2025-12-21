@@ -43,9 +43,9 @@ CREATE TABLE IF NOT EXISTS organization_invites (
 
 CREATE INDEX idx_invite_code ON organization_invites(invite_code);
 CREATE INDEX idx_tenant_org ON organization_invites(tenant_id, organization_id);
-CREATE INDEX idx_is_active ON organization_invites(is_active);
-CREATE INDEX idx_expires_at ON organization_invites(expires_at);
-CREATE INDEX idx_created_by ON organization_invites(created_by);
+CREATE INDEX idx_org_invites_is_active ON organization_invites(is_active);
+CREATE INDEX idx_org_invites_expires_at ON organization_invites(expires_at);
+CREATE INDEX idx_org_invites_created_by ON organization_invites(created_by);
 
 -- ========================================
 -- 3. 招待使用履歴テーブルの作成
@@ -63,9 +63,9 @@ CREATE TABLE IF NOT EXISTS invite_usage_history (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_invite_id ON invite_usage_history(invite_id);
-CREATE INDEX idx_user_id ON invite_usage_history(user_id);
-CREATE INDEX idx_used_at ON invite_usage_history(used_at DESC);
+CREATE INDEX idx_invite_usage_invite_id ON invite_usage_history(invite_id);
+CREATE INDEX idx_invite_usage_user_id ON invite_usage_history(user_id);
+CREATE INDEX idx_invite_usage_used_at ON invite_usage_history(used_at DESC);
 
 -- ========================================
 -- 4. 返信（Reply）機能の拡張
@@ -101,11 +101,11 @@ CREATE TABLE IF NOT EXISTS organization_members (
     CHECK (role IN ('CEO', 'MANAGER', 'SECTION_CHIEF', 'PM', 'GENERAL'))
 );
 
-CREATE INDEX idx_organization_id ON organization_members(organization_id);
-CREATE INDEX idx_user_id ON organization_members(user_id);
-CREATE INDEX idx_role ON organization_members(role);
-CREATE INDEX idx_is_primary ON organization_members(is_primary);
-CREATE INDEX idx_org_role ON organization_members(organization_id, role);
+CREATE INDEX idx_org_members_organization_id ON organization_members(organization_id);
+CREATE INDEX idx_org_members_user_id ON organization_members(user_id);
+CREATE INDEX idx_org_members_role ON organization_members(role);
+CREATE INDEX idx_org_members_is_primary ON organization_members(is_primary);
+CREATE INDEX idx_org_members_org_role ON organization_members(organization_id, role);
 
 -- ========================================
 -- 完了
