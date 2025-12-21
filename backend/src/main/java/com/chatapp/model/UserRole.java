@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"user_id", "organization_id"})
     },
     indexes = {
-        @Index(name = "idx_tenant", columnList = "tenant_id"),
-        @Index(name = "idx_user", columnList = "user_id"),
-        @Index(name = "idx_organization", columnList = "organization_id"),
-        @Index(name = "idx_role_level", columnList = "role_level"),
-        @Index(name = "idx_approval_status", columnList = "approval_status"),
-        @Index(name = "idx_tenant_org", columnList = "tenant_id, organization_id")
+        @Index(name = "idx_ur_tenant", columnList = "tenant_id"),
+        @Index(name = "idx_ur_user", columnList = "user_id"),
+        @Index(name = "idx_ur_organization", columnList = "organization_id"),
+        @Index(name = "idx_ur_role_level", columnList = "role_level"),
+        @Index(name = "idx_ur_approval_status", columnList = "approval_status"),
+        @Index(name = "idx_ur_tenant_org", columnList = "tenant_id, organization_id")
     }
 )
 public class UserRole {
